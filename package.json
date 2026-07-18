@@ -1,0 +1,47 @@
+{
+  "name": "@kontourai/bearing",
+  "version": "0.1.0",
+  "description": "Evidence-backed model capability observations, deterministic catalogs, and runtime-aware ranking.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kontourai/bearing.git"
+  },
+  "homepage": "https://github.com/kontourai/bearing#readme",
+  "bugs": {
+    "url": "https://github.com/kontourai/bearing/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    }
+  },
+  "files": [
+    "dist/src/",
+    "README.md",
+    "LICENSE",
+    "CONTEXT.md"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "prepare": "npm run build",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test dist/tests/*.test.js",
+    "check:pack": "npm pack --dry-run --json >/dev/null",
+    "verify": "npm run typecheck && npm test && npm run check:pack"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^5.8.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
