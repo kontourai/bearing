@@ -1,12 +1,14 @@
 import { createHash } from "node:crypto";
 
+export const compareText = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
 const canonicalize = (value: unknown): unknown => {
   if (Array.isArray(value)) return value.map(canonicalize);
   if (value !== null && typeof value === "object") {
     return Object.fromEntries(
       Object.entries(value as Record<string, unknown>)
         .filter(([, item]) => item !== undefined)
-        .sort(([a], [b]) => a.localeCompare(b))
+        .sort(([a], [b]) => compareText(a, b))
         .map(([key, item]) => [key, canonicalize(item)]),
     );
   }

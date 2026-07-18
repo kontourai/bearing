@@ -1,4 +1,4 @@
-import { canonicalJson, sha256 } from "./canonical.js";
+import { canonicalJson, compareText, sha256 } from "./canonical.js";
 import { BearingError } from "./error.js";
 import {
   CATALOG_SCHEMA_VERSION,
@@ -13,7 +13,7 @@ import {
 } from "./types.js";
 import { isoTimestamp, validateObservation } from "./validate.js";
 
-const compareCanonical = (a: unknown, b: unknown): number => canonicalJson(a).localeCompare(canonicalJson(b));
+const compareCanonical = (a: unknown, b: unknown): number => compareText(canonicalJson(a), canonicalJson(b));
 
 const compareScalar = (a: ScalarValue, b: ScalarValue): number => {
   const typeOrder = { boolean: 0, number: 1, string: 2 } as const;
@@ -22,7 +22,7 @@ const compareScalar = (a: ScalarValue, b: ScalarValue): number => {
   if (aType !== bType) return typeOrder[aType] - typeOrder[bType];
   if (typeof a === "number" && typeof b === "number") return a - b;
   if (typeof a === "boolean" && typeof b === "boolean") return Number(a) - Number(b);
-  return String(a).localeCompare(String(b));
+  return compareText(String(a), String(b));
 };
 
 export const normalizeObservation = (input: ObservationInput): CapabilityObservation => {
@@ -34,7 +34,7 @@ export const normalizeObservation = (input: ObservationInput): CapabilityObserva
       toolSurface: [...value.execution.toolSurface].sort(),
     },
     measurements: [...value.measurements].sort((a, b) => compareCanonical(a, b)),
-    evidence: [...value.evidence].sort((a, b) => a.id.localeCompare(b.id)),
+    evidence: [...value.evidence].sort((a, b) => compareText(a.id, b.id)),
     uncertainty: {
       ...value.uncertainty,
       basis: [...value.uncertainty.basis].sort(),
@@ -102,7 +102,7 @@ const conflictsFor = (observations: CapabilityObservation[]): ConflictSet[] => {
       values,
     });
   }
-  return conflicts.sort((a, b) => a.key.localeCompare(b.key));
+  return conflicts.sort((a, b) => compareText(a.key, b.key));
 };
 
 export const compileCatalog = (inputs: ObservationInput[], options: CompileCatalogOptions): CatalogSnapshot => {
@@ -150,8 +150,8 @@ export const compileCatalog = (inputs: ObservationInput[], options: CompileCatal
     grouped.set(key, entry);
   }
   const models = [...grouped.values()]
-    .map((entry) => ({ ...entry, observations: entry.observations.sort((a, b) => a.id.localeCompare(b.id)) }))
-    .sort((a, b) => a.key.localeCompare(b.key));
+    .map((entry) => ({ ...entry, observations: entry.observations.sort((a, b) => compareText(a.id, b.id)) }))
+    .sort((a, b) => compareText(a.key, b.key));
   const conflicts = conflictsFor(observations);
   const content = { schemaVersion: CATALOG_SCHEMA_VERSION, asOf, models, conflicts };
   return { ...content, digest: sha256(content) };

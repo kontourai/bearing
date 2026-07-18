@@ -3,10 +3,15 @@ import test from "node:test";
 
 import {
   BearingError,
+  canonicalJson,
   compileCatalog,
   normalizeObservation,
   type ObservationInput,
 } from "../src/index.js";
+
+test("canonical object ordering is locale-independent code-unit order", () => {
+  assert.equal(canonicalJson({ "ä": 3, z: 2, a: 1 }), "{\"a\":1,\"z\":2,\"ä\":3}");
+});
 
 const baseObservation = (overrides: Partial<ObservationInput> = {}): ObservationInput => ({
   schemaVersion: "bearing.observation/v1",

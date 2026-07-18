@@ -1,4 +1,4 @@
-export { canonicalJson, sha256 } from "./canonical.js";
+export { canonicalJson, compareText, sha256 } from "./canonical.js";
 export { compileCatalog, normalizeObservation } from "./catalog.js";
 export { BearingError, type BearingErrorCode } from "./error.js";
 export { validateObservation } from "./validate.js";
