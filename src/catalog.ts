@@ -7,7 +7,6 @@ import {
   type CatalogSnapshot,
   type CompileCatalogOptions,
   type ConflictSet,
-  type Freshness,
   type ObservationInput,
   type ScalarValue,
 } from "./types.js";
@@ -46,12 +45,6 @@ export const normalizeObservation = (input: ObservationInput): CapabilityObserva
 
 const modelKey = (observation: CapabilityObservation): string => sha256(observation.model);
 
-const intervalsOverlap = (a: Freshness, b: Freshness): boolean => {
-  const aEnd = a.validUntil ?? "9999-12-31T23:59:59.999Z";
-  const bEnd = b.validUntil ?? "9999-12-31T23:59:59.999Z";
-  return a.observedAt < bEnd && b.observedAt < aEnd;
-};
-
 interface FactEntry {
   observation: CapabilityObservation;
   modelKey: string;
@@ -59,6 +52,64 @@ interface FactEntry {
   value: ScalarValue;
   scope: string;
 }
+
+interface ConflictExtreme {
+  value: string;
+  endpoint: string;
+}
+
+const openEnded = "9999-12-31T23:59:59.999Z";
+
+const updateExtremes = (
+  extremes: ConflictExtreme[],
+  candidate: ConflictExtreme,
+  compareEndpoint: (left: string, right: string) => number,
+): ConflictExtreme[] => {
+  const updated = extremes.filter((entry) => entry.value !== candidate.value);
+  const existing = extremes.find((entry) => entry.value === candidate.value);
+  updated.push(existing !== undefined && compareEndpoint(existing.endpoint, candidate.endpoint) <= 0 ? existing : candidate);
+  return updated
+    .sort((left, right) => compareEndpoint(left.endpoint, right.endpoint) || compareText(left.value, right.value))
+    .slice(0, 2);
+};
+
+// Each participant sees a different value ending after its start or starting before its end.
+// Keeping the best two endpoints from distinct values makes that exclusion query constant-time.
+const conflictingParticipants = (entries: FactEntry[]): Set<string> => {
+  const sorted = [...entries].sort((left, right) =>
+    compareText(left.observation.freshness.observedAt, right.observation.freshness.observedAt)
+    || compareText(left.observation.id, right.observation.id));
+  const participants = new Set<string>();
+  let latestEnds: ConflictExtreme[] = [];
+  for (const entry of sorted) {
+    const value = canonicalJson(entry.value);
+    const other = latestEnds.find((candidate) => candidate.value !== value);
+    if (other !== undefined && other.endpoint > entry.observation.freshness.observedAt) {
+      participants.add(entry.observation.id);
+    }
+    latestEnds = updateExtremes(
+      latestEnds,
+      { value, endpoint: entry.observation.freshness.validUntil ?? openEnded },
+      (left, right) => compareText(right, left),
+    );
+  }
+
+  let earliestStarts: ConflictExtreme[] = [];
+  for (let index = sorted.length - 1; index >= 0; index -= 1) {
+    const entry = sorted[index];
+    const value = canonicalJson(entry.value);
+    const other = earliestStarts.find((candidate) => candidate.value !== value);
+    if (other !== undefined && other.endpoint < (entry.observation.freshness.validUntil ?? openEnded)) {
+      participants.add(entry.observation.id);
+    }
+    earliestStarts = updateExtremes(
+      earliestStarts,
+      { value, endpoint: entry.observation.freshness.observedAt },
+      compareText,
+    );
+  }
+  return participants;
+};
 
 const conflictsFor = (observations: CapabilityObservation[]): ConflictSet[] => {
   const groups = new Map<string, FactEntry[]>();
@@ -75,18 +126,7 @@ const conflictsFor = (observations: CapabilityObservation[]): ConflictSet[] => {
 
   const conflicts: ConflictSet[] = [];
   for (const entries of groups.values()) {
-    const participantIds = new Set<string>();
-    for (let left = 0; left < entries.length; left += 1) {
-      for (let right = left + 1; right < entries.length; right += 1) {
-        if (
-          canonicalJson(entries[left].value) !== canonicalJson(entries[right].value)
-          && intervalsOverlap(entries[left].observation.freshness, entries[right].observation.freshness)
-        ) {
-          participantIds.add(entries[left].observation.id);
-          participantIds.add(entries[right].observation.id);
-        }
-      }
-    }
+    const participantIds = conflictingParticipants(entries);
     if (participantIds.size === 0) continue;
     const participants = entries.filter((entry) => participantIds.has(entry.observation.id));
     const values = [...new Map(participants.map((entry) => [canonicalJson(entry.value), entry.value])).values()]
