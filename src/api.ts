@@ -1,4 +1,6 @@
 import { canonicalJson } from "./canonical.js";
+import { BearingError } from "./error.js";
+import { createCatalogRanker, type RankRequest } from "./rank.js";
 import { validateCatalogSnapshot } from "./snapshot.js";
 import type { CatalogSnapshot } from "./types.js";
 
@@ -7,6 +9,7 @@ export interface CatalogHandlerOptions {
 }
 
 export type CatalogHandler = (request: Request) => Promise<Response>;
+export const MAX_RANK_REQUEST_BYTES = 1_048_576;
 
 const matchesEtag = (header: string | null, etag: string): boolean => {
   if (header === null) return false;
@@ -68,6 +71,7 @@ export const createCatalogHandler = (options: CatalogHandlerOptions): CatalogHan
     observationCount: model.observations.length,
     conflictCount: conflictsByModel.get(model.key)?.length ?? 0,
   }));
+  const rank = createCatalogRanker(catalog);
 
   const notModified = (request: Request): Response | null =>
     matchesEtag(request.headers.get("if-none-match"), etag)
@@ -76,9 +80,6 @@ export const createCatalogHandler = (options: CatalogHandlerOptions): CatalogHan
 
   return async (request: Request): Promise<Response> => {
     const head = request.method === "HEAD";
-    if (request.method !== "GET" && !head) {
-      return errorResponse(catalog, 405, "METHOD_NOT_ALLOWED", "Only GET and HEAD are supported.", false, { allow: "GET, HEAD" });
-    }
     const url = new URL(request.url);
     const segments = url.pathname.split("/").filter(Boolean);
     if (segments[0]?.startsWith("v") && segments[0] !== "v1") {
@@ -86,6 +87,39 @@ export const createCatalogHandler = (options: CatalogHandlerOptions): CatalogHan
     }
     if (segments[0] !== "v1") {
       return errorResponse(catalog, 404, "NOT_FOUND", "Endpoint not found.", head);
+    }
+
+    if (segments.length === 2 && segments[1] === "rank") {
+      if (request.method === "OPTIONS") {
+        const headers = responseHeaders(catalog);
+        headers.set("access-control-allow-headers", "Content-Type");
+        headers.set("access-control-allow-methods", "POST, OPTIONS");
+        headers.set("allow", "POST, OPTIONS");
+        return new Response(null, { status: 204, headers });
+      }
+      if (request.method !== "POST") {
+        return errorResponse(catalog, 405, "METHOD_NOT_ALLOWED", "Only POST is supported.", head, { allow: "POST, OPTIONS" });
+      }
+      const declaredLength = Number(request.headers.get("content-length"));
+      if (Number.isFinite(declaredLength) && declaredLength > MAX_RANK_REQUEST_BYTES) {
+        return errorResponse(catalog, 413, "PAYLOAD_TOO_LARGE", `Rank requests are limited to ${MAX_RANK_REQUEST_BYTES} bytes.`, false);
+      }
+      const body = await request.text();
+      if (new TextEncoder().encode(body).byteLength > MAX_RANK_REQUEST_BYTES) {
+        return errorResponse(catalog, 413, "PAYLOAD_TOO_LARGE", `Rank requests are limited to ${MAX_RANK_REQUEST_BYTES} bytes.`, false);
+      }
+      try {
+        return jsonResponse(catalog, rank(JSON.parse(body) as RankRequest));
+      } catch (error) {
+        if (error instanceof SyntaxError || (error instanceof BearingError && error.code === "INVALID_RANK_REQUEST")) {
+          return errorResponse(catalog, 400, "INVALID_RANK_REQUEST", error.message, false);
+        }
+        throw error;
+      }
+    }
+
+    if (request.method !== "GET" && !head) {
+      return errorResponse(catalog, 405, "METHOD_NOT_ALLOWED", "Only GET and HEAD are supported.", false, { allow: "GET, HEAD" });
     }
 
     if (segments.length === 2 && segments[1] === "models") {

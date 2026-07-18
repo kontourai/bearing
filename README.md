@@ -31,6 +31,23 @@ The API supports `GET`, `HEAD`, `ETag`, and `If-None-Match`. Model list entries
 carry a stable model key; `GET /v1/models/<key>` returns the complete retained
 observations, evidence references, and conflict sets for that identity.
 
+## Runtime-Aware Ranking
+
+`rankCatalog` and `POST /v1/rank` evaluate only candidates supplied in the
+request's runtime inventory. Hard requirements exclude candidates before
+preferences contribute to a request-relative score. Results retain observation
+and evidence ids and explain missing, stale, conflicting, incomparable, and
+unsatisfied evidence.
+
+Supported aggregations are `fact`, `mean`, `min`, `max`, `success-rate`, and
+`count`. Facts must agree within their exact model/execution/task scope. Sample
+aggregations retain measured variation; `count` lets a policy enforce a minimum
+sample volume. A prepared `createCatalogRanker`
+validates and indexes one snapshot once for repeated local resolutions.
+
+Scores are explicitly request-relative and must not be compared across
+different inventories, requirements, preferences, or snapshot digests.
+
 ## Development
 
 ```sh

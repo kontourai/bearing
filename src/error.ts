@@ -4,7 +4,8 @@ export type BearingErrorCode =
   | "DUPLICATE_OBSERVATION"
   | "INVALID_COMPILE_OPTIONS"
   | "INVALID_CATALOG"
-  | "UNSUPPORTED_CATALOG_SCHEMA";
+  | "UNSUPPORTED_CATALOG_SCHEMA"
+  | "INVALID_RANK_REQUEST";
 
 export class BearingError extends Error {
   readonly code: BearingErrorCode;
