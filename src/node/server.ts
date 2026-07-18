@@ -1,7 +1,7 @@
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 
-import { createCatalogHandler } from "../api.js";
+import { createCatalogHandler, MAX_RANK_REQUEST_BYTES } from "../api.js";
 import type { CatalogSnapshot } from "../types.js";
 
 export interface StartCatalogServerOptions {
@@ -15,13 +15,33 @@ export interface RunningCatalogServer {
   close(): Promise<void>;
 }
 
+const readRequestBody = async (incoming: import("node:http").IncomingMessage): Promise<Buffer | undefined> => {
+  if (incoming.method === "GET" || incoming.method === "HEAD") return undefined;
+  const declared = Number(incoming.headers["content-length"]);
+  if (Number.isFinite(declared) && declared > MAX_RANK_REQUEST_BYTES) {
+    incoming.resume();
+    return Buffer.alloc(MAX_RANK_REQUEST_BYTES + 1);
+  }
+  const chunks: Buffer[] = [];
+  let total = 0;
+  for await (const chunk of incoming) {
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    total += buffer.length;
+    if (total > MAX_RANK_REQUEST_BYTES) {
+      incoming.resume();
+      return Buffer.alloc(MAX_RANK_REQUEST_BYTES + 1);
+    }
+    chunks.push(buffer);
+  }
+  return Buffer.concat(chunks);
+};
+
 export const startCatalogServer = async (options: StartCatalogServerOptions): Promise<RunningCatalogServer> => {
   const handler = createCatalogHandler({ catalog: options.catalog });
   const host = options.host ?? "127.0.0.1";
   const port = options.port ?? 4244;
   const server = createServer(async (incoming, outgoing) => {
     try {
-      if (incoming.method !== "GET" && incoming.method !== "HEAD") incoming.resume();
       const requestHeaders = new Headers();
       for (const [name, value] of Object.entries(incoming.headers)) {
         if (value === undefined) continue;
@@ -30,6 +50,7 @@ export const startCatalogServer = async (options: StartCatalogServerOptions): Pr
       const request = new Request(`http://bearing.local${incoming.url ?? "/"}`, {
         method: incoming.method ?? "GET",
         headers: requestHeaders,
+        body: (await readRequestBody(incoming))?.toString("utf8"),
       });
       const response = await handler(request);
       outgoing.writeHead(response.status, Object.fromEntries(response.headers.entries()));

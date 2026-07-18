@@ -94,7 +94,7 @@ const component = (value: unknown, path: string): ComponentIdentity => {
   return { id: text(item.id, `${path}.id`), version: nullableText(item.version, `${path}.version`) };
 };
 
-const model = (value: unknown, path: string): ModelIdentity => {
+export const validateModelIdentity = (value: unknown, path = "$"): ModelIdentity => {
   const item = record(value, path);
   allowedKeys(item, ["id", "revision", "quantization"], path);
   requiredKeys(item, ["id", "revision", "quantization"], path);
@@ -129,7 +129,7 @@ const workflow = (value: unknown, path: string): WorkflowProfile | null => {
   };
 };
 
-const execution = (value: unknown, path: string): ExecutionProfile | null => {
+export const validateExecutionProfile = (value: unknown, path = "$"): ExecutionProfile | null => {
   if (value === null) return null;
   const item = record(value, path);
   allowedKeys(item, ["runtime", "adapter", "effectiveContextTokens", "toolSurface", "hardware", "workflow"], path);
@@ -280,8 +280,8 @@ export const validateObservation = (value: unknown): ObservationInput => {
   const result: ObservationInput = {
     schemaVersion: OBSERVATION_SCHEMA_VERSION,
     kind: item.kind as ObservationKind,
-    model: model(item.model, "$.model"),
-    execution: execution(item.execution, "$.execution"),
+    model: validateModelIdentity(item.model, "$.model"),
+    execution: validateExecutionProfile(item.execution, "$.execution"),
     task: task(item.task, "$.task"),
     measurements,
     outcome: outcome(item.outcome, "$.outcome"),
