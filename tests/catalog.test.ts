@@ -71,6 +71,45 @@ const baseObservation = (overrides: Partial<ObservationInput> = {}): Observation
   ...overrides,
 });
 
+const factObservation = (
+  id: string,
+  value: string | number | boolean,
+  observedAt: string,
+  validUntil: string | null,
+): ObservationInput => baseObservation({
+  kind: "declaration",
+  execution: null,
+  task: null,
+  measurements: [{ key: "model.context.max_tokens", kind: "fact", value }],
+  outcome: null,
+  usage: null,
+  sourceClass: "external",
+  evidence: [{ id, kind: "model-card", uri: null, digest: null, observedAt }],
+  freshness: { observedAt, validUntil },
+});
+
+const referenceConflictParticipants = (inputs: ObservationInput[]): string[] => {
+  const normalized = inputs.map(normalizeObservation);
+  const participants = new Set<string>();
+  for (let left = 0; left < normalized.length; left += 1) {
+    for (let right = left + 1; right < normalized.length; right += 1) {
+      const leftValue = normalized[left].measurements[0].value;
+      const rightValue = normalized[right].measurements[0].value;
+      const leftEnd = normalized[left].freshness.validUntil ?? "9999-12-31T23:59:59.999Z";
+      const rightEnd = normalized[right].freshness.validUntil ?? "9999-12-31T23:59:59.999Z";
+      if (
+        canonicalJson(leftValue) !== canonicalJson(rightValue)
+        && normalized[left].freshness.observedAt < rightEnd
+        && normalized[right].freshness.observedAt < leftEnd
+      ) {
+        participants.add(normalized[left].id);
+        participants.add(normalized[right].id);
+      }
+    }
+  }
+  return [...participants].sort();
+};
+
 test("normalization is deterministic and computes an observation id", () => {
   const first = normalizeObservation(baseObservation());
   const reordered = normalizeObservation(baseObservation({
@@ -196,6 +235,38 @@ test("non-overlapping historical facts do not form a conflict", () => {
     declaration(131_072, "2026-07-01T00:00:00.000Z", null, "new"),
   ], { asOf: "2026-07-18T22:00:00.000Z" });
   assert.equal(catalog.conflicts.length, 0);
+});
+
+test("conflict sweeps match pairwise interval semantics across randomized scopes", () => {
+  const timestamp = (seconds: number) => new Date(Date.UTC(2026, 6, 18, 20, 0, seconds)).toISOString();
+  for (let seed = 1; seed <= 100; seed += 1) {
+    let state = seed;
+    const random = () => {
+      state = (Math.imul(state, 1_664_525) + 1_013_904_223) >>> 0;
+      return state;
+    };
+    const inputs = Array.from({ length: 24 }, (_, index) => {
+      const start = random() % 40;
+      const duration = 1 + (random() % 15);
+      const open = random() % 9 === 0;
+      const value = (index + seed) % 4;
+      return factObservation(`random-${seed}-${index}`, value, timestamp(start), open ? null : timestamp(start + duration));
+    });
+    assert.equal(new Set(inputs.map((input) => input.measurements[0].value)).size, 4);
+    const expected = referenceConflictParticipants(inputs);
+    const catalog = compileCatalog(inputs, { asOf: timestamp(59) });
+    assert.deepEqual(catalog.conflicts[0]?.observationIds ?? [], expected, `seed ${seed}`);
+  }
+});
+
+test("dense same-scope facts compile without pairwise conflict enumeration", () => {
+  const observedAt = "2026-07-18T20:00:00.000Z";
+  const inputs = Array.from({ length: 5_000 }, (_, index) =>
+    factObservation(`dense-${index}`, index % 2, observedAt, null));
+  const catalog = compileCatalog(inputs, { asOf: "2026-07-18T22:00:00.000Z" });
+  assert.equal(catalog.conflicts.length, 1);
+  assert.equal(catalog.conflicts[0].observationIds.length, inputs.length);
+  assert.deepEqual(catalog.conflicts[0].values, [0, 1]);
 });
 
 test("catalog asOf rejects observations and evidence from the future", () => {
