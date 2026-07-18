@@ -11,9 +11,9 @@ Station and other runtimes consume that resolution.
 
 ## Status
 
-The initial catalog contract is under development. See
-[Bearing issue #1](https://github.com/kontourai/bearing/issues/1) for the product
-delivery graph.
+The catalog, read API, and runtime-aware ranking contracts are available. See
+[Bearing issue #1](https://github.com/kontourai/bearing/issues/1) for the
+remaining ingestion and hosted-service delivery graph.
 
 ## Read API
 
@@ -59,6 +59,16 @@ npm run verify
 ```
 
 Node.js 22 or newer is required. Bearing has no runtime dependencies.
+
+## Releases
+
+Package contents are checked by `npm run verify`. Release Please and npm
+provenance workflows are installed as manual dispatch surfaces while hosted CI
+is out of budget. The Release Please workflow does not dispatch publication
+until the npm trusted publisher exists. Releases are locally verified and
+published until
+[Bearing issue #12](https://github.com/kontourai/bearing/issues/12) enables the
+automatic triggers and npm trusted publisher.
 
 ## License
 

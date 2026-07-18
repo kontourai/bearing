@@ -39,9 +39,10 @@
   "scripts": {
     "build": "rm -rf dist && tsc",
     "prepare": "npm run build",
+    "prepublishOnly": "npm run verify",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test dist/tests/*.test.js",
-    "check:pack": "npm pack --dry-run --json >/dev/null",
+    "check:pack": "node scripts/check-package-contents.mjs",
     "verify": "npm run typecheck && npm test && npm run check:pack"
   },
   "dependencies": {},
