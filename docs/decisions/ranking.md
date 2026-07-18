@@ -16,6 +16,10 @@ volume. Missing, stale, conflicting, and incomparable evidence remain
 distinct reason codes. Result evidence references the contributing observation
 and evidence ids.
 
+Requirements and preferences may independently filter `sourceClasses`. This
+keeps external priors available for declared facts without silently averaging
+them into first-party measured outcomes.
+
 Preference scores are request-relative. The result declares its maximum weight
 and scope and is not a universal model-quality score. Identical validated
 catalog and normalized request inputs produce identical ordering, reasons, and

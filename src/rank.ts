@@ -6,6 +6,7 @@ import type {
   ExecutionProfile,
   ModelIdentity,
   ScalarValue,
+  SourceClass,
   Uncertainty,
 } from "./types.js";
 import { validateCatalogSnapshot } from "./snapshot.js";
@@ -32,6 +33,7 @@ export interface RankRequirement {
   aggregation: Aggregation;
   operator: "eq" | "gte" | "lte";
   value: ScalarValue;
+  sourceClasses?: SourceClass[];
 }
 
 export interface RankPreference {
@@ -39,6 +41,7 @@ export interface RankPreference {
   aggregation: Aggregation;
   direction: "maximize" | "minimize";
   weight: number;
+  sourceClasses?: SourceClass[];
 }
 
 export interface RankRequest {
@@ -116,10 +119,10 @@ const record = (value: unknown, path: string): RecordValue => {
   return value as RecordValue;
 };
 
-const exactKeys = (value: RecordValue, keys: string[], path: string): void => {
+const exactKeys = (value: RecordValue, keys: string[], path: string, requiredKeys = keys): void => {
   const expected = new Set(keys);
   for (const key of Object.keys(value)) if (!expected.has(key)) invalid(`${path}.${key}`, "is not supported");
-  for (const key of keys) if (!(key in value)) invalid(`${path}.${key}`, "is required");
+  for (const key of requiredKeys) if (!(key in value)) invalid(`${path}.${key}`, "is required");
 };
 
 const text = (value: unknown, path: string): string => {
@@ -140,6 +143,17 @@ const aggregation = (value: unknown, path: string): Aggregation => {
     invalid(path, "must be fact, mean, min, max, success-rate, or count");
   }
   return value as Aggregation;
+};
+
+const sourceClasses = (value: unknown, path: string): SourceClass[] | undefined => {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value) || value.length === 0) invalid(path, "must be a non-empty array");
+  const result = (value as unknown[]).map((item: unknown, index: number) => {
+    if (item !== "first-party" && item !== "external") invalid(`${path}[${index}]`, "must be first-party or external");
+    return item as SourceClass;
+  });
+  if (new Set(result).size !== result.length) invalid(path, "must not contain duplicates");
+  return result.sort();
 };
 
 export const validateRankRequest = (value: unknown): RankRequest => {
@@ -172,7 +186,12 @@ export const validateRankRequest = (value: unknown): RankRequest => {
   const requirements = (request.requirements as unknown[]).map((raw, index): RankRequirement => {
     const path = `$.requirements[${index}]`;
     const item = record(raw, path);
-    exactKeys(item, ["measurementKey", "aggregation", "operator", "value"], path);
+    exactKeys(
+      item,
+      ["measurementKey", "aggregation", "operator", "value", "sourceClasses"],
+      path,
+      ["measurementKey", "aggregation", "operator", "value"],
+    );
     if (item.operator !== "eq" && item.operator !== "gte" && item.operator !== "lte") invalid(`${path}.operator`, "must be eq, gte, or lte");
     const value = scalar(item.value, `${path}.value`);
     if ((item.operator === "gte" || item.operator === "lte") && typeof value !== "number") invalid(`${path}.value`, "must be numeric for gte or lte");
@@ -181,6 +200,7 @@ export const validateRankRequest = (value: unknown): RankRequest => {
       aggregation: aggregation(item.aggregation, `${path}.aggregation`),
       operator: item.operator as RankRequirement["operator"],
       value,
+      ...(item.sourceClasses === undefined ? {} : { sourceClasses: sourceClasses(item.sourceClasses, `${path}.sourceClasses`) }),
     };
   }).sort((a, b) => compareText(canonicalJson(a), canonicalJson(b)));
 
@@ -188,7 +208,12 @@ export const validateRankRequest = (value: unknown): RankRequest => {
   const preferences = (request.preferences as unknown[]).map((raw, index): RankPreference => {
     const path = `$.preferences[${index}]`;
     const item = record(raw, path);
-    exactKeys(item, ["measurementKey", "aggregation", "direction", "weight"], path);
+    exactKeys(
+      item,
+      ["measurementKey", "aggregation", "direction", "weight", "sourceClasses"],
+      path,
+      ["measurementKey", "aggregation", "direction", "weight"],
+    );
     if (item.direction !== "maximize" && item.direction !== "minimize") invalid(`${path}.direction`, "must be maximize or minimize");
     if (typeof item.weight !== "number" || !Number.isFinite(item.weight) || item.weight <= 0) invalid(`${path}.weight`, "must be a positive finite number");
     return {
@@ -196,6 +221,7 @@ export const validateRankRequest = (value: unknown): RankRequest => {
       aggregation: aggregation(item.aggregation, `${path}.aggregation`),
       direction: item.direction as RankPreference["direction"],
       weight: item.weight as number,
+      ...(item.sourceClasses === undefined ? {} : { sourceClasses: sourceClasses(item.sourceClasses, `${path}.sourceClasses`) }),
     };
   }).sort((a, b) => compareText(canonicalJson(a), canonicalJson(b)));
 
@@ -247,9 +273,11 @@ const aggregateFor = (
   task: RankTask,
   measurementKey: string,
   mode: Aggregation,
+  allowedSources?: SourceClass[],
 ): AggregateResult => {
   const all = observations
     .filter((observation) => applicable(observation, candidate, task))
+    .filter((observation) => allowedSources === undefined || allowedSources.includes(observation.sourceClass))
     .flatMap((observation) => observation.measurements
       .filter((measurement) => measurement.key === measurementKey)
       .map((measurement) => ({ observation, measurement })));
@@ -325,7 +353,15 @@ const rankValidatedCatalog = (
     const working: WorkingCandidate = { candidate, score: 0, reasons: [], evidence: [], observations: [], preferenceValues: new Map() };
     let failed = false;
     for (const requirement of request.requirements) {
-      const aggregate = aggregateFor(candidateObservations, catalog.asOf, candidate, request.task, requirement.measurementKey, requirement.aggregation);
+      const aggregate = aggregateFor(
+        candidateObservations,
+        catalog.asOf,
+        candidate,
+        request.task,
+        requirement.measurementKey,
+        requirement.aggregation,
+        requirement.sourceClasses,
+      );
       working.evidence.push(aggregate.evidence);
       working.observations.push(...aggregate.observations);
       const unavailable = evidenceReason(aggregate, requirement.measurementKey, false);
@@ -365,7 +401,15 @@ const rankValidatedCatalog = (
       continue;
     }
     for (const preference of request.preferences) {
-      const aggregate = aggregateFor(candidateObservations, catalog.asOf, candidate, request.task, preference.measurementKey, preference.aggregation);
+      const aggregate = aggregateFor(
+        candidateObservations,
+        catalog.asOf,
+        candidate,
+        request.task,
+        preference.measurementKey,
+        preference.aggregation,
+        preference.sourceClasses,
+      );
       working.evidence.push(aggregate.evidence);
       working.observations.push(...aggregate.observations);
       const unavailable = evidenceReason(aggregate, preference.measurementKey, true);

@@ -44,6 +44,9 @@ Supported aggregations are `fact`, `mean`, `min`, `max`, `success-rate`, and
 aggregations retain measured variation; `count` lets a policy enforce a minimum
 sample volume. A prepared `createCatalogRanker`
 validates and indexes one snapshot once for repeated local resolutions.
+Each requirement or preference may filter `sourceClasses`, so a policy can use
+external declarations for model facts while scoring completion from first-party
+measurements only.
 
 Scores are explicitly request-relative and must not be compared across
 different inventories, requirements, preferences, or snapshot digests.

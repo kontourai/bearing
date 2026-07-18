@@ -153,6 +153,28 @@ test("count aggregation can enforce minimum sample volume", () => {
   assert.ok(result.excluded.every((candidate) => candidate.reasons.some((reason) => reason.code === "REQUIREMENT_NOT_MET")));
 });
 
+test("criteria can separate first-party measurements from external priors", () => {
+  const externalSample: ObservationInput = {
+    ...sample(modelA, true, 1000, "external-pass"),
+    sourceClass: "external",
+  };
+  const catalog = compileCatalog([...observations(), externalSample], { asOf: "2026-07-18T22:00:00.000Z" });
+  const result = rankCatalog(catalog, request({
+    inventory: [inventory[0]],
+    requirements: [],
+    preferences: [{
+      measurementKey: "task.accepted",
+      aggregation: "success-rate",
+      direction: "maximize",
+      weight: 1,
+      sourceClasses: ["first-party"],
+    }],
+  }));
+  const scoreReason = result.ranked[0].reasons.find((reason) => reason.code === "PREFERENCE_SCORE");
+  assert.equal(scoreReason?.actual, 0.5);
+  assert.equal(result.ranked[0].evidence[0].observationIds.length, 2);
+});
+
 test("runtime tool ordering is normalized before exact profile matching", () => {
   const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
   const reversedTools = { ...inventory[0], execution: { ...execution, toolSurface: ["shell", "edit"] } };
