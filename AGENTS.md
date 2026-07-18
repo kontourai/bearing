@@ -41,5 +41,7 @@ invokes a model.
 - `npm run verify` must pass locally before publication.
 - `.github/workflows/release-please.yml` and `publish-npm.yml` are manual-only
   until issue #12 enables automatic triggers and the npm trusted publisher.
+- The Release Please workflow must not dispatch npm publication before issue
+  #12; use the locally verified publication path during that period.
 - Do not treat an installed workflow as executed CI evidence.
 - Do not add automatic workflow triggers while hosted CI is out of budget.

@@ -64,7 +64,9 @@ Node.js 22 or newer is required. Bearing has no runtime dependencies.
 
 Package contents are checked by `npm run verify`. Release Please and npm
 provenance workflows are installed as manual dispatch surfaces while hosted CI
-is out of budget. Releases are locally verified and published until
+is out of budget. The Release Please workflow does not dispatch publication
+until the npm trusted publisher exists. Releases are locally verified and
+published until
 [Bearing issue #12](https://github.com/kontourai/bearing/issues/12) enables the
 automatic triggers and npm trusted publisher.
 

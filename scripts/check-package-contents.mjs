@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,12 +8,26 @@ import { promisify } from "node:util";
 const execFileAsync = promisify(execFile);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageJson = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
-const cache = await mkdtemp(path.join(os.tmpdir(), "bearing-pack-"));
+const temporary = await mkdtemp(path.join(os.tmpdir(), "bearing-pack-"));
+const npmCache = path.join(temporary, "npm-cache");
+const consumer = path.join(temporary, "consumer");
+const packageDestination = process.env.BEARING_PACK_DESTINATION
+  ? path.resolve(process.env.BEARING_PACK_DESTINATION)
+  : path.join(temporary, "artifacts");
 
 try {
+  await mkdir(packageDestination, { recursive: true });
   const { stdout } = await execFileAsync(
     "npm",
-    ["pack", "--dry-run", "--json", "--cache", cache],
+    [
+      "pack",
+      "--dry-run=false",
+      "--json",
+      "--pack-destination",
+      packageDestination,
+      "--cache",
+      npmCache,
+    ],
     { cwd: root, maxBuffer: 10 * 1024 * 1024 },
   );
   const entries = parsePackJson(stdout);
@@ -31,45 +45,92 @@ try {
   }
 
   const files = entry.files.map((file) => file.path).sort();
-  const fileSet = new Set(files);
-  const requiredFiles = [
+  const expectedFiles = [
     "LICENSE",
     "README.md",
     "CONTEXT.md",
     "bin/bearing.mjs",
+    "dist/src/api.d.ts",
+    "dist/src/api.js",
+    "dist/src/canonical.d.ts",
+    "dist/src/canonical.js",
+    "dist/src/catalog.d.ts",
+    "dist/src/catalog.js",
+    "dist/src/error.d.ts",
+    "dist/src/error.js",
     "dist/src/index.js",
     "dist/src/index.d.ts",
+    "dist/src/node/catalog-file.d.ts",
+    "dist/src/node/catalog-file.js",
     "dist/src/node/index.js",
     "dist/src/node/index.d.ts",
+    "dist/src/node/server.d.ts",
+    "dist/src/node/server.js",
     "dist/src/rank.js",
     "dist/src/rank.d.ts",
-  ];
-
-  for (const requiredFile of requiredFiles) {
-    if (!fileSet.has(requiredFile)) {
-      throw new Error(`Missing expected package file: ${requiredFile}`);
-    }
+    "dist/src/snapshot.d.ts",
+    "dist/src/snapshot.js",
+    "dist/src/types.d.ts",
+    "dist/src/types.js",
+    "dist/src/validate.d.ts",
+    "dist/src/validate.js",
+    "package.json",
+  ].sort();
+  if (JSON.stringify(files) !== JSON.stringify(expectedFiles)) {
+    const actual = new Set(files);
+    const expected = new Set(expectedFiles);
+    const missing = expectedFiles.filter((file) => !actual.has(file));
+    const unexpected = files.filter((file) => !expected.has(file));
+    throw new Error(
+      `Package contents differ from the exact allowlist. Missing: ${formatList(missing)}. ` +
+        `Unexpected: ${formatList(unexpected)}.`,
+    );
   }
 
-  const forbiddenPatterns = [
-    /^node_modules\//,
-    /^src\//,
-    /^tests\//,
-    /^scripts\//,
-    /^dist\/tests\//,
-    /^tsconfig/,
-    /node_modules/,
-  ];
-  for (const file of files) {
-    const forbiddenPattern = forbiddenPatterns.find((pattern) => pattern.test(file));
-    if (forbiddenPattern) {
-      throw new Error(`Unexpected package file matched ${forbiddenPattern}: ${file}`);
-    }
-  }
+  await mkdir(consumer);
+  await writeFile(path.join(consumer, "package.json"), '{"private":true,"type":"module"}\n');
+  await execFileAsync(
+    "npm",
+    [
+      "install",
+      "--dry-run=false",
+      "--ignore-scripts",
+      "--no-audit",
+      "--no-fund",
+      "--cache",
+      npmCache,
+      path.join(packageDestination, entry.filename),
+    ],
+    { cwd: consumer, maxBuffer: 10 * 1024 * 1024 },
+  );
+  await execFileAsync(
+    "node",
+    [
+      "--input-type=module",
+      "--eval",
+      [
+        'import * as core from "@kontourai/bearing";',
+        'import * as adapter from "@kontourai/bearing/node";',
+        'if (typeof core.compileCatalog !== "function") throw new Error("missing compileCatalog");',
+        'if (typeof core.rankCatalog !== "function") throw new Error("missing rankCatalog");',
+        'if (typeof adapter.startCatalogServer !== "function") throw new Error("missing startCatalogServer");',
+        'if (typeof adapter.readCatalogFile !== "function") throw new Error("missing readCatalogFile");',
+      ].join("\n"),
+    ],
+    { cwd: consumer },
+  );
+  await execFileAsync(
+    "node",
+    [path.join(consumer, "node_modules", ".bin", "bearing"), "--help"],
+    { cwd: consumer },
+  );
 
-  console.log(`Bearing package contents check passed: ${files.length} files.`);
+  console.log(
+    `Bearing package contents and clean-consumer checks passed: ${files.length} files; ` +
+      `artifact ${path.join(packageDestination, entry.filename)}.`,
+  );
 } finally {
-  await rm(cache, { recursive: true, force: true });
+  await rm(temporary, { recursive: true, force: true });
 }
 
 function parsePackJson(output) {
@@ -79,4 +140,8 @@ function parsePackJson(output) {
     throw new Error(`Could not find npm pack JSON in output:\n${output}`);
   }
   return JSON.parse(output.slice(start, end + 1));
+}
+
+function formatList(items) {
+  return items.length ? items.join(", ") : "(none)";
 }
