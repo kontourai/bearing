@@ -41,7 +41,7 @@
     "prepare": "npm run build",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test dist/tests/*.test.js",
-    "check:pack": "npm pack --dry-run --json >/dev/null",
+    "check:pack": "node scripts/check-package-contents.mjs",
     "verify": "npm run typecheck && npm test && npm run check:pack"
   },
   "dependencies": {},
