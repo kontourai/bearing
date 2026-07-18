@@ -2,7 +2,9 @@ export type BearingErrorCode =
   | "INVALID_OBSERVATION"
   | "UNSUPPORTED_SCHEMA"
   | "DUPLICATE_OBSERVATION"
-  | "INVALID_COMPILE_OPTIONS";
+  | "INVALID_COMPILE_OPTIONS"
+  | "INVALID_CATALOG"
+  | "UNSUPPORTED_CATALOG_SCHEMA";
 
 export class BearingError extends Error {
   readonly code: BearingErrorCode;
