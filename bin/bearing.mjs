@@ -37,8 +37,11 @@ const main = async () => {
     if (catalogFile === undefined && !process.exitCode) fail("--catalog is required.");
     return;
   }
-  const host = valueFor(args, "--host") ?? "127.0.0.1";
-  const rawPort = valueFor(args, "--port") ?? "4244";
+  const configuredHost = valueFor(args, "--host");
+  const configuredPort = valueFor(args, "--port");
+  if (process.exitCode) return;
+  const host = configuredHost ?? "127.0.0.1";
+  const rawPort = configuredPort ?? "4244";
   const port = Number(rawPort);
   if (!Number.isSafeInteger(port) || port < 0 || port > 65535) {
     fail("--port must be an integer from 0 through 65535.");

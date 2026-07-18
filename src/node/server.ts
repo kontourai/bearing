@@ -21,6 +21,7 @@ export const startCatalogServer = async (options: StartCatalogServerOptions): Pr
   const port = options.port ?? 4244;
   const server = createServer(async (incoming, outgoing) => {
     try {
+      if (incoming.method !== "GET" && incoming.method !== "HEAD") incoming.resume();
       const requestHeaders = new Headers();
       for (const [name, value] of Object.entries(incoming.headers)) {
         if (value === undefined) continue;
