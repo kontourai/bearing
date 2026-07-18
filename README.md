@@ -15,6 +15,22 @@ The initial catalog contract is under development. See
 [Bearing issue #1](https://github.com/kontourai/bearing/issues/1) for the product
 delivery graph.
 
+## Read API
+
+The core exports a Web-standard request handler, while `@kontourai/bearing/node`
+provides an optional local server adapter. Both serve the same validated,
+content-addressed snapshot.
+
+```sh
+bearing serve --catalog ./catalog.json --host 127.0.0.1 --port 4244
+curl http://127.0.0.1:4244/v1/models
+curl http://127.0.0.1:4244/v1/catalog/snapshot
+```
+
+The API supports `GET`, `HEAD`, `ETag`, and `If-None-Match`. Model list entries
+carry a stable model key; `GET /v1/models/<key>` returns the complete retained
+observations, evidence references, and conflict sets for that identity.
+
 ## Development
 
 ```sh

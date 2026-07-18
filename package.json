@@ -20,10 +20,18 @@
     ".": {
       "types": "./dist/src/index.d.ts",
       "default": "./dist/src/index.js"
+    },
+    "./node": {
+      "types": "./dist/src/node/index.d.ts",
+      "default": "./dist/src/node/index.js"
     }
+  },
+  "bin": {
+    "bearing": "bin/bearing.mjs"
   },
   "files": [
     "dist/src/",
+    "bin/",
     "README.md",
     "LICENSE",
     "CONTEXT.md"

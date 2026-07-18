@@ -1,6 +1,8 @@
 export { canonicalJson, compareText, sha256 } from "./canonical.js";
+export { createCatalogHandler, type CatalogHandler, type CatalogHandlerOptions } from "./api.js";
 export { compileCatalog, normalizeObservation } from "./catalog.js";
 export { BearingError, type BearingErrorCode } from "./error.js";
+export { parseCatalog, serializeCatalog, validateCatalogSnapshot } from "./snapshot.js";
 export { validateObservation } from "./validate.js";
 export {
   CATALOG_SCHEMA_VERSION,
