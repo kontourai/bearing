@@ -52,12 +52,15 @@ This lets a downstream resolver consume trusted benchmark or provider facts
 without guessing measurement keys from model names or reimplementing Bearing's
 evidence semantics.
 
-Version 2 bounds candidate, criterion, and advisory counts and independently
-bounds the candidate-by-advisory projection cells. These structural limits
-apply before projection so a bounded request body cannot amplify into an
-unbounded result. Advisory lookup uses a prepared per-model measurement index.
-Version 1 validation remains unchanged apart from shared rejection of inherited
-or accessor-backed request fields.
+Both request versions bound candidate and criterion counts, reject exact
+duplicate criteria, cap request text, and bound candidate-by-criterion
+evaluation cells. Version 2 additionally bounds advisory counts and
+candidate-by-advisory projection cells. These structural limits apply before
+evaluation or projection so changing the message schema cannot turn a bounded
+request body into an unbounded result. Advisory lookup uses a prepared per-model
+measurement index.
+Version 1 retains its response shape, but shares the structural and resource
+bounds above so its schema cannot bypass endpoint safety policy.
 
 The Web handler reads request bodies incrementally, stops at its byte limit,
 bounds serialized rank responses, and limits concurrent rank work per prepared

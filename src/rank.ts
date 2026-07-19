@@ -1,5 +1,11 @@
 import { canonicalJson, compareText } from "./canonical.js";
 import { BearingError } from "./error.js";
+import {
+  evaluateExecutionScope,
+  summarizeExecutionApplicability,
+  type ExecutionApplicabilitySummary,
+} from "./execution-scope.js";
+export type { ExecutionApplicabilitySummary, ObservationExecutionScopeKind } from "./execution-scope.js";
 import type {
   CapabilityObservation,
   CatalogSnapshot,
@@ -17,11 +23,16 @@ export const RANK_REQUEST_SCHEMA_VERSION = "bearing.rank.request/v1" as const;
 export const RANK_RESULT_SCHEMA_VERSION = "bearing.rank.result/v1" as const;
 export const RANK_REQUEST_SCHEMA_VERSION_V2 = "bearing.rank.request/v2" as const;
 export const RANK_RESULT_SCHEMA_VERSION_V2 = "bearing.rank.result/v2" as const;
-export const MAX_RANK_V2_CANDIDATES = 128;
-export const MAX_RANK_V2_CRITERIA = 128;
+export const MAX_RANK_CANDIDATES = 128;
+export const MAX_RANK_CRITERIA = 128;
+export const MAX_RANK_CRITERION_CELLS = 2_048;
+export const MAX_RANK_TEXT_BYTES = 256;
+export const MAX_RANK_V2_CANDIDATES = MAX_RANK_CANDIDATES;
+export const MAX_RANK_V2_CRITERIA = MAX_RANK_CRITERIA;
+export const MAX_RANK_V2_CRITERION_CELLS = MAX_RANK_CRITERION_CELLS;
+export const MAX_RANK_V2_TEXT_BYTES = MAX_RANK_TEXT_BYTES;
 export const MAX_RANK_V2_ADVISORIES = 64;
 export const MAX_RANK_V2_ADVISORY_CELLS = 1_024;
-export const MAX_RANK_V2_TEXT_BYTES = 256;
 
 export type Aggregation = "fact" | "mean" | "min" | "max" | "success-rate" | "count";
 
@@ -98,6 +109,10 @@ export interface RankReason {
   contribution?: number;
 }
 
+export interface RankReasonV2 extends RankReason {
+  executionApplicability: ExecutionApplicabilitySummary;
+}
+
 export interface RankEvidence {
   measurementKey: string;
   observationIds: string[];
@@ -113,6 +128,7 @@ interface RankAdvisoryProjectionBase {
   sourceClasses?: SourceClass[];
   evidence: RankEvidence;
   uncertainty: Uncertainty;
+  executionApplicability: ExecutionApplicabilitySummary;
 }
 
 export type RankAdvisoryProjection =
@@ -143,11 +159,13 @@ export interface ExcludedCandidate {
   uncertainty: Uncertainty;
 }
 
-export interface RankedCandidateV2 extends RankedCandidate {
+export interface RankedCandidateV2 extends Omit<RankedCandidate, "reasons"> {
+  reasons: RankReasonV2[];
   advisories: RankAdvisoryProjection[];
 }
 
-export interface ExcludedCandidateV2 extends ExcludedCandidate {
+export interface ExcludedCandidateV2 extends Omit<ExcludedCandidate, "reasons"> {
+  reasons: RankReasonV2[];
   advisories: RankAdvisoryProjection[];
 }
 
@@ -214,8 +232,8 @@ const text = (value: unknown, path: string): string => {
 
 const boundedText = (value: unknown, path: string): string => {
   const result = text(value, path);
-  if (new TextEncoder().encode(result).byteLength > MAX_RANK_V2_TEXT_BYTES) {
-    invalid(path, `must not exceed ${MAX_RANK_V2_TEXT_BYTES} UTF-8 bytes in v2`);
+  if (new TextEncoder().encode(result).byteLength > MAX_RANK_TEXT_BYTES) {
+    invalid(path, `must not exceed ${MAX_RANK_TEXT_BYTES} UTF-8 bytes`);
   }
   return result;
 };
@@ -270,9 +288,9 @@ const validateRankTask = (value: unknown, requestText: RequestText): RankTask =>
   };
 };
 
-const validateRankInventory = (value: unknown, v2: boolean, requestText: RequestText): RuntimeCandidate[] => {
-  const values = array(value, "$.inventory", false);
-  if (v2 && values.length > MAX_RANK_V2_CANDIDATES) invalid("$.inventory", `must contain at most ${MAX_RANK_V2_CANDIDATES} candidates in v2`);
+const validateRankInventory = (value: unknown, requestText: RequestText): RuntimeCandidate[] => {
+  const values = array(value, "$.inventory", true);
+  if (values.length > MAX_RANK_CANDIDATES) invalid("$.inventory", `must contain at most ${MAX_RANK_CANDIDATES} candidates`);
   const inventory = values.map((raw, index): RuntimeCandidate => {
     const path = `$.inventory[${index}]`;
     const candidate = record(raw, path);
@@ -285,26 +303,24 @@ const validateRankInventory = (value: unknown, v2: boolean, requestText: Request
       model: rankValidated(() => validateModelIdentity(candidate.model, `${path}.model`)),
       execution: { ...concreteExecution, toolSurface: [...concreteExecution.toolSurface].sort() },
     };
-    if (v2) {
-      assertBoundedStrings(normalized.model, `${path}.model`);
-      assertBoundedStrings(normalized.execution, `${path}.execution`);
-    }
+    assertBoundedStrings(normalized.model, `${path}.model`);
+    assertBoundedStrings(normalized.execution, `${path}.execution`);
     return normalized;
   });
   if (new Set(inventory.map((candidate) => candidate.id)).size !== inventory.length) invalid("$.inventory", "candidate ids must be unique");
   return inventory.sort((a, b) => compareText(a.id, b.id));
 };
 
-const validateRankRequirements = (value: unknown, v2: boolean, requestText: RequestText): RankRequirement[] => {
+const validateRankRequirements = (value: unknown, requestText: RequestText): RankRequirement[] => {
   const values = array(value, "$.requirements", true);
-  if (v2 && values.length > MAX_RANK_V2_CRITERIA) invalid("$.requirements", `must contain at most ${MAX_RANK_V2_CRITERIA} criteria in v2`);
-  return values.map((raw, index): RankRequirement => {
+  if (values.length > MAX_RANK_CRITERIA) invalid("$.requirements", `must contain at most ${MAX_RANK_CRITERIA} criteria`);
+  const requirements = values.map((raw, index): RankRequirement => {
     const path = `$.requirements[${index}]`;
     const item = record(raw, path);
     exactKeys(item, ["measurementKey", "aggregation", "operator", "value", "sourceClasses"], path, ["measurementKey", "aggregation", "operator", "value"]);
     if (item.operator !== "eq" && item.operator !== "gte" && item.operator !== "lte") invalid(`${path}.operator`, "must be eq, gte, or lte");
     const requirementValue = scalar(item.value, `${path}.value`);
-    if (v2 && typeof requirementValue === "string") boundedText(requirementValue, `${path}.value`);
+    if (typeof requirementValue === "string") boundedText(requirementValue, `${path}.value`);
     if ((item.operator === "gte" || item.operator === "lte") && typeof requirementValue !== "number") invalid(`${path}.value`, "must be numeric for gte or lte");
     return {
       measurementKey: requestText(item.measurementKey, `${path}.measurementKey`),
@@ -314,12 +330,16 @@ const validateRankRequirements = (value: unknown, v2: boolean, requestText: Requ
       ...(item.sourceClasses === undefined ? {} : { sourceClasses: sourceClasses(item.sourceClasses, `${path}.sourceClasses`) }),
     };
   }).sort((a, b) => compareText(canonicalJson(a), canonicalJson(b)));
+  if (new Set(requirements.map(canonicalJson)).size !== requirements.length) {
+    invalid("$.requirements", "must not contain duplicate criteria");
+  }
+  return requirements;
 };
 
-const validateRankPreferences = (value: unknown, v2: boolean, requestText: RequestText): RankPreference[] => {
+const validateRankPreferences = (value: unknown, requestText: RequestText): RankPreference[] => {
   const values = array(value, "$.preferences", true);
-  if (v2 && values.length > MAX_RANK_V2_CRITERIA) invalid("$.preferences", `must contain at most ${MAX_RANK_V2_CRITERIA} criteria in v2`);
-  return values.map((raw, index): RankPreference => {
+  if (values.length > MAX_RANK_CRITERIA) invalid("$.preferences", `must contain at most ${MAX_RANK_CRITERIA} criteria`);
+  const preferences = values.map((raw, index): RankPreference => {
     const path = `$.preferences[${index}]`;
     const item = record(raw, path);
     exactKeys(item, ["measurementKey", "aggregation", "direction", "weight", "sourceClasses"], path, ["measurementKey", "aggregation", "direction", "weight"]);
@@ -333,6 +353,10 @@ const validateRankPreferences = (value: unknown, v2: boolean, requestText: Reque
       ...(item.sourceClasses === undefined ? {} : { sourceClasses: sourceClasses(item.sourceClasses, `${path}.sourceClasses`) }),
     };
   }).sort((a, b) => compareText(canonicalJson(a), canonicalJson(b)));
+  if (new Set(preferences.map(canonicalJson)).size !== preferences.length) {
+    invalid("$.preferences", "must not contain duplicate criteria");
+  }
+  return preferences;
 };
 
 const validateRankAdvisories = (value: unknown, inventorySize: number, requestText: RequestText): RankAdvisoryRequest[] => {
@@ -361,13 +385,18 @@ export function validateRankRequest(value: unknown): AnyRankRequest {
   const request = record(value, "$"), v2 = request.schemaVersion === RANK_REQUEST_SCHEMA_VERSION_V2;
   if (request.schemaVersion !== RANK_REQUEST_SCHEMA_VERSION && !v2) invalid("$.schemaVersion", `expected ${RANK_REQUEST_SCHEMA_VERSION} or ${RANK_REQUEST_SCHEMA_VERSION_V2}`);
   exactKeys(request, v2 ? ["schemaVersion", "task", "inventory", "requirements", "preferences", "advisories"] : ["schemaVersion", "task", "inventory", "requirements", "preferences"], "$");
-  const requestText = v2 ? boundedText : text;
-  const inventory = validateRankInventory(request.inventory, v2, requestText);
+  const requestText = boundedText;
+  const inventory = validateRankInventory(request.inventory, requestText);
+  const requirements = validateRankRequirements(request.requirements, requestText);
+  const preferences = validateRankPreferences(request.preferences, requestText);
+  if (inventory.length * (requirements.length + preferences.length) > MAX_RANK_CRITERION_CELLS) {
+    invalid("$", `candidate and criterion count must produce at most ${MAX_RANK_CRITERION_CELLS} evaluation cells`);
+  }
   const common = {
     task: validateRankTask(request.task, requestText),
     inventory,
-    requirements: validateRankRequirements(request.requirements, v2, requestText),
-    preferences: validateRankPreferences(request.preferences, v2, requestText),
+    requirements,
+    preferences,
   };
   return v2
     ? { schemaVersion: RANK_REQUEST_SCHEMA_VERSION_V2, ...common, advisories: validateRankAdvisories(request.advisories, inventory.length, requestText) }
@@ -391,9 +420,8 @@ const combinedUncertainty = (observations: CapabilityObservation[], extraGaps: s
   };
 };
 
-const applicable = (observation: CapabilityObservation, candidate: RuntimeCandidate, task: RankTask): boolean => {
+const taskApplicable = (observation: CapabilityObservation, candidate: RuntimeCandidate, task: RankTask): boolean => {
   if (canonicalJson(observation.model) !== canonicalJson(candidate.model)) return false;
-  if (observation.execution !== null && canonicalJson(observation.execution) !== canonicalJson(candidate.execution)) return false;
   if (observation.task === null) return true;
   if (observation.task.family !== task.family) return false;
   return task.suite === null || observation.task.suite === task.suite;
@@ -408,6 +436,7 @@ interface AggregateResult {
   /** Includes stale matches for advisory diagnosis without changing v1 ranking evidence. */
   diagnosticObservations: CapabilityObservation[];
   diagnosticEvidence: RankEvidence;
+  executionApplicability: ExecutionApplicabilitySummary;
 }
 
 const evidenceFor = (measurementKey: string, observations: CapabilityObservation[]): RankEvidence => ({
@@ -425,50 +454,59 @@ const aggregateFor = (
   mode: Aggregation,
   allowedSources?: SourceClass[],
 ): AggregateResult => {
-  const all = observations
-    .filter((observation) => applicable(observation, candidate, task))
+  const expectedKind = mode === "fact" ? "fact" : "sample";
+  const scoped = observations
+    .filter((observation) => taskApplicable(observation, candidate, task))
     .filter((observation) => observation.outcome?.status !== "invalid")
     .filter((observation) => allowedSources === undefined || allowedSources.includes(observation.sourceClass))
     .flatMap((observation) => observation.measurements
       .filter((measurement) => measurement.key === measurementKey)
-      .map((measurement) => ({ observation, measurement })));
-  const expectedKind = mode === "fact" ? "fact" : "sample";
-  const matching = all.filter(({ measurement }) => measurement.kind === expectedKind);
+      .filter((measurement) => measurement.kind === expectedKind)
+      .map((measurement) => ({ observation, measurement, scope: evaluateExecutionScope(observation.execution, candidate.execution) })));
+  const matching = scoped.filter(({ scope }) => scope.matches);
   const fresh = matching.filter(({ observation }) => observation.freshness.validUntil === null || observation.freshness.validUntil > asOf);
+  const scopedApplicability = summarizeExecutionApplicability(scoped.map((item) => item.scope));
+  const matchingApplicability = summarizeExecutionApplicability(matching.map((item) => item.scope));
+  const contributingApplicability = summarizeExecutionApplicability(fresh.map((item) => item.scope));
   const contributingObservations = fresh.map(({ observation }) => observation);
   const matchingObservations = matching.map(({ observation }) => observation);
   const evidence = evidenceFor(measurementKey, contributingObservations);
-  const diagnosticObservations = contributingObservations.length > 0 ? contributingObservations : matchingObservations;
+  const diagnosticObservations = contributingObservations.length > 0
+    ? contributingObservations
+    : matchingObservations.length > 0 ? matchingObservations : scoped.map(({ observation }) => observation);
   const diagnosticEvidence = evidenceFor(measurementKey, diagnosticObservations);
+  if (matching.length === 0 && scoped.length > 0) {
+    return { status: "incomparable", observations: [], evidence, diagnosticObservations, diagnosticEvidence, executionApplicability: scopedApplicability };
+  }
   if (fresh.length === 0) {
-    return { status: matching.length > 0 ? "stale" : "missing", observations: [], evidence, diagnosticObservations, diagnosticEvidence };
+    return { status: matching.length > 0 ? "stale" : "missing", observations: [], evidence, diagnosticObservations, diagnosticEvidence, executionApplicability: matchingApplicability };
   }
   const values = fresh.map(({ measurement }) => measurement.value);
   const unitSensitive = mode === "fact" || mode === "mean" || mode === "min" || mode === "max";
   const units = new Map(fresh.map(({ measurement }) => [measurement.unit ?? null, measurement.unit ?? null]));
   if (unitSensitive && units.size > 1) {
-    return { status: "incomparable", observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence };
+    return { status: "incomparable", observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence, executionApplicability: contributingApplicability };
   }
   const unit = unitSensitive ? [...units.values()][0] ?? null : null;
   if (mode === "fact") {
     const unique = new Map(values.map((value) => [canonicalJson(value), value]));
     return unique.size === 1
-      ? { status: "ok", value: [...unique.values()][0], unit, observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence }
-      : { status: "conflict", observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence };
+      ? { status: "ok", value: [...unique.values()][0], unit, observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence, executionApplicability: contributingApplicability }
+      : { status: "conflict", observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence, executionApplicability: contributingApplicability };
   }
   if (mode === "success-rate") {
-    if (!values.every((value) => typeof value === "boolean")) return { status: "incomparable", observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence };
-    return { status: "ok", value: values.filter(Boolean).length / values.length, unit, observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence };
+    if (!values.every((value) => typeof value === "boolean")) return { status: "incomparable", observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence, executionApplicability: contributingApplicability };
+    return { status: "ok", value: values.filter(Boolean).length / values.length, unit, observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence, executionApplicability: contributingApplicability };
   }
   if (mode === "count") {
-    return { status: "ok", value: values.length, unit, observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence };
+    return { status: "ok", value: values.length, unit, observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence, executionApplicability: contributingApplicability };
   }
-  if (!values.every((value) => typeof value === "number")) return { status: "incomparable", observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence };
+  if (!values.every((value) => typeof value === "number")) return { status: "incomparable", observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence, executionApplicability: contributingApplicability };
   const numbers = values as number[];
   const value = mode === "mean"
     ? numbers.reduce((sum, current) => sum + current, 0) / numbers.length
     : mode === "min" ? Math.min(...numbers) : Math.max(...numbers);
-  return { status: "ok", value, unit, observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence };
+  return { status: "ok", value, unit, observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence, executionApplicability: contributingApplicability };
 };
 
 const advisoryStatus = (status: AggregateResult["status"]): RankAdvisoryStatus =>
@@ -502,19 +540,25 @@ const projectAdvisories = (
     ...(advisory.sourceClasses === undefined ? {} : { sourceClasses: advisory.sourceClasses }),
     evidence: aggregate.diagnosticEvidence,
     uncertainty,
+    executionApplicability: aggregate.executionApplicability,
   };
   return status === "present"
     ? { ...common, status, value: aggregate.value!, unit: aggregate.unit ?? null }
     : { ...common, status };
 });
 
-const evidenceReason = (aggregate: AggregateResult, key: string, preference: boolean): RankReason | null => {
+const evidenceReason = (aggregate: AggregateResult, key: string, preference: boolean): RankReasonV2 | null => {
   if (aggregate.status === "ok") return null;
   const code: RankReasonCode = aggregate.status === "missing"
     ? (preference ? "PREFERENCE_EVIDENCE_MISSING" : "MISSING_EVIDENCE")
     : aggregate.status === "stale" ? "STALE_EVIDENCE"
       : aggregate.status === "conflict" ? "CONFLICTING_EVIDENCE" : "INCOMPARABLE_EVIDENCE";
-  return { code, measurementKey: key, summary: `${aggregate.status} evidence for ${key}` };
+  return {
+    code,
+    measurementKey: key,
+    summary: `${aggregate.status} evidence for ${key}`,
+    executionApplicability: aggregate.executionApplicability,
+  };
 };
 
 const requirementMet = (actual: ScalarValue, requirement: RankRequirement): boolean => {
@@ -526,10 +570,10 @@ const requirementMet = (actual: ScalarValue, requirement: RankRequirement): bool
 interface WorkingCandidate {
   candidate: RuntimeCandidate;
   score: number;
-  reasons: RankReason[];
+  reasons: RankReasonV2[];
   evidence: RankEvidence[];
   observations: CapabilityObservation[];
-  preferenceValues: Map<string, number>;
+  preferenceValues: Map<string, { value: number; executionApplicability: ExecutionApplicabilitySummary }>;
   advisories: RankAdvisoryProjection[];
 }
 
@@ -577,8 +621,8 @@ const evaluateRequirements = (
   let failed = false;
   for (const requirement of request.requirements) {
     const aggregate = aggregateCriterion(catalog, working.candidate, request.task, requirement, observationsFor);
-    working.evidence.push(aggregate.evidence);
-    working.observations.push(...aggregate.observations);
+    working.evidence.push(aggregate.status === "ok" ? aggregate.evidence : aggregate.diagnosticEvidence);
+    working.observations.push(...(aggregate.status === "ok" ? aggregate.observations : aggregate.diagnosticObservations));
     const unavailable = evidenceReason(aggregate, requirement.measurementKey, false);
     if (unavailable !== null) {
       working.reasons.push(unavailable);
@@ -592,6 +636,7 @@ const evaluateRequirements = (
       summary: `${requirement.measurementKey} ${met ? "satisfied" : "did not satisfy"} ${requirement.operator}`,
       actual: aggregate.value,
       expected: requirement.value,
+      executionApplicability: aggregate.executionApplicability,
     });
     if (!met) failed = true;
   }
@@ -606,37 +651,60 @@ const collectPreferences = (
 ): void => {
   for (const preference of request.preferences) {
     const aggregate = aggregateCriterion(catalog, working.candidate, request.task, preference, observationsFor);
-    working.evidence.push(aggregate.evidence);
-    working.observations.push(...aggregate.observations);
+    working.evidence.push(aggregate.status === "ok" ? aggregate.evidence : aggregate.diagnosticEvidence);
+    working.observations.push(...(aggregate.status === "ok" ? aggregate.observations : aggregate.diagnosticObservations));
     const unavailable = evidenceReason(aggregate, preference.measurementKey, true);
     if (unavailable !== null) working.reasons.push(unavailable);
-    else if (typeof aggregate.value === "number") working.preferenceValues.set(canonicalJson(preference), aggregate.value);
-    else working.reasons.push({ code: "INCOMPARABLE_EVIDENCE", measurementKey: preference.measurementKey, summary: "preference evidence is not numeric" });
+    else if (typeof aggregate.value === "number") {
+      working.preferenceValues.set(canonicalJson(preference), {
+        value: aggregate.value,
+        executionApplicability: aggregate.executionApplicability,
+      });
+    }
+    else working.reasons.push({
+      code: "INCOMPARABLE_EVIDENCE",
+      measurementKey: preference.measurementKey,
+      summary: "preference evidence is not numeric",
+      executionApplicability: aggregate.executionApplicability,
+    });
   }
 };
 
 const scoreCandidates = (passed: WorkingCandidate[], preferences: RankPreference[]): void => {
   for (const preference of preferences) {
     const key = canonicalJson(preference);
-    const values = passed.flatMap((candidate) => candidate.preferenceValues.has(key) ? [candidate.preferenceValues.get(key)!] : []);
+    const values = passed.flatMap((candidate) => {
+      const aggregate = candidate.preferenceValues.get(key);
+      return aggregate === undefined ? [] : [aggregate.value];
+    });
     if (values.length === 0) continue;
     const min = Math.min(...values), max = Math.max(...values);
     for (const candidate of passed) {
-      const value = candidate.preferenceValues.get(key);
-      if (value === undefined) continue;
-      const normalized = max === min ? 1 : preference.direction === "maximize" ? (value - min) / (max - min) : (max - value) / (max - min);
+      const aggregate = candidate.preferenceValues.get(key);
+      if (aggregate === undefined) continue;
+      const normalized = max === min ? 1 : preference.direction === "maximize" ? (aggregate.value - min) / (max - min) : (max - aggregate.value) / (max - min);
       const contribution = normalized * preference.weight;
       candidate.score += contribution;
-      candidate.reasons.push({ code: "PREFERENCE_SCORE", measurementKey: preference.measurementKey, summary: `${preference.direction} contributed ${contribution}`, actual: value, contribution });
+      candidate.reasons.push({
+        code: "PREFERENCE_SCORE",
+        measurementKey: preference.measurementKey,
+        summary: `${preference.direction} contributed ${contribution}`,
+        actual: aggregate.value,
+        contribution,
+        executionApplicability: aggregate.executionApplicability,
+      });
     }
   }
 };
+
+const reasonsForVersion = (working: WorkingCandidate, v2: boolean): RankReason[] | RankReasonV2[] =>
+  v2 ? working.reasons : working.reasons.map(({ executionApplicability: _executionApplicability, ...reason }) => reason);
 
 const excludedCandidate = (working: WorkingCandidate, v2: boolean): ExcludedCandidate | ExcludedCandidateV2 => ({
   candidateId: working.candidate.id,
   model: working.candidate.model,
   execution: working.candidate.execution,
-  reasons: working.reasons,
+  reasons: reasonsForVersion(working, v2),
   evidence: working.evidence,
   uncertainty: combinedUncertainty(working.observations, working.reasons.map((reason) => reason.code)),
   ...(v2 ? { advisories: working.advisories } : {}),
@@ -648,7 +716,7 @@ const rankedCandidate = (working: WorkingCandidate, index: number, v2: boolean):
   execution: working.candidate.execution,
   rank: index + 1,
   score: working.score,
-  reasons: working.reasons,
+  reasons: reasonsForVersion(working, v2),
   evidence: working.evidence,
   uncertainty: combinedUncertainty(working.observations, working.reasons.filter((reason) => reason.code !== "REQUIREMENT_MET" && reason.code !== "PREFERENCE_SCORE").map((reason) => reason.code)),
   ...(v2 ? { advisories: working.advisories } : {}),

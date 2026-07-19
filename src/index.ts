@@ -10,9 +10,14 @@ export {
 export { compileCatalog, normalizeObservation } from "./catalog.js";
 export { BearingError, type BearingErrorCode } from "./error.js";
 export {
+  MAX_RANK_CANDIDATES,
+  MAX_RANK_CRITERIA,
+  MAX_RANK_CRITERION_CELLS,
+  MAX_RANK_TEXT_BYTES,
   MAX_RANK_V2_ADVISORIES,
   MAX_RANK_V2_ADVISORY_CELLS,
   MAX_RANK_V2_CANDIDATES,
+  MAX_RANK_V2_CRITERION_CELLS,
   MAX_RANK_V2_CRITERIA,
   MAX_RANK_V2_TEXT_BYTES,
   RANK_REQUEST_SCHEMA_VERSION,
@@ -28,6 +33,8 @@ export {
   type CatalogRanker,
   type ExcludedCandidate,
   type ExcludedCandidateV2,
+  type ExecutionApplicabilitySummary,
+  type ObservationExecutionScopeKind,
   type RankAdvisoryProjection,
   type RankAdvisoryRequest,
   type RankAdvisoryStatus,
@@ -36,6 +43,7 @@ export {
   type RankedCandidateV2,
   type RankPreference,
   type RankReason,
+  type RankReasonV2,
   type RankReasonCode,
   type RankRequest,
   type RankRequestV2,
@@ -87,7 +95,7 @@ export {
   type OpenRouterModelsImportResult,
   type OpenRouterTrustedSnapshot,
 } from "./sources/openrouter-models.js";
-export { validateExecutionProfile, validateModelIdentity, validateObservation } from "./validate.js";
+export { validateExecutionProfile, validateExecutionScope, validateModelIdentity, validateObservation } from "./validate.js";
 export {
   APPROVED_SOURCE_MANIFEST_SCHEMA_VERSION,
   DEFAULT_APPROVED_SOURCE_REGISTRY,
@@ -123,7 +131,9 @@ export {
   type EvaluationOutcome,
   type EvidenceDigest,
   type EvidenceReference,
+  type ExactExecutionScope,
   type ExecutionProfile,
+  type ExecutionScope,
   type Freshness,
   type HardwareProfile,
   type Measurement,
@@ -131,6 +141,7 @@ export {
   type ModelIdentity,
   type ObservationInput,
   type ObservationKind,
+  type PartialExecutionScope,
   type ScalarValue,
   type SourceClass,
   type TaskProfile,

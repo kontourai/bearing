@@ -5,6 +5,7 @@ import {
   type ComponentIdentity,
   type EvaluationOutcome,
   type EvidenceReference,
+  type ExecutionScope,
   type ExecutionProfile,
   type Freshness,
   type HardwareProfile,
@@ -136,6 +137,31 @@ export const validateExecutionProfile = (value: unknown, path = "$"): ExecutionP
     hardware: hardware(item.hardware, `${path}.hardware`),
     workflow: workflow(item.workflow, `${path}.workflow`),
   };
+};
+
+export const validateExecutionScope = (value: unknown, path = "$"): ExecutionScope | null => {
+  if (value === null) return null;
+  const item = record(value, path);
+  const keys = ["kind", "runtime", "adapter", "effectiveContextTokens", "toolSurface", "hardware", "workflow"];
+  allowedKeys(item, keys, path);
+  requiredKeys(item, keys, path);
+  if (item.kind !== "exact" && item.kind !== "partial") {
+    fail(`${path}.kind`, "must be exact or partial");
+  }
+  const common = {
+    runtime: component(item.runtime, `${path}.runtime`),
+    adapter: item.adapter === null ? null : component(item.adapter, `${path}.adapter`),
+    effectiveContextTokens: nullableInteger(item.effectiveContextTokens, `${path}.effectiveContextTokens`),
+    hardware: hardware(item.hardware, `${path}.hardware`),
+    workflow: workflow(item.workflow, `${path}.workflow`),
+  };
+  return item.kind === "exact"
+    ? { kind: "exact", ...common, toolSurface: stringArray(item.toolSurface, `${path}.toolSurface`, true) }
+    : {
+        kind: "partial",
+        ...common,
+        toolSurface: item.toolSurface === null ? null : stringArray(item.toolSurface, `${path}.toolSurface`, true),
+      };
 };
 
 const task = (value: unknown, path: string): TaskProfile | null => {
@@ -273,7 +299,7 @@ export const validateObservation = (value: unknown): ObservationInput => {
     schemaVersion: OBSERVATION_SCHEMA_VERSION,
     kind: item.kind as ObservationKind,
     model: validateModelIdentity(item.model, "$.model"),
-    execution: validateExecutionProfile(item.execution, "$.execution"),
+    execution: validateExecutionScope(item.execution, "$.execution"),
     task: task(item.task, "$.task"),
     measurements,
     outcome: outcome(item.outcome, "$.outcome"),
@@ -285,7 +311,9 @@ export const validateObservation = (value: unknown): ObservationInput => {
   };
 
   if (result.kind === "evaluation") {
-    if (result.execution === null) fail("$.execution", "is required for an evaluation");
+    const execution = result.execution;
+    if (execution === null) fail("$.execution", "is required for an evaluation");
+    else if (execution.kind !== "exact") fail("$.execution.kind", "must be exact for an evaluation");
     if (result.task === null) fail("$.task", "is required for an evaluation");
     if (result.outcome === null) fail("$.outcome", "is required for an evaluation");
   } else {

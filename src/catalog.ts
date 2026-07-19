@@ -28,10 +28,12 @@ export const normalizeObservation = (input: ObservationInput): CapabilityObserva
   const value = validateObservation(input);
   const normalized: ObservationInput = {
     ...value,
-    execution: value.execution === null ? null : {
-      ...value.execution,
-      toolSurface: [...value.execution.toolSurface].sort(),
-    },
+    execution: value.execution === null ? null : value.execution.kind === "exact"
+      ? { ...value.execution, toolSurface: [...value.execution.toolSurface].sort() }
+      : {
+          ...value.execution,
+          toolSurface: value.execution.toolSurface === null ? null : [...value.execution.toolSurface].sort(),
+        },
     measurements: [...value.measurements].sort((a, b) => compareCanonical(a, b)),
     evidence: [...value.evidence].sort((a, b) => compareText(a.id, b.id)),
     uncertainty: {

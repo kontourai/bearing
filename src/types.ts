@@ -1,5 +1,5 @@
-export const OBSERVATION_SCHEMA_VERSION = "bearing.observation/v1" as const;
-export const CATALOG_SCHEMA_VERSION = "bearing.catalog/v1" as const;
+export const OBSERVATION_SCHEMA_VERSION = "bearing.observation/v2" as const;
+export const CATALOG_SCHEMA_VERSION = "bearing.catalog/v2" as const;
 
 export type ObservationKind = "evaluation" | "declaration";
 export type SourceClass = "first-party" | "external";
@@ -37,6 +37,23 @@ export interface ExecutionProfile {
   hardware: HardwareProfile | null;
   workflow: WorkflowProfile | null;
 }
+
+export interface ExactExecutionScope extends ExecutionProfile {
+  kind: "exact";
+}
+
+export interface PartialExecutionScope {
+  kind: "partial";
+  runtime: ComponentIdentity;
+  adapter: ComponentIdentity | null;
+  effectiveContextTokens: number | null;
+  /** null means unknown; an empty array means known-empty. */
+  toolSurface: string[] | null;
+  hardware: HardwareProfile | null;
+  workflow: WorkflowProfile | null;
+}
+
+export type ExecutionScope = ExactExecutionScope | PartialExecutionScope;
 
 export interface TaskProfile {
   family: string;
@@ -95,7 +112,7 @@ export interface ObservationInput {
   schemaVersion: typeof OBSERVATION_SCHEMA_VERSION;
   kind: ObservationKind;
   model: ModelIdentity;
-  execution: ExecutionProfile | null;
+  execution: ExecutionScope | null;
   task: TaskProfile | null;
   measurements: Measurement[];
   outcome: EvaluationOutcome | null;
@@ -120,7 +137,7 @@ export interface ConflictSet {
   key: string;
   modelKey: string;
   measurementKey: string;
-  execution: ExecutionProfile | null;
+  execution: ExecutionScope | null;
   task: TaskProfile | null;
   observationIds: string[];
   values: ScalarValue[];

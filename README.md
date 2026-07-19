@@ -42,9 +42,15 @@ request's runtime inventory. Hard requirements exclude candidates before
 preferences contribute to a request-relative score. Results retain observation
 and evidence ids and explain missing, stale, conflicting, incomparable, and
 unsatisfied evidence.
+An empty inventory remains a valid bounded request: Bearing validates and
+normalizes its task, criteria, and advisories, then returns deterministic empty
+ranked and excluded sets.
 
 Supported aggregations are `fact`, `mean`, `min`, `max`, `success-rate`, and
-`count`. Facts must agree within their exact model/execution/task scope. Sample
+`count`. Facts must agree within their canonical model/execution/task scope. An
+exact execution scope requires complete profile equality. A partial declaration
+scope matches only asserted dimensions: `null` is a wildcard, but an empty tool
+surface is known-empty. Sample
 aggregations retain measured variation; `count` lets a policy enforce a minimum
 sample volume. A prepared `createCatalogRanker`
 validates and indexes one snapshot once for repeated local resolutions.
@@ -134,6 +140,11 @@ top-provider context, completion limits, pricing, input modalities, tool and
 structured-output support, and reasoning efforts remain OpenRouter runtime
 facts; they are not promoted to provider-global declarations. OpenRouter's
 `-1` variable-price sentinel becomes unknown rather than a negative price.
+These facts carry a partial OpenRouter execution scope: runtime identity is
+asserted, while caller adapter, effective context, tool surface, hardware, and
+workflow remain wildcarded. Version 2 rank reasons and advisories report
+asserted, wildcarded, and mismatched execution dimensions; version 1 responses
+retain their prior shape.
 
 Artificial Analysis indexes and Design Arena category results remain separate
 high-uncertainty external samples attributed to their upstream evaluators. The

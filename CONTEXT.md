@@ -13,9 +13,13 @@ and quantization may be `null` when unknown, but may not be inferred from the
 display id.
 
 **Execution Profile**: The runtime, adapter, effective context, tool surface,
-hardware class, and workflow condition under which an observation was made.
-Model-level declarations may have no execution profile; evaluation observations
-must have one.
+hardware class, and workflow condition for one concrete runtime candidate.
+
+**Execution Scope**: The applicability boundary carried by an observation. An
+`exact` scope requires complete profile equality and is mandatory for evaluation
+observations. A `partial` declaration scope matches only asserted dimensions;
+`null` means unknown/wildcard, while an empty tool surface means known-empty.
+Model-level declarations may use a global `null` execution scope.
 
 **Task Profile**: The task family, suite/task identity, and evaluator that give
 an observation its behavioral scope.
@@ -24,8 +28,8 @@ an observation its behavioral scope.
 model. An observation carries measurements, evidence, freshness, and uncertainty.
 Evaluation observations also carry an outcome and execution/task profiles.
 
-**Fact Measurement**: A source assertion intended to hold for its exact model,
-execution, and task scope, such as a declared maximum context. Different values
+**Fact Measurement**: A source assertion intended to hold for its canonical
+model, execution, and task scope, such as a declared maximum context. Different values
 for the same overlapping fact scope form a Conflict Set.
 
 **Sample Measurement**: One measured result, such as a benchmark task outcome or
@@ -55,6 +59,8 @@ sets and performs no model ranking by itself.
 
 **Runtime Inventory**: A caller-owned list of models it can actually launch.
 Bearing may rank that list but never discovers or expands it.
+The list may be empty so callers can validate the same rank policy when none of
+their launchable candidates has a complete execution profile.
 
 **Advisory Projection**: A caller-requested, evidence-bearing view of one
 measurement and aggregation for each runtime candidate. It preserves missing,

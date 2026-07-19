@@ -6,6 +6,7 @@ import {
   canonicalJson,
   compileCatalog,
   normalizeObservation,
+  validateCatalogSnapshot,
   type ObservationInput,
 } from "../src/index.js";
 
@@ -14,7 +15,7 @@ test("canonical object ordering is locale-independent code-unit order", () => {
 });
 
 const baseObservation = (overrides: Partial<ObservationInput> = {}): ObservationInput => ({
-  schemaVersion: "bearing.observation/v1",
+  schemaVersion: "bearing.observation/v2",
   kind: "evaluation",
   model: {
     id: "example/model-7b",
@@ -22,6 +23,7 @@ const baseObservation = (overrides: Partial<ObservationInput> = {}): Observation
     quantization: "q8",
   },
   execution: {
+    kind: "exact",
     runtime: { id: "local-runtime", version: "1.2.3" },
     adapter: { id: "agent-adapter", version: "4.2.0" },
     effectiveContextTokens: 32_768,
@@ -166,7 +168,7 @@ test("revision, quantization, and execution scopes remain distinct", () => {
 
 test("different overlapping fact values are retained as a conflict", () => {
   const declared = (value: number, evidenceId: string): ObservationInput => ({
-    schemaVersion: "bearing.observation/v1",
+    schemaVersion: "bearing.observation/v2",
     kind: "declaration",
     model: { id: "example/model-7b", revision: "r1", quantization: null },
     execution: null,
@@ -197,6 +199,30 @@ test("different overlapping fact values are retained as a conflict", () => {
   assert.equal(catalog.models[0].observations.length, 2);
 });
 
+test("partial execution scopes participate in deterministic conflict identity", () => {
+  const scoped = (runtimeId: string, value: number, evidenceId: string): ObservationInput => ({
+    ...factObservation(evidenceId, value, "2026-07-18T20:00:00.000Z", null),
+    execution: {
+      kind: "partial",
+      runtime: { id: runtimeId, version: null },
+      adapter: null,
+      effectiveContextTokens: null,
+      toolSurface: null,
+      hardware: null,
+      workflow: null,
+    },
+  });
+  const catalog = compileCatalog([
+    scoped("openrouter", 100, "openrouter-a"),
+    scoped("openrouter", 200, "openrouter-b"),
+    scoped("other-runtime", 300, "other-runtime"),
+  ], { asOf: "2026-07-18T22:00:00.000Z" });
+  assert.equal(catalog.conflicts.length, 1);
+  assert.equal(catalog.conflicts[0].execution?.kind, "partial");
+  assert.equal(catalog.conflicts[0].execution?.runtime.id, "openrouter");
+  assert.deepEqual(catalog.conflicts[0].values, [100, 200]);
+});
+
 test("different sample values are retained without a fact conflict", () => {
   const rejected = baseObservation({
     measurements: [{ key: "task.accepted", kind: "sample", value: false }],
@@ -217,7 +243,7 @@ test("different sample values are retained without a fact conflict", () => {
 
 test("non-overlapping historical facts do not form a conflict", () => {
   const declaration = (value: number, observedAt: string, validUntil: string | null, id: string): ObservationInput => ({
-    schemaVersion: "bearing.observation/v1",
+    schemaVersion: "bearing.observation/v2",
     kind: "declaration",
     model: { id: "example/model-7b", revision: "r1", quantization: null },
     execution: null,
@@ -287,12 +313,23 @@ test("duplicate normalized observations fail with a typed diagnostic", () => {
 
 test("unsupported schema and incomplete evaluation scope fail explicitly", () => {
   assert.throws(
-    () => normalizeObservation({ ...baseObservation(), schemaVersion: "bearing.observation/v2" as never }),
+    () => normalizeObservation({ ...baseObservation(), schemaVersion: "bearing.observation/v1" as never }),
     (error: unknown) => error instanceof BearingError && error.code === "UNSUPPORTED_SCHEMA",
   );
   assert.throws(
     () => normalizeObservation(baseObservation({ execution: null })),
     (error: unknown) => error instanceof BearingError && error.code === "INVALID_OBSERVATION" && error.path === "$.execution",
+  );
+  assert.throws(
+    () => normalizeObservation(baseObservation({
+      execution: { ...baseObservation().execution!, kind: "partial" },
+    })),
+    (error: unknown) => error instanceof BearingError && error.path === "$.execution.kind",
+  );
+  const catalog = compileCatalog([baseObservation()], { asOf: "2026-07-18T22:00:00.000Z" });
+  assert.throws(
+    () => validateCatalogSnapshot({ ...catalog, schemaVersion: "bearing.catalog/v1" }),
+    (error: unknown) => error instanceof BearingError && error.code === "UNSUPPORTED_CATALOG_SCHEMA",
   );
 });
 

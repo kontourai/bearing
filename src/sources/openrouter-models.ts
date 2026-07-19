@@ -290,10 +290,11 @@ const factObservation = (
     kind: "declaration",
     model: mapping.model,
     execution: {
+      kind: "partial",
       runtime: { id: "openrouter", version: null },
-      adapter: { id: "openrouter-models-api", version: "v1" },
+      adapter: null,
       effectiveContextTokens: null,
-      toolSurface: [],
+      toolSurface: null,
       hardware: null,
       workflow: null,
     },

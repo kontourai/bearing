@@ -62,6 +62,8 @@ try {
     "dist/src/catalog.js",
     "dist/src/error.d.ts",
     "dist/src/error.js",
+    "dist/src/execution-scope.d.ts",
+    "dist/src/execution-scope.js",
     "dist/src/index.js",
     "dist/src/index.d.ts",
     "dist/src/node/catalog-file.d.ts",

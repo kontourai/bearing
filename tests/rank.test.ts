@@ -45,10 +45,10 @@ const fact = (
   scopedExecution: ExecutionProfile | null = null,
   validUntil: string | null = null,
 ): ObservationInput => ({
-  schemaVersion: "bearing.observation/v1",
+  schemaVersion: "bearing.observation/v2",
   kind: "declaration",
   model,
-  execution: scopedExecution,
+  execution: scopedExecution === null ? null : { kind: "exact", ...scopedExecution },
   task: null,
   measurements: [{ key, kind: "fact", value }],
   outcome: null,
@@ -65,10 +65,10 @@ const sample = (
   tokens: number,
   id: string,
 ): ObservationInput => ({
-  schemaVersion: "bearing.observation/v1",
+  schemaVersion: "bearing.observation/v2",
   kind: "evaluation",
   model,
-  execution,
+  execution: { kind: "exact", ...execution },
   task: {
     family: "software-engineering",
     suite: "example-suite",
@@ -134,6 +134,15 @@ const requestV2 = (overrides: Partial<Omit<RankRequestV2, "schemaVersion">> = {}
     advisories: [],
     ...overrides,
   };
+};
+
+const invalidRankRequest = (operation: () => unknown, message?: string): void => {
+  assert.throws(
+    operation,
+    (error: unknown) => error instanceof BearingError
+      && error.code === "INVALID_RANK_REQUEST"
+      && (message === undefined || error.message.includes(message)),
+  );
 };
 
 test("hard requirements filter before request-relative preference ranking", () => {
@@ -258,8 +267,14 @@ test("v2 advisories project scalar facts without changing v1 eligibility, scores
   const withoutAdvisories = {
     ...v2,
     schemaVersion: "bearing.rank.result/v1",
-    ranked: v2.ranked.map(({ advisories: _advisories, ...candidate }) => candidate),
-    excluded: v2.excluded.map(({ advisories: _advisories, ...candidate }) => candidate),
+    ranked: v2.ranked.map(({ advisories: _advisories, reasons, ...candidate }) => ({
+      ...candidate,
+      reasons: reasons.map(({ executionApplicability: _executionApplicability, ...reason }) => reason),
+    })),
+    excluded: v2.excluded.map(({ advisories: _advisories, reasons, ...candidate }) => ({
+      ...candidate,
+      reasons: reasons.map(({ executionApplicability: _executionApplicability, ...reason }) => reason),
+    })),
   };
   assert.deepEqual(withoutAdvisories, v1);
 });
@@ -345,48 +360,128 @@ test("v2 advisories remain available on excluded candidates and deterministic ac
   );
 });
 
-test("invalid rank requests fail with typed diagnostics", () => {
+test("rank message schemas fail with typed diagnostics", () => {
   const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
   const v1OnlyRanker: CatalogRanker = (input) => rankCatalog(catalog, input);
   assert.equal(v1OnlyRanker(request()).schemaVersion, "bearing.rank.result/v1");
-  assert.throws(
-    () => rankCatalog(catalog, { ...request(), inventory: [] }),
-    (error: unknown) => error instanceof BearingError && error.code === "INVALID_RANK_REQUEST",
-  );
-  assert.throws(
-    () => rankCatalog(catalog, { ...requestV2(), advisories: [
-      { id: "duplicate", measurementKey: "model.context.max_tokens", aggregation: "fact" },
-      { id: "duplicate", measurementKey: "model.license", aggregation: "fact" },
-    ] }),
-    (error: unknown) => error instanceof BearingError && error.code === "INVALID_RANK_REQUEST",
-  );
-  assert.throws(
-    () => rankCatalog(catalog, { ...request(), advisories: [] } as RankRequest),
-    (error: unknown) => error instanceof BearingError && error.code === "INVALID_RANK_REQUEST",
-  );
+  invalidRankRequest(() => rankCatalog(catalog, { ...requestV2(), advisories: [
+    { id: "duplicate", measurementKey: "model.context.max_tokens", aggregation: "fact" },
+    { id: "duplicate", measurementKey: "model.license", aggregation: "fact" },
+  ] }));
+  invalidRankRequest(() => rankCatalog(catalog, { ...request(), advisories: [] } as RankRequest));
+});
+
+test("empty runtime inventories retain rank request validation and deterministic results", () => {
+  const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
+  const v1 = rankCatalog(catalog, request({ inventory: [] }));
+  const v2 = rankCatalog(catalog, requestV2({
+    inventory: [],
+    advisories: [{ id: "context", measurementKey: "model.context.max_tokens", aggregation: "fact" }],
+  }));
+
+  assert.deepEqual(v1.ranked, []);
+  assert.deepEqual(v1.excluded, []);
+  assert.deepEqual(v2.ranked, []);
+  assert.deepEqual(v2.excluded, []);
+  assert.deepEqual(v1.task, { family: "software-engineering", suite: null });
+  assert.deepEqual(v2.scoreScale, { kind: "request-relative", maximum: 3 });
+
+  invalidRankRequest(() => rankCatalog(catalog, requestV2({
+    inventory: [],
+    requirements: [{
+      measurementKey: "model.context.max_tokens",
+      aggregation: "fact",
+      operator: "gte",
+      value: "not-numeric",
+    }],
+  })), "must be numeric");
+});
+
+test("rank candidate count boundaries are explicit", () => {
+  const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
+  const candidateBoundary = Array.from({ length: 128 }, (_, index) => ({ ...inventory[0], id: `candidate-${index}` }));
+  assert.equal(rankCatalog(catalog, request({ inventory: candidateBoundary, requirements: [], preferences: [] })).ranked.length, 128);
+  invalidRankRequest(() => rankCatalog(catalog, request({
+    inventory: [...candidateBoundary, { ...inventory[0], id: "candidate-128" }],
+    requirements: [],
+    preferences: [],
+  })), "at most 128 candidates");
+});
+
+test("rank requirement count boundaries are explicit", () => {
+  const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
+  const requirementBoundary = Array.from({ length: 128 }, (_, index) => ({
+    measurementKey: `requirement.${index}`,
+    aggregation: "fact" as const,
+    operator: "eq" as const,
+    value: true,
+  }));
+  assert.equal(rankCatalog(catalog, requestV2({ inventory: [inventory[0]], requirements: requirementBoundary, preferences: [] })).excluded.length, 1);
+  invalidRankRequest(() => rankCatalog(catalog, requestV2({
+    inventory: [inventory[0]],
+    requirements: [...requirementBoundary, { ...requirementBoundary[0], measurementKey: "requirement.128" }],
+    preferences: [],
+  })), "at most 128 criteria");
+});
+
+test("rank preference count boundaries are explicit", () => {
+  const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
+  const preferenceBoundary = Array.from({ length: 128 }, (_, index) => ({
+    measurementKey: `preference.${index}`,
+    aggregation: "fact" as const,
+    direction: "maximize" as const,
+    weight: 1,
+  }));
+  assert.equal(rankCatalog(catalog, requestV2({ inventory: [inventory[0]], requirements: [], preferences: preferenceBoundary })).ranked.length, 1);
+  invalidRankRequest(() => rankCatalog(catalog, requestV2({
+    inventory: [inventory[0]],
+    requirements: [],
+    preferences: [...preferenceBoundary, { ...preferenceBoundary[0], measurementKey: "preference.128" }],
+  })), "at most 128 criteria");
+});
+
+test("rank requests reject duplicate criteria and excessive evaluation cells", () => {
+  const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
+  const duplicate = [request().requirements[0], request().requirements[0]];
+  invalidRankRequest(() => rankCatalog(catalog, requestV2({ requirements: duplicate })), "duplicate criteria");
+  invalidRankRequest(() => rankCatalog(catalog, request({ requirements: duplicate })), "duplicate criteria");
+  const expandedInventory = Array.from({ length: 33 }, (_, index) => ({ ...inventory[0], id: `candidate-${index}` }));
+  const expandedCriteria = Array.from({ length: 63 }, (_, index) => ({
+    measurementKey: `criterion.${index}`,
+    aggregation: "fact" as const,
+    operator: "eq" as const,
+    value: true,
+  }));
+  invalidRankRequest(() => rankCatalog(catalog, requestV2({
+    inventory: expandedInventory, requirements: expandedCriteria, preferences: [],
+  })), "evaluation cells");
+  invalidRankRequest(() => rankCatalog(catalog, request({
+    inventory: expandedInventory, requirements: expandedCriteria, preferences: [],
+  })), "evaluation cells");
+});
+
+test("rank advisory projection and text bounds are explicit", () => {
+  const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
   const expandedInventory = Array.from({ length: 33 }, (_, index) => ({ ...inventory[0], id: `candidate-${index}` }));
   const expandedAdvisories = Array.from({ length: 32 }, (_, index) => ({
     id: `advisory-${index}`,
     measurementKey: "model.context.max_tokens",
     aggregation: "fact" as const,
   }));
-  assert.throws(
+  invalidRankRequest(
     () => rankCatalog(catalog, requestV2({ inventory: expandedInventory, advisories: expandedAdvisories })),
-    (error: unknown) => error instanceof BearingError
-      && error.code === "INVALID_RANK_REQUEST"
-      && error.message.includes("projection cells"),
+    "projection cells",
   );
-  assert.throws(
-    () => rankCatalog(catalog, requestV2({ advisories: [{
-      id: "x".repeat(257),
-      measurementKey: "model.context.max_tokens",
-      aggregation: "fact",
-    }] })),
-    (error: unknown) => error instanceof BearingError
-      && error.code === "INVALID_RANK_REQUEST"
-      && error.message.includes("256 UTF-8 bytes"),
-  );
+  invalidRankRequest(() => rankCatalog(catalog, requestV2({ advisories: [{
+    id: "x".repeat(257), measurementKey: "model.context.max_tokens", aggregation: "fact",
+  }] })), "256 UTF-8 bytes");
+  invalidRankRequest(() => rankCatalog(catalog, request({
+    inventory: [{ ...inventory[0], id: "x".repeat(257) }],
+  })), "256 UTF-8 bytes");
+});
 
+test("rank requests reject inherited record structures", () => {
+  const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
   const inheritedRoot = Object.create(requestV2()) as RankRequestV2;
   const inheritedCandidate = requestV2({ inventory: [Object.create(inventory[0])] });
   const inheritedRequirement = requestV2({ requirements: [Object.create(request().requirements[0])] });
@@ -396,12 +491,12 @@ test("invalid rank requests fail with typed diagnostics", () => {
     aggregation: "fact",
   })] });
   for (const inherited of [inheritedRoot, inheritedCandidate, inheritedRequirement, inheritedAdvisory]) {
-    assert.throws(
-      () => rankCatalog(catalog, inherited),
-      (error: unknown) => error instanceof BearingError && error.code === "INVALID_RANK_REQUEST",
-    );
+    invalidRankRequest(() => rankCatalog(catalog, inherited));
   }
+});
 
+test("rank requests reject nested inherited and accessor values without invoking getters", () => {
+  const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
   let getterReads = 0;
   const accessorModel = { revision: modelA.revision, quantization: modelA.quantization } as Record<string, unknown>;
   Object.defineProperty(accessorModel, "id", {
@@ -420,13 +515,14 @@ test("invalid rank requests fail with typed diagnostics", () => {
     requestV2({ inventory: [{ ...inventory[0], execution: { ...execution, toolSurface: accessorTools } }] }),
   ];
   for (const nested of nestedInputs) {
-    assert.throws(
-      () => rankCatalog(catalog, nested),
-      (error: unknown) => error instanceof BearingError && error.code === "INVALID_RANK_REQUEST",
-    );
+    invalidRankRequest(() => rankCatalog(catalog, nested));
   }
   assert.equal(getterReads, 0);
+});
 
+test("rank requests reject inherited and accessor-backed arrays without invoking getters", () => {
+  const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
+  let getterReads = 0;
   const inheritedInventory = new Array(1);
   const inheritedInventoryPrototype = Object.create(Array.prototype) as unknown[];
   Object.defineProperty(inheritedInventoryPrototype, "0", {
@@ -460,10 +556,7 @@ test("invalid rank requests fail with typed diagnostics", () => {
     }] }),
   ];
   for (const rankArrayInput of rankArrayInputs) {
-    assert.throws(
-      () => rankCatalog(catalog, rankArrayInput),
-      (error: unknown) => error instanceof BearingError && error.code === "INVALID_RANK_REQUEST",
-    );
+    invalidRankRequest(() => rankCatalog(catalog, rankArrayInput));
   }
   assert.equal(getterReads, 0);
 });
