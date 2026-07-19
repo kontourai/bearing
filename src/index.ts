@@ -78,6 +78,15 @@ export {
   type LiveBenchRunMapping,
   type LiveBenchTrustedSnapshot,
 } from "./sources/livebench.js";
+export {
+  OPENROUTER_MODELS_SOURCE,
+  importOpenRouterModelsSnapshot,
+  type OpenRouterModelMapping,
+  type OpenRouterModelsDiagnostic,
+  type OpenRouterModelsImportInput,
+  type OpenRouterModelsImportResult,
+  type OpenRouterTrustedSnapshot,
+} from "./sources/openrouter-models.js";
 export { validateExecutionProfile, validateModelIdentity, validateObservation } from "./validate.js";
 export {
   APPROVED_SOURCE_MANIFEST_SCHEMA_VERSION,

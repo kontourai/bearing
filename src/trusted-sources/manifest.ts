@@ -13,6 +13,7 @@ const MAX_LIMIT_BYTES = 64 * 1024 * 1024;
 const MAX_JSON_DEPTH = 64;
 const MAX_JSON_STRUCTURAL_TOKENS = 100_000;
 const parsedManifests = new WeakSet<object>();
+const forbiddenObjectKeys = new Set(["__proto__", "constructor", "prototype"]);
 
 export interface ApprovedSourceArtifact {
   readonly id: string;
@@ -42,8 +43,8 @@ export interface ApprovedSource {
     readonly maxAgeHours: number;
   };
   readonly revision: {
-    readonly kind: "release" | "commit" | "opaque";
-    readonly grammar: "calendar-date" | "full-git-sha" | "opaque-token";
+    readonly kind: "release" | "commit" | "opaque" | "snapshot";
+    readonly grammar: "calendar-date" | "full-git-sha" | "opaque-token" | "sha256";
   };
   readonly resolver: {
     readonly adapter: string;
@@ -87,6 +88,10 @@ export const DEFAULT_APPROVED_SOURCE_REGISTRY: ApprovedSourceRegistry = Object.f
     Object.freeze({
       id: "livebench",
       digest: "3ea9391905f64dd90ff23298f54c900271d50b99e5dac19f4f3ede06a482ee14",
+    }),
+    Object.freeze({
+      id: "openrouter-models",
+      digest: "ba877e92c78601d7f6b2d2ce69e3dcc0074236295e19b4fa43c0b79c559f0f5c",
     }),
   ]),
 });
@@ -161,6 +166,7 @@ const assertUniqueObjectKeys = (root: Node): void => {
           return fail(path, "must contain complete JSON properties");
         }
         if (seen.has(keyNode.value)) return fail(`${path}.${keyNode.value}`, "must not duplicate an object key");
+        if (forbiddenObjectKeys.has(keyNode.value)) return fail(`${path}.${keyNode.value}`, `contains forbidden key ${keyNode.value}`);
         seen.add(keyNode.value);
         pending.push({ node: valueNode, path: `${path}.${keyNode.value}` });
       }
@@ -244,14 +250,15 @@ const parseFreshness = (value: unknown, path: string): ApprovedSource["freshness
 const parseRevision = (value: unknown, path: string): ApprovedSource["revision"] => {
   const item = record(value, path);
   exactKeys(item, ["kind", "grammar"], path);
-  const kinds = ["release", "commit", "opaque"] as const;
-  const grammars = ["calendar-date", "full-git-sha", "opaque-token"] as const;
+  const kinds = ["release", "commit", "opaque", "snapshot"] as const;
+  const grammars = ["calendar-date", "full-git-sha", "opaque-token", "sha256"] as const;
   if (!kinds.includes(item.kind as never)) return fail(`${path}.kind`, "is unsupported");
   if (!grammars.includes(item.grammar as never)) return fail(`${path}.grammar`, "is unsupported");
   if (
     (item.kind === "release" && item.grammar !== "calendar-date") ||
     (item.kind === "commit" && item.grammar !== "full-git-sha") ||
-    (item.kind === "opaque" && item.grammar !== "opaque-token")
+    (item.kind === "opaque" && item.grammar !== "opaque-token") ||
+    (item.kind === "snapshot" && item.grammar !== "sha256")
   ) return fail(path, "kind and grammar are incompatible");
   return item as unknown as ApprovedSource["revision"];
 };
@@ -293,8 +300,8 @@ const parseArtifacts = (
   exactKeys(item, ["adapter", "version", "items"], path);
   const adapter = text(item.adapter, `${path}.adapter`);
   const version = text(item.version, `${path}.version`);
-  if (!Array.isArray(item.items) || item.items.length === 0 || item.items.length > MAX_ARTIFACTS) {
-    return fail(`${path}.items`, `must contain between 1 and ${MAX_ARTIFACTS} artifacts`);
+  if (!Array.isArray(item.items) || item.items.length > MAX_ARTIFACTS) {
+    return fail(`${path}.items`, `must contain at most ${MAX_ARTIFACTS} artifacts`);
   }
   const items = item.items.map((artifact, index) => parseArtifact(artifact, `${path}.items[${index}]`, origin));
   if (new Set(items.map((artifact) => artifact.id)).size !== items.length) return fail(`${path}.items`, "must use unique artifact ids");
@@ -336,6 +343,8 @@ const parseSource = (value: unknown, path: string): ApprovedSource => {
   const canonicalOrigin = new URL(canonicalOriginUrl).origin;
   if (canonicalOriginUrl !== `${canonicalOrigin}/`) return fail(`${path}.canonicalOrigin`, "must contain only the canonical HTTPS origin");
   if (!Array.isArray(item.knownLimitations) || item.knownLimitations.length > 128) return fail(`${path}.knownLimitations`, "must be a bounded array");
+  const resolver = parseResolver(item.resolver, `${path}.resolver`, canonicalOrigin);
+  const artifacts = parseArtifacts(item.artifacts, `${path}.artifacts`, canonicalOrigin);
   return {
     id: text(item.id, `${path}.id`), owner: text(item.owner, `${path}.owner`), sourceClass: "external", canonicalOrigin,
     ...parseAttributionAndLicense(item, path),
@@ -343,8 +352,8 @@ const parseSource = (value: unknown, path: string): ApprovedSource => {
     knownLimitations: item.knownLimitations.map((entry, index) => text(entry, `${path}.knownLimitations[${index}]`)),
     freshness: parseFreshness(item.freshness, `${path}.freshness`),
     revision: parseRevision(item.revision, `${path}.revision`),
-    resolver: parseResolver(item.resolver, `${path}.resolver`, canonicalOrigin),
-    artifacts: parseArtifacts(item.artifacts, `${path}.artifacts`, canonicalOrigin),
+    resolver,
+    artifacts,
     proposalPolicy: parseProposalPolicy(item.proposalPolicy, `${path}.proposalPolicy`),
   };
 };
@@ -429,6 +438,7 @@ export const isApprovedRevision = (source: ApprovedSource, revision: string): bo
     return Number.isFinite(instant.getTime()) && instant.toISOString() === `${revision}T00:00:00.000Z`;
   }
   if (source.revision.grammar === "full-git-sha") return /^[a-f0-9]{40}$/.test(revision);
+  if (source.revision.grammar === "sha256") return /^[a-f0-9]{64}$/.test(revision);
   return /^[A-Za-z0-9._-]{1,128}$/.test(revision);
 };
 

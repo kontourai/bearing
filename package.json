@@ -44,6 +44,7 @@
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test dist/tests/*.test.js",
     "prove:livebench-discovery": "npm run build && node scripts/prove-livebench-discovery.mjs",
+    "prove:openrouter-models": "npm run build && node scripts/prove-openrouter-models.mjs",
     "check:pack": "node scripts/check-package-contents.mjs",
     "verify": "npm run typecheck && npm test && npm run check:pack"
   },
