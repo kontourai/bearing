@@ -75,17 +75,26 @@ export interface ApprovedSourceManifest {
   readonly digest: string;
 }
 
-export interface ApprovedSourceAdapterRegistry {
-  resolvers: readonly string[];
-  artifacts: readonly string[];
-  derivedResourcePolicies: readonly string[];
+export interface ApprovedSourceRegistry {
+  readonly sources: ReadonlyArray<{
+    readonly id: string;
+    readonly digest: string;
+  }>;
 }
 
-export const DEFAULT_APPROVED_SOURCE_ADAPTER_REGISTRY: ApprovedSourceAdapterRegistry = Object.freeze({
-  resolvers: Object.freeze(["livebench-web/v1"]),
-  artifacts: Object.freeze(["livebench-release/v1"]),
-  derivedResourcePolicies: Object.freeze(["same-origin-livebench-main-bundle/v1"]),
+export const DEFAULT_APPROVED_SOURCE_REGISTRY: ApprovedSourceRegistry = Object.freeze({
+  sources: Object.freeze([
+    Object.freeze({
+      id: "livebench",
+      digest: "3ea9391905f64dd90ff23298f54c900271d50b99e5dac19f4f3ede06a482ee14",
+    }),
+  ]),
 });
+
+export const isDefaultApprovedSourceIdentity = (source: ApprovedSource): boolean => {
+  const approved = DEFAULT_APPROVED_SOURCE_REGISTRY.sources.find((entry) => entry.id === source.id);
+  return approved !== undefined && sha256(source) === approved.digest;
+};
 
 const fail = (path: string, message: string): never => {
   throw new BearingError("INVALID_SOURCE_MANIFEST", path, message);
@@ -251,15 +260,12 @@ const parseResolver = (
   value: unknown,
   path: string,
   origin: string,
-  registry: ApprovedSourceAdapterRegistry,
 ): ApprovedSource["resolver"] => {
   const item = record(value, path);
   exactKeys(item, ["adapter", "version", "entrypoint", "derivedResourcePolicy", "maxBytes"], path);
   const adapter = text(item.adapter, `${path}.adapter`);
   const version = text(item.version, `${path}.version`);
-  if (!registry.resolvers.includes(`${adapter}/${version}`)) return fail(path, `unsupported adapter ${adapter}/${version}`);
   const derivedResourcePolicy = text(item.derivedResourcePolicy, `${path}.derivedResourcePolicy`);
-  if (!registry.derivedResourcePolicies.includes(derivedResourcePolicy)) return fail(`${path}.derivedResourcePolicy`, "is unsupported");
   const entrypoint = record(item.entrypoint, `${path}.entrypoint`);
   exactKeys(entrypoint, ["sourceId", "url", "mediaType", "maxBytes"], `${path}.entrypoint`);
   const url = httpsUrl(entrypoint.url, `${path}.entrypoint.url`);
@@ -282,13 +288,11 @@ const parseArtifacts = (
   value: unknown,
   path: string,
   origin: string,
-  registry: ApprovedSourceAdapterRegistry,
 ): ApprovedSource["artifacts"] => {
   const item = record(value, path);
   exactKeys(item, ["adapter", "version", "items"], path);
   const adapter = text(item.adapter, `${path}.adapter`);
   const version = text(item.version, `${path}.version`);
-  if (!registry.artifacts.includes(`${adapter}/${version}`)) return fail(path, `unsupported adapter ${adapter}/${version}`);
   if (!Array.isArray(item.items) || item.items.length === 0 || item.items.length > MAX_ARTIFACTS) {
     return fail(`${path}.items`, `must contain between 1 and ${MAX_ARTIFACTS} artifacts`);
   }
@@ -320,7 +324,7 @@ const parseProposalPolicy = (value: unknown, path: string): ApprovedSource["prop
   return { newRevision: "review", unknownRows: "review", mappingChanges: "review" };
 };
 
-const parseSource = (value: unknown, path: string, registry: ApprovedSourceAdapterRegistry): ApprovedSource => {
+const parseSource = (value: unknown, path: string): ApprovedSource => {
   const item = record(value, path);
   exactKeys(item, [
     "id", "owner", "sourceClass", "canonicalOrigin", "attribution", "license",
@@ -339,16 +343,39 @@ const parseSource = (value: unknown, path: string, registry: ApprovedSourceAdapt
     knownLimitations: item.knownLimitations.map((entry, index) => text(entry, `${path}.knownLimitations[${index}]`)),
     freshness: parseFreshness(item.freshness, `${path}.freshness`),
     revision: parseRevision(item.revision, `${path}.revision`),
-    resolver: parseResolver(item.resolver, `${path}.resolver`, canonicalOrigin, registry),
-    artifacts: parseArtifacts(item.artifacts, `${path}.artifacts`, canonicalOrigin, registry),
+    resolver: parseResolver(item.resolver, `${path}.resolver`, canonicalOrigin),
+    artifacts: parseArtifacts(item.artifacts, `${path}.artifacts`, canonicalOrigin),
     proposalPolicy: parseProposalPolicy(item.proposalPolicy, `${path}.proposalPolicy`),
   };
 };
 
+const validateRegistry = (registry: ApprovedSourceRegistry): Map<string, string> => {
+  if (registry === null || typeof registry !== "object" || !Array.isArray(registry.sources)) {
+    return fail("$.registry", "must contain approved source identities");
+  }
+  if (registry.sources.length === 0 || registry.sources.length > MAX_SOURCES) {
+    return fail("$.registry.sources", `must contain between 1 and ${MAX_SOURCES} source identities`);
+  }
+  const entries = new Map<string, string>();
+  registry.sources.forEach((entry, index) => {
+    const path = `$.registry.sources[${index}]`;
+    const item = record(entry, path);
+    exactKeys(item, ["id", "digest"], path);
+    const id = text(item.id, `${path}.id`);
+    if (typeof item.digest !== "string" || !/^[a-f0-9]{64}$/.test(item.digest)) {
+      return fail(`${path}.digest`, "must be a lowercase SHA-256 digest");
+    }
+    if (entries.has(id)) return fail(`${path}.id`, "must be unique");
+    entries.set(id, item.digest);
+  });
+  return entries;
+};
+
 export const parseApprovedSourceManifest = (
   input: string | Uint8Array,
-  registry: ApprovedSourceAdapterRegistry = DEFAULT_APPROVED_SOURCE_ADAPTER_REGISTRY,
+  registry: ApprovedSourceRegistry = DEFAULT_APPROVED_SOURCE_REGISTRY,
 ): ApprovedSourceManifest => {
+  const approvedSources = validateRegistry(registry);
   const bytes = typeof input === "string" ? Buffer.from(input, "utf8") : input;
   if (bytes.byteLength > MAX_MANIFEST_BYTES) return fail("$", `exceeds ${MAX_MANIFEST_BYTES} bytes`);
   let body: string;
@@ -376,10 +403,16 @@ export const parseApprovedSourceManifest = (
   if (!Array.isArray(root.sources) || root.sources.length === 0 || root.sources.length > MAX_SOURCES) {
     return fail("$.sources", `must contain between 1 and ${MAX_SOURCES} approved sources`);
   }
-  const sources = root.sources.map((source, index) => parseSource(source, `$.sources[${index}]`, registry));
+  const sources = root.sources.map((source, index) => parseSource(source, `$.sources[${index}]`));
   if (new Set(sources.map((source) => source.id)).size !== sources.length) {
     return fail("$.sources", "must use unique source ids");
   }
+  sources.forEach((source, index) => {
+    const approvedDigest = approvedSources.get(source.id);
+    if (approvedDigest === undefined || sha256(source) !== approvedDigest) {
+      return fail(`$.sources[${index}]`, "must exactly match an approved content-addressed source identity");
+    }
+  });
   const value = { schemaVersion: APPROVED_SOURCE_MANIFEST_SCHEMA_VERSION, sources };
   const result = deepFreeze({ ...value, digest: sha256(value) });
   parsedManifests.add(result);

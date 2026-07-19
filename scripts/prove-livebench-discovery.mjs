@@ -6,6 +6,7 @@ import { buildSnapshotSourceRef, fetchSource, parseSnapshotSourceRef } from "@ko
 
 import {
   discoverLiveBenchBundle,
+  isDefaultApprovedSourceIdentity,
   parseApprovedSourceManifest,
   resolveLiveBenchDiscovery,
 } from "../dist/src/index.js";
@@ -16,6 +17,9 @@ const store = createFilesystemSnapshotStore({ root: path.join(proofRoot, "snapsh
 const manifest = parseApprovedSourceManifest(await readFile(path.join(root, "sources", "approved-sources.v1.json")));
 const source = manifest.sources.find((candidate) => candidate.id === "livebench");
 if (!source) throw new Error("Packaged manifest does not approve LiveBench");
+if (!isDefaultApprovedSourceIdentity(source)) {
+  throw new Error("Packaged manifest does not exactly match the reviewed LiveBench source identity");
+}
 
 const acquire = async ({ sourceId, url, maxBytes, mediaType }) => {
   const result = await fetchSource({

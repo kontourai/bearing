@@ -9,6 +9,7 @@ import { parse as parseHtml } from "parse5";
 import { compareText, sha256 } from "../canonical.js";
 import { BearingError } from "../error.js";
 import {
+  isDefaultApprovedSourceIdentity,
   renderApprovedArtifactUrl,
   isParsedApprovedSourceManifest,
   type ApprovedSource,
@@ -94,11 +95,8 @@ const sourceFromManifest = (manifest: ApprovedSourceManifest, sourceId: string):
   }
   const source = manifest.sources.find((candidate) => candidate.id === sourceId);
   if (source === undefined) return fail("$.sourceId", "must identify an approved manifest source");
-  if (
-    source.resolver.adapter !== "livebench-web" || source.resolver.version !== "v1" ||
-    source.resolver.derivedResourcePolicy !== "same-origin-livebench-main-bundle/v1"
-  ) {
-    return fail("$.sourceId", "must use the supported LiveBench resolver contract");
+  if (sourceId !== "livebench" || !isDefaultApprovedSourceIdentity(source)) {
+    return fail("$.sourceId", "must use the approved official LiveBench source identity");
   }
   return source;
 };

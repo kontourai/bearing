@@ -81,13 +81,14 @@ export {
 export { validateExecutionProfile, validateModelIdentity, validateObservation } from "./validate.js";
 export {
   APPROVED_SOURCE_MANIFEST_SCHEMA_VERSION,
-  DEFAULT_APPROVED_SOURCE_ADAPTER_REGISTRY,
+  DEFAULT_APPROVED_SOURCE_REGISTRY,
+  isDefaultApprovedSourceIdentity,
   isApprovedRevision,
   isParsedApprovedSourceManifest,
   parseApprovedSourceManifest,
   renderApprovedArtifactUrl,
   type ApprovedSource,
-  type ApprovedSourceAdapterRegistry,
+  type ApprovedSourceRegistry,
   type ApprovedSourceArtifact,
   type ApprovedSourceManifest,
 } from "./trusted-sources/manifest.js";

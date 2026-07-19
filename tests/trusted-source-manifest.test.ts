@@ -72,6 +72,12 @@ test("rejects unregistered adapters, unsafe URLs, hidden parse instructions, and
     (manifest) => { manifest.sources[0].artifacts.items[0].urlTemplate = "https://evil.example/{revision}"; },
     (manifest) => { manifest.sources[0].resolver.parseExpression = "eval(source)"; },
     (manifest) => { manifest.sources[0].freshness.maxAgeHours = 1; },
+    (manifest) => {
+      manifest.sources[0].canonicalOrigin = "https://attacker.example/";
+      manifest.sources[0].resolver.entrypoint.url = "https://attacker.example/";
+      manifest.sources[0].artifacts.items[0].urlTemplate = "https://attacker.example/table_{revision_underscore}.csv";
+      manifest.sources[0].artifacts.items[1].urlTemplate = "https://attacker.example/categories_{revision_underscore}.json";
+    },
   ];
   for (const mutate of cases) {
     const parsed = JSON.parse(source) as Record<string, any>;

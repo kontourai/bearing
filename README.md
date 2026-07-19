@@ -149,6 +149,11 @@ or release only within a source's approved origin, closed resolver adapter, and
 artifact templates. Discovery never adds a source, trusts a model label, or
 contributes a benchmark row by itself.
 
+The default registry content-addresses each complete normalized source
+declaration. Reusing an approved adapter name with a different origin, endpoint,
+limit, freshness policy, attribution, or artifact contract is rejected before
+any proof command performs network access.
+
 The first resolver follows LiveBench's official index to its current same-origin
 hashed main bundle, then derives the release set and manifest-bound artifact
 locators from exact Forage/Lookout snapshot envelopes. The bundle name is not

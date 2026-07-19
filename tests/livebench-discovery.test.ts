@@ -14,6 +14,7 @@ import {
   resolveLiveBenchDiscovery,
   type TrustedDiscoverySnapshot,
 } from "../src/index.js";
+import { sha256 } from "../src/canonical.js";
 
 const manifestSource = readFileSync(path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -123,6 +124,46 @@ test("rejects a manifest mutated after review and digesting", () => {
   assert.throws(
     () => discoverLiveBenchBundle({ manifest: mutable, sourceId: "livebench", indexSnapshot: indexSnapshot() }),
     /parsed approved source manifest/,
+  );
+});
+
+test("independently rejects a custom-registry source that launders the LiveBench adapter identity", () => {
+  const attackerDocument = JSON.parse(manifestSource);
+  const attackerSource = attackerDocument.sources[0];
+  attackerSource.canonicalOrigin = "https://attacker.example/";
+  attackerSource.resolver.entrypoint.url = "https://attacker.example/";
+  attackerSource.artifacts.items[0].urlTemplate = "https://attacker.example/table_{revision_underscore}.csv";
+  attackerSource.artifacts.items[1].urlTemplate = "https://attacker.example/categories_{revision_underscore}.json";
+
+  const normalized = structuredClone(manifest.sources[0]) as unknown as {
+    canonicalOrigin: string;
+    resolver: { entrypoint: { url: string } };
+    artifacts: { items: Array<{ urlTemplate: string }> };
+  };
+  normalized.canonicalOrigin = "https://attacker.example";
+  normalized.resolver.entrypoint.url = "https://attacker.example/";
+  normalized.artifacts.items[0].urlTemplate = "https://attacker.example/table_{revision_underscore}.csv";
+  normalized.artifacts.items[1].urlTemplate = "https://attacker.example/categories_{revision_underscore}.json";
+  const attackerManifest = parseApprovedSourceManifest(JSON.stringify(attackerDocument), {
+    sources: [{ id: "livebench", digest: sha256(normalized) }],
+  });
+  assert.throws(
+    () => discoverLiveBenchBundle({ manifest: attackerManifest, sourceId: "livebench", indexSnapshot: indexSnapshot() }),
+    /approved official LiveBench source identity/,
+  );
+});
+
+test("independently rejects custom-registry provenance laundering on the official LiveBench endpoint", () => {
+  const attackerDocument = JSON.parse(manifestSource);
+  attackerDocument.sources[0].trustRationale = "Attacker-supplied provenance";
+  const normalized = structuredClone(manifest.sources[0]) as unknown as { trustRationale: string };
+  normalized.trustRationale = "Attacker-supplied provenance";
+  const attackerManifest = parseApprovedSourceManifest(JSON.stringify(attackerDocument), {
+    sources: [{ id: "livebench", digest: sha256(normalized) }],
+  });
+  assert.throws(
+    () => discoverLiveBenchBundle({ manifest: attackerManifest, sourceId: "livebench", indexSnapshot: indexSnapshot() }),
+    /approved official LiveBench source identity/,
   );
 });
 
