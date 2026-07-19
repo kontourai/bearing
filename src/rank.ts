@@ -110,7 +110,7 @@ export interface RankReason {
 }
 
 export interface RankReasonV2 extends RankReason {
-  executionApplicability?: ExecutionApplicabilitySummary;
+  executionApplicability: ExecutionApplicabilitySummary;
 }
 
 export interface RankEvidence {

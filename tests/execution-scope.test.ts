@@ -144,7 +144,7 @@ test("successful applicability summarizes only contributing requirements and pre
   };
   const requirement = { measurementKey: "runtime.context", aggregation: "fact" as const, operator: "gte" as const, value: 1_000_000 };
   const v2 = rankCatalog(catalog, requestV2({ inventory: [candidate], requirements: [requirement] }));
-  assert.deepEqual(v2.ranked[0].reasons[0].executionApplicability?.mismatchedDimensions, []);
+  assert.deepEqual(v2.ranked[0].reasons[0].executionApplicability.mismatchedDimensions, []);
   assert.deepEqual(v2.ranked[0].evidence[0].evidenceIds, ["matching-openrouter-context"]);
 
   const v1 = rankCatalog(catalog, request({ inventory: [candidate], requirements: [requirement] }));
@@ -153,8 +153,8 @@ test("successful applicability summarizes only contributing requirements and pre
   const preference = { measurementKey: "runtime.context", aggregation: "fact" as const, direction: "maximize" as const, weight: 1 };
   const preferenceV2 = rankCatalog(catalog, requestV2({ inventory: [candidate], preferences: [preference] }));
   const preferenceReasonV2 = preferenceV2.ranked[0].reasons.find((reason) => reason.code === "PREFERENCE_SCORE")!;
-  assert.deepEqual(preferenceReasonV2.executionApplicability?.mismatchedDimensions, []);
-  assert.deepEqual(preferenceReasonV2.executionApplicability?.matchedKinds, ["partial"]);
+  assert.deepEqual(preferenceReasonV2.executionApplicability.mismatchedDimensions, []);
+  assert.deepEqual(preferenceReasonV2.executionApplicability.matchedKinds, ["partial"]);
 
   const preferenceV1 = rankCatalog(catalog, request({ inventory: [candidate], preferences: [preference] }));
   const preferenceReasonV1 = preferenceV1.ranked[0].reasons.find((reason) => reason.code === "PREFERENCE_SCORE")!;
@@ -167,8 +167,8 @@ test("successful applicability summarizes only contributing requirements and pre
     preferences: [preference],
   }));
   const incomparable = nonnumericResult.ranked[0].reasons.find((reason) => reason.code === "INCOMPARABLE_EVIDENCE")!;
-  assert.deepEqual(incomparable.executionApplicability?.matchedKinds, ["partial"]);
-  assert.deepEqual(incomparable.executionApplicability?.mismatchedDimensions, []);
+  assert.deepEqual(incomparable.executionApplicability.matchedKinds, ["partial"]);
+  assert.deepEqual(incomparable.executionApplicability.mismatchedDimensions, []);
 });
 
 test("partial scope nulls are wildcards while empty tools remain known-empty", () => {
