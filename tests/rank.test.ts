@@ -364,12 +364,37 @@ test("rank message schemas fail with typed diagnostics", () => {
   const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
   const v1OnlyRanker: CatalogRanker = (input) => rankCatalog(catalog, input);
   assert.equal(v1OnlyRanker(request()).schemaVersion, "bearing.rank.result/v1");
-  invalidRankRequest(() => rankCatalog(catalog, { ...request(), inventory: [] }));
   invalidRankRequest(() => rankCatalog(catalog, { ...requestV2(), advisories: [
     { id: "duplicate", measurementKey: "model.context.max_tokens", aggregation: "fact" },
     { id: "duplicate", measurementKey: "model.license", aggregation: "fact" },
   ] }));
   invalidRankRequest(() => rankCatalog(catalog, { ...request(), advisories: [] } as RankRequest));
+});
+
+test("empty runtime inventories retain rank request validation and deterministic results", () => {
+  const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
+  const v1 = rankCatalog(catalog, request({ inventory: [] }));
+  const v2 = rankCatalog(catalog, requestV2({
+    inventory: [],
+    advisories: [{ id: "context", measurementKey: "model.context.max_tokens", aggregation: "fact" }],
+  }));
+
+  assert.deepEqual(v1.ranked, []);
+  assert.deepEqual(v1.excluded, []);
+  assert.deepEqual(v2.ranked, []);
+  assert.deepEqual(v2.excluded, []);
+  assert.deepEqual(v1.task, { family: "software-engineering", suite: null });
+  assert.deepEqual(v2.scoreScale, { kind: "request-relative", maximum: 3 });
+
+  invalidRankRequest(() => rankCatalog(catalog, requestV2({
+    inventory: [],
+    requirements: [{
+      measurementKey: "model.context.max_tokens",
+      aggregation: "fact",
+      operator: "gte",
+      value: "not-numeric",
+    }],
+  })), "must be numeric");
 });
 
 test("rank candidate count boundaries are explicit", () => {

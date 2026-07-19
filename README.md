@@ -42,6 +42,9 @@ request's runtime inventory. Hard requirements exclude candidates before
 preferences contribute to a request-relative score. Results retain observation
 and evidence ids and explain missing, stale, conflicting, incomparable, and
 unsatisfied evidence.
+An empty inventory remains a valid bounded request: Bearing validates and
+normalizes its task, criteria, and advisories, then returns deterministic empty
+ranked and excluded sets.
 
 Supported aggregations are `fact`, `mean`, `min`, `max`, `success-rate`, and
 `count`. Facts must agree within their canonical model/execution/task scope. An

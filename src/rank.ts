@@ -289,7 +289,7 @@ const validateRankTask = (value: unknown, requestText: RequestText): RankTask =>
 };
 
 const validateRankInventory = (value: unknown, requestText: RequestText): RuntimeCandidate[] => {
-  const values = array(value, "$.inventory", false);
+  const values = array(value, "$.inventory", true);
   if (values.length > MAX_RANK_CANDIDATES) invalid("$.inventory", `must contain at most ${MAX_RANK_CANDIDATES} candidates`);
   const inventory = values.map((raw, index): RuntimeCandidate => {
     const path = `$.inventory[${index}]`;
