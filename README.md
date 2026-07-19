@@ -139,8 +139,9 @@ facts; they are not promoted to provider-global declarations. OpenRouter's
 `-1` variable-price sentinel becomes unknown rather than a negative price.
 These facts carry a partial OpenRouter execution scope: runtime identity is
 asserted, while caller adapter, effective context, tool surface, hardware, and
-workflow remain wildcarded. Rank reasons and v2 advisories report asserted,
-wildcarded, and mismatched execution dimensions.
+workflow remain wildcarded. Version 2 rank reasons and advisories report
+asserted, wildcarded, and mismatched execution dimensions; version 1 responses
+retain their prior shape.
 
 Artificial Analysis indexes and Design Arena category results remain separate
 high-uncertainty external samples attributed to their upstream evaluators. The

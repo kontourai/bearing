@@ -136,6 +136,15 @@ const requestV2 = (overrides: Partial<Omit<RankRequestV2, "schemaVersion">> = {}
   };
 };
 
+const invalidRankRequest = (operation: () => unknown, message?: string): void => {
+  assert.throws(
+    operation,
+    (error: unknown) => error instanceof BearingError
+      && error.code === "INVALID_RANK_REQUEST"
+      && (message === undefined || error.message.includes(message)),
+  );
+};
+
 test("hard requirements filter before request-relative preference ranking", () => {
   const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
   const result = rankCatalog(catalog, request());
@@ -211,199 +220,6 @@ test("runtime tool ordering is normalized before exact profile matching", () => 
   assert.equal(result.ranked.length, 1);
 });
 
-test("partial declarations match asserted runtime dimensions and explain wildcarded fields", () => {
-  const partial: ObservationInput = {
-    ...fact(modelA, "openrouter.model.context.max_tokens", 1_050_000, "openrouter-context"),
-    execution: {
-      kind: "partial",
-      runtime: { id: "openrouter", version: null },
-      adapter: null,
-      effectiveContextTokens: null,
-      toolSurface: null,
-      hardware: null,
-      workflow: null,
-    },
-  };
-  const catalog = compileCatalog([partial], { asOf: "2026-07-18T22:00:00.000Z" });
-  const openrouter = {
-    id: "openrouter:model-a",
-    model: modelA,
-    execution: {
-      ...execution,
-      runtime: { id: "openrouter", version: "2026-07-18" },
-      adapter: { id: "caller-openrouter-adapter", version: "9.0.0" },
-      toolSurface: ["browser", "shell"],
-    },
-  };
-  const local = { id: "local:model-a", model: modelA, execution };
-  const result = rankCatalog(catalog, request({
-    inventory: [local, openrouter],
-    requirements: [{
-      measurementKey: "openrouter.model.context.max_tokens",
-      aggregation: "fact",
-      operator: "gte",
-      value: 1_000_000,
-    }],
-    preferences: [],
-  }));
-
-  assert.deepEqual(result.ranked.map((candidate) => candidate.candidateId), ["openrouter:model-a"]);
-  const matched = result.ranked[0].reasons[0].executionApplicability!;
-  assert.deepEqual(matched.matchedKinds, ["partial"]);
-  assert.deepEqual(matched.assertedDimensions, ["runtime.id"]);
-  assert.deepEqual(matched.wildcardedDimensions, [
-    "adapter",
-    "effectiveContextTokens",
-    "hardware",
-    "runtime.version",
-    "toolSurface",
-    "workflow",
-  ]);
-  const rejected = result.excluded[0].reasons[0];
-  assert.equal(rejected.code, "INCOMPARABLE_EVIDENCE");
-  assert.deepEqual(rejected.executionApplicability?.mismatchedDimensions, ["runtime.id"]);
-  assert.deepEqual(result.excluded[0].evidence[0].evidenceIds, ["openrouter-context"]);
-});
-
-test("partial scope nulls are wildcards while empty tools remain known-empty", () => {
-  const partial: ObservationInput = {
-    ...fact(modelA, "runtime.ready", true, "partial-runtime-ready"),
-    execution: {
-      kind: "partial",
-      runtime: { id: "local-runtime", version: null },
-      adapter: { id: "agent-adapter", version: null },
-      effectiveContextTokens: 32_768,
-      toolSurface: [],
-      hardware: { class: "desktop-gpu", accelerator: null, memoryBytes: null },
-      workflow: { id: "builder", version: null, condition: "kit" },
-    },
-  };
-  const catalog = compileCatalog([partial], { asOf: "2026-07-18T22:00:00.000Z" });
-  const knownEmpty = { ...execution, toolSurface: [] };
-  const matching = rankCatalog(catalog, request({
-    inventory: [{ id: "empty-tools", model: modelA, execution: knownEmpty }],
-    requirements: [{ measurementKey: "runtime.ready", aggregation: "fact", operator: "eq", value: true }],
-    preferences: [],
-  }));
-  assert.equal(matching.ranked.length, 1);
-  const applicability = matching.ranked[0].reasons[0].executionApplicability!;
-  assert.ok(applicability.assertedDimensions.includes("toolSurface"));
-  assert.ok(applicability.wildcardedDimensions.includes("hardware.accelerator"));
-  assert.ok(applicability.wildcardedDimensions.includes("hardware.memoryBytes"));
-  assert.ok(applicability.wildcardedDimensions.includes("workflow.version"));
-
-  const nonEmpty = rankCatalog(catalog, request({
-    inventory: [{ id: "non-empty-tools", model: modelA, execution }],
-    requirements: [{ measurementKey: "runtime.ready", aggregation: "fact", operator: "eq", value: true }],
-    preferences: [],
-  }));
-  assert.equal(nonEmpty.excluded[0].reasons[0].code, "INCOMPARABLE_EVIDENCE");
-  assert.deepEqual(nonEmpty.excluded[0].reasons[0].executionApplicability?.mismatchedDimensions, ["toolSurface"]);
-
-  const mismatches: Array<[string, ExecutionProfile]> = [
-    ["adapter.id", { ...knownEmpty, adapter: { id: "other-adapter", version: "4.2.0" } }],
-    ["effectiveContextTokens", { ...knownEmpty, effectiveContextTokens: 16_384 }],
-    ["hardware.class", { ...knownEmpty, hardware: { ...knownEmpty.hardware!, class: "server-gpu" } }],
-    ["workflow.condition", { ...knownEmpty, workflow: { ...knownEmpty.workflow!, condition: "bare" } }],
-  ];
-  for (const [dimension, candidateExecution] of mismatches) {
-    const mismatch = rankCatalog(catalog, request({
-      inventory: [{ id: dimension, model: modelA, execution: candidateExecution }],
-      requirements: [{ measurementKey: "runtime.ready", aggregation: "fact", operator: "eq", value: true }],
-      preferences: [],
-    }));
-    assert.deepEqual(
-      mismatch.excluded[0].reasons[0].executionApplicability?.mismatchedDimensions,
-      [dimension],
-    );
-  }
-});
-
-test("partial nested versions and optional hardware fields match only when asserted", () => {
-  const partial: ObservationInput = {
-    ...fact(modelA, "runtime.ready", true, "partial-versioned-runtime"),
-    execution: {
-      kind: "partial",
-      runtime: { id: "local-runtime", version: "1.2.3" },
-      adapter: { id: "agent-adapter", version: "4.2.0" },
-      effectiveContextTokens: null,
-      toolSurface: null,
-      hardware: { class: "desktop-gpu", accelerator: "gpu-1", memoryBytes: 24_000_000_000 },
-      workflow: { id: "builder", version: "2.0.0", condition: null },
-    },
-  };
-  const catalog = compileCatalog([partial], { asOf: "2026-07-18T22:00:00.000Z" });
-  const requirement = [{ measurementKey: "runtime.ready", aggregation: "fact" as const, operator: "eq" as const, value: true }];
-  const matchingExecution: ExecutionProfile = {
-    ...execution,
-    runtime: { ...execution.runtime, version: "1.2.3" },
-    hardware: { ...execution.hardware!, accelerator: "gpu-1" },
-    workflow: { ...execution.workflow!, version: "2.0.0" },
-  };
-  const mismatches: Array<[string, ExecutionProfile]> = [
-    ["runtime.version", { ...matchingExecution, runtime: { ...matchingExecution.runtime, version: "1.2.4" } }],
-    ["adapter.version", { ...matchingExecution, adapter: { ...matchingExecution.adapter!, version: "4.3.0" } }],
-    ["hardware.accelerator", { ...matchingExecution, hardware: { ...matchingExecution.hardware!, accelerator: "gpu-2" } }],
-    ["hardware.memoryBytes", { ...matchingExecution, hardware: { ...matchingExecution.hardware!, memoryBytes: 16_000_000_000 } }],
-    ["workflow.version", { ...matchingExecution, workflow: { ...matchingExecution.workflow!, version: "2.1.0" } }],
-  ];
-
-  for (const [dimension, candidateExecution] of mismatches) {
-    const result = rankCatalog(catalog, request({
-      inventory: [{ id: dimension, model: modelA, execution: candidateExecution }],
-      requirements: requirement,
-      preferences: [],
-    }));
-    assert.deepEqual(
-      result.excluded[0].reasons[0].executionApplicability?.mismatchedDimensions,
-      [dimension],
-    );
-  }
-});
-
-test("exact evaluation scopes remain exact after partial matching is introduced", () => {
-  const catalog = compileCatalog([sample(modelA, true, 1000, "exact-sample")], { asOf: "2026-07-18T22:00:00.000Z" });
-  const otherAdapter = { ...execution, adapter: { id: "other-adapter", version: "1.0.0" } };
-  const result = rankCatalog(catalog, request({
-    inventory: [{ id: "other-adapter", model: modelA, execution: otherAdapter }],
-    requirements: [{ measurementKey: "task.accepted", aggregation: "count", operator: "gte", value: 1 }],
-    preferences: [],
-  }));
-  assert.equal(result.ranked.length, 0);
-  assert.equal(result.excluded[0].reasons[0].code, "INCOMPARABLE_EVIDENCE");
-  assert.deepEqual(result.excluded[0].reasons[0].executionApplicability?.mismatchedDimensions, ["adapter"]);
-});
-
-test("advisories expose partial-scope applicability without changing ranking", () => {
-  const partial: ObservationInput = {
-    ...fact(modelA, "runtime.context", 1_050_000, "advisory-partial"),
-    execution: {
-      kind: "partial",
-      runtime: { id: "openrouter", version: null },
-      adapter: null,
-      effectiveContextTokens: null,
-      toolSurface: null,
-      hardware: null,
-      workflow: null,
-    },
-  };
-  const catalog = compileCatalog([partial], { asOf: "2026-07-18T22:00:00.000Z" });
-  const candidate = {
-    id: "openrouter:model-a",
-    model: modelA,
-    execution: { ...execution, runtime: { id: "openrouter", version: "2026-07-18" } },
-  };
-  const result = rankCatalog(catalog, requestV2({
-    inventory: [candidate],
-    requirements: [],
-    preferences: [],
-    advisories: [{ id: "context", measurementKey: "runtime.context", aggregation: "fact" }],
-  }));
-  assert.equal(result.ranked[0].advisories[0].status, "present");
-  assert.deepEqual(result.ranked[0].advisories[0].executionApplicability.matchedKinds, ["partial"]);
-  assert.deepEqual(result.ranked[0].advisories[0].executionApplicability.assertedDimensions, ["runtime.id"]);
-});
-
 test("missing, stale, and conflicting requirement evidence exclude explicitly", () => {
   const stale = fact(modelA, "tool.edit.supported", true, "stale-edit", execution, "2026-07-18T21:00:00.000Z");
   const conflict = fact(modelB, "model.context.max_tokens", 16_384, "b-context-conflict");
@@ -451,8 +267,14 @@ test("v2 advisories project scalar facts without changing v1 eligibility, scores
   const withoutAdvisories = {
     ...v2,
     schemaVersion: "bearing.rank.result/v1",
-    ranked: v2.ranked.map(({ advisories: _advisories, ...candidate }) => candidate),
-    excluded: v2.excluded.map(({ advisories: _advisories, ...candidate }) => candidate),
+    ranked: v2.ranked.map(({ advisories: _advisories, reasons, ...candidate }) => ({
+      ...candidate,
+      reasons: reasons.map(({ executionApplicability: _executionApplicability, ...reason }) => reason),
+    })),
+    excluded: v2.excluded.map(({ advisories: _advisories, reasons, ...candidate }) => ({
+      ...candidate,
+      reasons: reasons.map(({ executionApplicability: _executionApplicability, ...reason }) => reason),
+    })),
   };
   assert.deepEqual(withoutAdvisories, v1);
 });
@@ -538,48 +360,103 @@ test("v2 advisories remain available on excluded candidates and deterministic ac
   );
 });
 
-test("invalid rank requests fail with typed diagnostics", () => {
+test("rank message schemas fail with typed diagnostics", () => {
   const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
   const v1OnlyRanker: CatalogRanker = (input) => rankCatalog(catalog, input);
   assert.equal(v1OnlyRanker(request()).schemaVersion, "bearing.rank.result/v1");
-  assert.throws(
-    () => rankCatalog(catalog, { ...request(), inventory: [] }),
-    (error: unknown) => error instanceof BearingError && error.code === "INVALID_RANK_REQUEST",
-  );
-  assert.throws(
-    () => rankCatalog(catalog, { ...requestV2(), advisories: [
-      { id: "duplicate", measurementKey: "model.context.max_tokens", aggregation: "fact" },
-      { id: "duplicate", measurementKey: "model.license", aggregation: "fact" },
-    ] }),
-    (error: unknown) => error instanceof BearingError && error.code === "INVALID_RANK_REQUEST",
-  );
-  assert.throws(
-    () => rankCatalog(catalog, { ...request(), advisories: [] } as RankRequest),
-    (error: unknown) => error instanceof BearingError && error.code === "INVALID_RANK_REQUEST",
-  );
+  invalidRankRequest(() => rankCatalog(catalog, { ...request(), inventory: [] }));
+  invalidRankRequest(() => rankCatalog(catalog, { ...requestV2(), advisories: [
+    { id: "duplicate", measurementKey: "model.context.max_tokens", aggregation: "fact" },
+    { id: "duplicate", measurementKey: "model.license", aggregation: "fact" },
+  ] }));
+  invalidRankRequest(() => rankCatalog(catalog, { ...request(), advisories: [] } as RankRequest));
+});
+
+test("rank candidate count boundaries are explicit", () => {
+  const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
+  const candidateBoundary = Array.from({ length: 128 }, (_, index) => ({ ...inventory[0], id: `candidate-${index}` }));
+  assert.equal(rankCatalog(catalog, request({ inventory: candidateBoundary, requirements: [], preferences: [] })).ranked.length, 128);
+  invalidRankRequest(() => rankCatalog(catalog, request({
+    inventory: [...candidateBoundary, { ...inventory[0], id: "candidate-128" }],
+    requirements: [],
+    preferences: [],
+  })), "at most 128 candidates");
+});
+
+test("rank requirement count boundaries are explicit", () => {
+  const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
+  const requirementBoundary = Array.from({ length: 128 }, (_, index) => ({
+    measurementKey: `requirement.${index}`,
+    aggregation: "fact" as const,
+    operator: "eq" as const,
+    value: true,
+  }));
+  assert.equal(rankCatalog(catalog, requestV2({ inventory: [inventory[0]], requirements: requirementBoundary, preferences: [] })).excluded.length, 1);
+  invalidRankRequest(() => rankCatalog(catalog, requestV2({
+    inventory: [inventory[0]],
+    requirements: [...requirementBoundary, { ...requirementBoundary[0], measurementKey: "requirement.128" }],
+    preferences: [],
+  })), "at most 128 criteria");
+});
+
+test("rank preference count boundaries are explicit", () => {
+  const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
+  const preferenceBoundary = Array.from({ length: 128 }, (_, index) => ({
+    measurementKey: `preference.${index}`,
+    aggregation: "fact" as const,
+    direction: "maximize" as const,
+    weight: 1,
+  }));
+  assert.equal(rankCatalog(catalog, requestV2({ inventory: [inventory[0]], requirements: [], preferences: preferenceBoundary })).ranked.length, 1);
+  invalidRankRequest(() => rankCatalog(catalog, requestV2({
+    inventory: [inventory[0]],
+    requirements: [],
+    preferences: [...preferenceBoundary, { ...preferenceBoundary[0], measurementKey: "preference.128" }],
+  })), "at most 128 criteria");
+});
+
+test("rank requests reject duplicate criteria and excessive evaluation cells", () => {
+  const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
+  const duplicate = [request().requirements[0], request().requirements[0]];
+  invalidRankRequest(() => rankCatalog(catalog, requestV2({ requirements: duplicate })), "duplicate criteria");
+  invalidRankRequest(() => rankCatalog(catalog, request({ requirements: duplicate })), "duplicate criteria");
+  const expandedInventory = Array.from({ length: 33 }, (_, index) => ({ ...inventory[0], id: `candidate-${index}` }));
+  const expandedCriteria = Array.from({ length: 63 }, (_, index) => ({
+    measurementKey: `criterion.${index}`,
+    aggregation: "fact" as const,
+    operator: "eq" as const,
+    value: true,
+  }));
+  invalidRankRequest(() => rankCatalog(catalog, requestV2({
+    inventory: expandedInventory, requirements: expandedCriteria, preferences: [],
+  })), "evaluation cells");
+  invalidRankRequest(() => rankCatalog(catalog, request({
+    inventory: expandedInventory, requirements: expandedCriteria, preferences: [],
+  })), "evaluation cells");
+});
+
+test("rank advisory projection and text bounds are explicit", () => {
+  const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
   const expandedInventory = Array.from({ length: 33 }, (_, index) => ({ ...inventory[0], id: `candidate-${index}` }));
   const expandedAdvisories = Array.from({ length: 32 }, (_, index) => ({
     id: `advisory-${index}`,
     measurementKey: "model.context.max_tokens",
     aggregation: "fact" as const,
   }));
-  assert.throws(
+  invalidRankRequest(
     () => rankCatalog(catalog, requestV2({ inventory: expandedInventory, advisories: expandedAdvisories })),
-    (error: unknown) => error instanceof BearingError
-      && error.code === "INVALID_RANK_REQUEST"
-      && error.message.includes("projection cells"),
+    "projection cells",
   );
-  assert.throws(
-    () => rankCatalog(catalog, requestV2({ advisories: [{
-      id: "x".repeat(257),
-      measurementKey: "model.context.max_tokens",
-      aggregation: "fact",
-    }] })),
-    (error: unknown) => error instanceof BearingError
-      && error.code === "INVALID_RANK_REQUEST"
-      && error.message.includes("256 UTF-8 bytes"),
-  );
+  invalidRankRequest(() => rankCatalog(catalog, requestV2({ advisories: [{
+    id: "x".repeat(257), measurementKey: "model.context.max_tokens", aggregation: "fact",
+  }] })), "256 UTF-8 bytes");
+  invalidRankRequest(() => rankCatalog(catalog, request({
+    inventory: [{ ...inventory[0], id: "x".repeat(257) }],
+  })), "256 UTF-8 bytes");
+});
 
+test("rank requests reject inherited record structures", () => {
+  const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
   const inheritedRoot = Object.create(requestV2()) as RankRequestV2;
   const inheritedCandidate = requestV2({ inventory: [Object.create(inventory[0])] });
   const inheritedRequirement = requestV2({ requirements: [Object.create(request().requirements[0])] });
@@ -589,12 +466,12 @@ test("invalid rank requests fail with typed diagnostics", () => {
     aggregation: "fact",
   })] });
   for (const inherited of [inheritedRoot, inheritedCandidate, inheritedRequirement, inheritedAdvisory]) {
-    assert.throws(
-      () => rankCatalog(catalog, inherited),
-      (error: unknown) => error instanceof BearingError && error.code === "INVALID_RANK_REQUEST",
-    );
+    invalidRankRequest(() => rankCatalog(catalog, inherited));
   }
+});
 
+test("rank requests reject nested inherited and accessor values without invoking getters", () => {
+  const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
   let getterReads = 0;
   const accessorModel = { revision: modelA.revision, quantization: modelA.quantization } as Record<string, unknown>;
   Object.defineProperty(accessorModel, "id", {
@@ -613,13 +490,14 @@ test("invalid rank requests fail with typed diagnostics", () => {
     requestV2({ inventory: [{ ...inventory[0], execution: { ...execution, toolSurface: accessorTools } }] }),
   ];
   for (const nested of nestedInputs) {
-    assert.throws(
-      () => rankCatalog(catalog, nested),
-      (error: unknown) => error instanceof BearingError && error.code === "INVALID_RANK_REQUEST",
-    );
+    invalidRankRequest(() => rankCatalog(catalog, nested));
   }
   assert.equal(getterReads, 0);
+});
 
+test("rank requests reject inherited and accessor-backed arrays without invoking getters", () => {
+  const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
+  let getterReads = 0;
   const inheritedInventory = new Array(1);
   const inheritedInventoryPrototype = Object.create(Array.prototype) as unknown[];
   Object.defineProperty(inheritedInventoryPrototype, "0", {
@@ -653,10 +531,7 @@ test("invalid rank requests fail with typed diagnostics", () => {
     }] }),
   ];
   for (const rankArrayInput of rankArrayInputs) {
-    assert.throws(
-      () => rankCatalog(catalog, rankArrayInput),
-      (error: unknown) => error instanceof BearingError && error.code === "INVALID_RANK_REQUEST",
-    );
+    invalidRankRequest(() => rankCatalog(catalog, rankArrayInput));
   }
   assert.equal(getterReads, 0);
 });

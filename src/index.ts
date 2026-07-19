@@ -10,9 +10,14 @@ export {
 export { compileCatalog, normalizeObservation } from "./catalog.js";
 export { BearingError, type BearingErrorCode } from "./error.js";
 export {
+  MAX_RANK_CANDIDATES,
+  MAX_RANK_CRITERIA,
+  MAX_RANK_CRITERION_CELLS,
+  MAX_RANK_TEXT_BYTES,
   MAX_RANK_V2_ADVISORIES,
   MAX_RANK_V2_ADVISORY_CELLS,
   MAX_RANK_V2_CANDIDATES,
+  MAX_RANK_V2_CRITERION_CELLS,
   MAX_RANK_V2_CRITERIA,
   MAX_RANK_V2_TEXT_BYTES,
   RANK_REQUEST_SCHEMA_VERSION,
@@ -38,6 +43,7 @@ export {
   type RankedCandidateV2,
   type RankPreference,
   type RankReason,
+  type RankReasonV2,
   type RankReasonCode,
   type RankRequest,
   type RankRequestV2,
