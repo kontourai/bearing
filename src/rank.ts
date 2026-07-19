@@ -277,6 +277,7 @@ const aggregateFor = (
 ): AggregateResult => {
   const all = observations
     .filter((observation) => applicable(observation, candidate, task))
+    .filter((observation) => observation.outcome?.status !== "invalid")
     .filter((observation) => allowedSources === undefined || allowedSources.includes(observation.sourceClass))
     .flatMap((observation) => observation.measurements
       .filter((measurement) => measurement.key === measurementKey)
