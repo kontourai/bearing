@@ -70,6 +70,8 @@ try {
     "dist/src/rank.d.ts",
     "dist/src/snapshot.d.ts",
     "dist/src/snapshot.js",
+    "dist/src/sources/aider-polyglot.d.ts",
+    "dist/src/sources/aider-polyglot.js",
     "dist/src/types.d.ts",
     "dist/src/types.js",
     "dist/src/validate.d.ts",

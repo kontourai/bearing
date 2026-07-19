@@ -23,6 +23,16 @@ export {
   type RuntimeCandidate,
 } from "./rank.js";
 export { parseCatalog, serializeCatalog, validateCatalogSnapshot } from "./snapshot.js";
+export {
+  AIDER_POLYGLOT_SOURCE,
+  aiderPolyglotSourceUrl,
+  importAiderPolyglotSnapshot,
+  type AiderPolyglotDiagnostic,
+  type AiderPolyglotImportInput,
+  type AiderPolyglotImportResult,
+  type AiderPolyglotRunMapping,
+  type TrustedSourceSnapshot,
+} from "./sources/aider-polyglot.js";
 export { validateExecutionProfile, validateModelIdentity, validateObservation } from "./validate.js";
 export {
   CATALOG_SCHEMA_VERSION,

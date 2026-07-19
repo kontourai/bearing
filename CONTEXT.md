@@ -41,7 +41,9 @@ Bearing may rank that list but never discovers or expands it.
 ## Product Boundary
 
 - Evals and external adapters produce observations.
-- Forage/Lookout fetch, snapshot, and detect source drift.
+- Forage/Lookout fetch, authenticate snapshot acquisition, and detect source
+  drift. Bearing source adapters validate the handed-off binding but do not
+  independently establish network origin.
 - Traverse proposes fields from unstructured content.
 - Survey carries candidate/review records.
 - Surface derives trust status and freshness meaning.
