@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "bearing.approved-source-manifest/v1",
+  "sources": [
+    {
+      "id": "livebench",
+      "owner": "LiveBench",
+      "sourceClass": "external",
+      "canonicalOrigin": "https://livebench.ai/",
+      "attribution": {
+        "name": "LiveBench",
+        "url": "https://livebench.ai/"
+      },
+      "license": {
+        "identifier": "NOASSERTION",
+        "evidenceUrl": null
+      },
+      "trustRationale": "Official LiveBench site and release-addressed benchmark artifacts published by the benchmark owner.",
+      "knownLimitations": [
+        "The public release artifacts do not disclose every execution-profile dimension.",
+        "Model labels require separately reviewed exact mappings before they can contribute observations.",
+        "License and reuse terms are not asserted by this manifest."
+      ],
+      "freshness": {
+        "refreshIntervalHours": 24,
+        "maxAgeHours": 168
+      },
+      "revision": {
+        "kind": "release",
+        "grammar": "calendar-date"
+      },
+      "resolver": {
+        "adapter": "livebench-web",
+        "version": "v1",
+        "entrypoint": {
+          "sourceId": "livebench-index",
+          "url": "https://livebench.ai/",
+          "mediaType": "text/html",
+          "maxBytes": 1048576
+        },
+        "derivedResourcePolicy": "same-origin-livebench-main-bundle/v1",
+        "maxBytes": 8388608
+      },
+      "artifacts": {
+        "adapter": "livebench-release",
+        "version": "v1",
+        "items": [
+          {
+            "id": "table",
+            "required": true,
+            "urlTemplate": "https://livebench.ai/table_{revision_underscore}.csv",
+            "mediaType": "text/csv",
+            "maxBytes": 8388608
+          },
+          {
+            "id": "categories",
+            "required": true,
+            "urlTemplate": "https://livebench.ai/categories_{revision_underscore}.json",
+            "mediaType": "application/json",
+            "maxBytes": 8388608
+          }
+        ]
+      },
+      "proposalPolicy": {
+        "newRevision": "review",
+        "unknownRows": "review",
+        "mappingChanges": "review"
+      }
+    }
+  ]
+}

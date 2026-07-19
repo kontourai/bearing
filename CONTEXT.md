@@ -61,6 +61,18 @@ measurement and aggregation for each runtime candidate. It preserves missing,
 stale, conflicting, and incomparable states and never affects ranking
 eligibility, scores, or order.
 
+**Approved Source Manifest**: A reviewed, versioned list of model-intelligence
+sources and the exact origins, resolver adapters, artifact templates, bounds,
+freshness policy, attribution, and limitations within which discovery may run.
+Discovery can propose a new source revision inside that boundary; it cannot
+onboard a source or approve a model mapping.
+
+**Source Revision Proposal**: A content-addressed result derived from exact
+resolver snapshot envelopes. It binds the approved manifest digest, resolver
+version, official entrypoint and derived-resource acquisitions, discovered
+revisions, and manifest-derived artifact locators. It is review input, not a
+capability observation or trust decision.
+
 ## Product Boundary
 
 - Evals and external adapters produce observations.
