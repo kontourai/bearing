@@ -7,6 +7,8 @@ export const OPENROUTER_MAX_ROWS = 5_000;
 
 const MAX_TEXT_CHARACTERS = 32_768;
 const MAX_ARRAY_ITEMS = 1_000;
+const MAX_MODEL_ID_CHARACTERS = 512;
+const MAX_DESIGN_CATEGORY_CHARACTERS = 256;
 const MAX_JSON_DEPTH = 64;
 const MAX_JSON_STRUCTURAL_TOKENS = 100_000;
 const DECIMAL_PATTERN = /^(?:0|[1-9]\d*)(?:\.\d{1,12})?$/;
@@ -72,6 +74,14 @@ const text = (value: unknown, path: string): string =>
   typeof value === "string" && value.length > 0 && value.length <= MAX_TEXT_CHARACTERS && value.trim() === value
     ? value
     : fail(path, `must be a trimmed non-empty string of at most ${MAX_TEXT_CHARACTERS} characters`);
+
+const identityText = (value: unknown, path: string, maxCharacters: number): string => {
+  if (typeof value !== "string" || value.length === 0 || value.length > maxCharacters || value.trim() !== value) {
+    return fail(path, `must be a trimmed non-empty identity of at most ${maxCharacters} characters`);
+  }
+  try { encodeURIComponent(value); } catch { return fail(path, "must be URI-encodable Unicode text"); }
+  return value;
+};
 
 const positiveInteger = (value: unknown, path: string): number =>
   typeof value === "number" && Number.isSafeInteger(value) && value > 0
@@ -268,7 +278,7 @@ const parseDesignArena = (value: unknown, path: string): ParsedOpenRouterModelRo
     const arena: "agents" | "models" = item.arena;
     return {
       arena,
-      category: text(item.category, `${itemPath}.category`),
+      category: identityText(item.category, `${itemPath}.category`, MAX_DESIGN_CATEGORY_CHARACTERS),
       elo: numberBetween(item.elo, 0, 5_000, `${itemPath}.elo`),
       winRate: numberBetween(item.win_rate, 0, 100, `${itemPath}.win_rate`),
       rank: positiveInteger(item.rank, `${itemPath}.rank`),
@@ -334,7 +344,7 @@ const parseRow = (value: unknown, index: number): ParsedOpenRouterModelRow => {
   }
   validateRowMetadata(item, path);
   return {
-    id: text(item.id, `${path}.id`),
+    id: identityText(item.id, `${path}.id`, MAX_MODEL_ID_CHARACTERS),
     contextLength: positiveInteger(item.context_length, `${path}.context_length`),
     topProviderContextLength: optionalPositiveInteger(provider.context_length, `${path}.top_provider.context_length`),
     maxCompletionTokens: optionalPositiveInteger(provider.max_completion_tokens, `${path}.top_provider.max_completion_tokens`),

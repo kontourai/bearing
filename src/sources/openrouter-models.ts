@@ -25,6 +25,10 @@ import {
 
 const MAX_SOURCE_REF_LENGTH = 16 * 1024;
 const MAX_OBSERVATIONS = 10_000;
+const MAX_NORMALIZED_OUTPUT_BYTES = 16 * 1024 * 1024;
+const MAX_MAPPING_KEY_CHARACTERS = 512;
+const MAX_MAPPING_IDENTITY_BYTES = 1_024;
+const ESTIMATED_FIXED_OBSERVATION_BYTES = 4_096;
 
 export const OPENROUTER_MODELS_SOURCE = Object.freeze({
   id: "openrouter-models",
@@ -193,10 +197,33 @@ const validateSnapshot = (
 const validateMapping = (value: unknown, modelId: string): OpenRouterModelMapping => {
   const item = record(value, `$.models.${modelId}`);
   exactKeys(item, ["model", "validUntil"], `$.models.${modelId}`);
+  const model = validateModelIdentity(item.model, `$.models.${modelId}.model`);
+  for (const [field, text] of Object.entries(model)) {
+    if (text !== null && Buffer.byteLength(text, "utf8") > MAX_MAPPING_IDENTITY_BYTES) {
+      return fail(`$.models.${modelId}.model.${field}`, `must be at most ${MAX_MAPPING_IDENTITY_BYTES} UTF-8 bytes`);
+    }
+  }
   return {
-    model: validateModelIdentity(item.model, `$.models.${modelId}.model`),
+    model,
     validUntil: item.validUntil === null ? null : isoTimestamp(item.validUntil, `$.models.${modelId}.validUntil`),
   };
+};
+
+const validateMappings = (value: unknown): ReadonlyMap<string, OpenRouterModelMapping> => {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return fail("$.models", "must be an exact model-row mapping");
+  }
+  const entries = Object.entries(value);
+  if (entries.length > OPENROUTER_MAX_ROWS) return fail("$.models", `must contain at most ${OPENROUTER_MAX_ROWS} mappings`);
+  const mappings = new Map<string, OpenRouterModelMapping>();
+  for (const [rowId, mapping] of entries) {
+    if (rowId.length === 0 || rowId.length > MAX_MAPPING_KEY_CHARACTERS || rowId.trim() !== rowId) {
+      return fail(`$.models.${rowId}`, `key must be a trimmed identity of at most ${MAX_MAPPING_KEY_CHARACTERS} characters`);
+    }
+    try { encodeURIComponent(rowId); } catch { return fail(`$.models.${rowId}`, "key must be URI-encodable Unicode text"); }
+    mappings.set(rowId, validateMapping(mapping, rowId));
+  }
+  return mappings;
 };
 
 const earlier = (left: string | null, right: string): string =>
@@ -408,37 +435,58 @@ const mappedRowObservationCount = (row: ParsedOpenRouterModelRow): number => {
   return factMeasurements(row).length + benchmarkCount + row.designArena.length;
 };
 
+const estimatedMappedRowBytes = (row: ParsedOpenRouterModelRow, mapping: OpenRouterModelMapping): number => {
+  const common = ESTIMATED_FIXED_OBSERVATION_BYTES +
+    Buffer.byteLength(JSON.stringify(mapping.model), "utf8") +
+    2 * Buffer.byteLength(encodeURIComponent(row.id), "utf8");
+  const nonDesignCount = mappedRowObservationCount(row) - row.designArena.length;
+  return common * nonDesignCount + row.designArena.reduce(
+    (total, sample) => total + common + 2 * Buffer.byteLength(encodeURIComponent(sample.category), "utf8"),
+    0,
+  );
+};
+
 const assertObservationBound = (
   rows: ParsedOpenRouterModelRow[],
-  models: OpenRouterModelsImportInput["models"],
+  models: ReadonlyMap<string, OpenRouterModelMapping>,
 ): void => {
   let count = 0;
   for (const row of rows) {
-    if (!Object.prototype.hasOwnProperty.call(models, row.id)) continue;
+    if (!models.has(row.id)) continue;
     count += mappedRowObservationCount(row);
     if (count > MAX_OBSERVATIONS) {
       return fail("$.snapshot.body.data", `mapped rows must expand to at most ${MAX_OBSERVATIONS} observations`);
+    }
+  }
+  let bytes = 0;
+  for (const row of rows) {
+    const mapping = models.get(row.id);
+    if (mapping === undefined) continue;
+    bytes += estimatedMappedRowBytes(row, mapping);
+    if (bytes > MAX_NORMALIZED_OUTPUT_BYTES) {
+      return fail("$.snapshot.body.data", `mapped rows must expand to at most ${MAX_NORMALIZED_OUTPUT_BYTES} estimated output bytes`);
     }
   }
 };
 
 const importRows = (
   rows: ParsedOpenRouterModelRow[],
-  models: OpenRouterModelsImportInput["models"],
+  models: ReadonlyMap<string, OpenRouterModelMapping>,
   fetchedAt: string,
   validUntil: string,
 ): { observations: ObservationInput[]; diagnostics: OpenRouterModelsDiagnostic[] } => {
   const observations: ObservationInput[] = [];
   const diagnostics: OpenRouterModelsDiagnostic[] = [];
   rows.forEach((row, index) => {
-    if (!Object.prototype.hasOwnProperty.call(models, row.id)) {
+    const mapping = models.get(row.id);
+    if (mapping === undefined) {
       diagnostics.push({ code: "unmapped-model", path: `$.snapshot.body.data[${index}]`, message: `Skipped unmapped OpenRouter model ${row.id}` });
       return;
     }
-    observations.push(...mappedRowObservations(row, validateMapping(models[row.id], row.id), fetchedAt, validUntil));
+    observations.push(...mappedRowObservations(row, mapping, fetchedAt, validUntil));
   });
   const rowIds = new Set(rows.map((row) => row.id));
-  Object.keys(models).sort(compareText).forEach((modelId) => {
+  [...models.keys()].sort(compareText).forEach((modelId) => {
     if (!rowIds.has(modelId)) diagnostics.push({ code: "configured-model-missing", path: `$.models.${modelId}`, message: `Configured OpenRouter model ${modelId} is absent from the source snapshot` });
   });
   return { observations, diagnostics };
@@ -450,15 +498,10 @@ export const importOpenRouterModelsSnapshot = (input: OpenRouterModelsImportInpu
   const sourceValidUntil = new Date(
     new Date(snapshot.fetchedAt).getTime() + source.freshness.maxAgeHours * 60 * 60 * 1_000,
   ).toISOString();
-  if (input.models === null || typeof input.models !== "object" || Array.isArray(input.models)) {
-    return fail("$.models", "must be an exact model-row mapping");
-  }
+  const models = validateMappings(input.models);
   const rows = parseOpenRouterModelRows(snapshot.body);
-  if (Object.keys(input.models).length > OPENROUTER_MAX_ROWS) {
-    return fail("$.models", `must contain at most ${OPENROUTER_MAX_ROWS} mappings`);
-  }
-  assertObservationBound(rows, input.models);
-  const { observations, diagnostics } = importRows(rows, input.models, snapshot.fetchedAt, sourceValidUntil);
+  assertObservationBound(rows, models);
+  const { observations, diagnostics } = importRows(rows, models, snapshot.fetchedAt, sourceValidUntil);
   observations.sort((left, right) => {
     const model = compareText(left.model.id, right.model.id);
     if (model !== 0) return model;

@@ -32,7 +32,7 @@ const result = await fetchSource({
   retries: 2,
   respectRobots: true,
   egress: { guarded: true },
-}, { store });
+}, { store, maxResponseBytes: source.resolver.entrypoint.maxBytes });
 if (!result.snapshot) {
   throw new Error(`Guarded acquisition failed: ${result.error?.kind ?? "no-snapshot"}: ${result.error?.message ?? "unknown error"}`);
 }

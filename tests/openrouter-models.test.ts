@@ -215,6 +215,36 @@ test("fails closed on unparsed policy, snapshot tampering, duplicate keys, and s
     () => importSnapshot({ snapshot: snapshot(JSON.stringify({ data: [], total_count: 0, links: { next: null } })) }),
     /between 1 and 5000 model rows/,
   );
+
+  const oversizedId = modelRow(`provider/${"x".repeat(504)}`);
+  assert.throws(
+    () => importSnapshot({ snapshot: snapshot(JSON.stringify({ data: [oversizedId], total_count: 1, links: { next: null } })) }),
+    /identity of at most 512 characters/,
+  );
+
+  const invalidUnicodeId = modelRow("provider/\ud800");
+  assert.throws(
+    () => importSnapshot({ snapshot: snapshot(JSON.stringify({ data: [invalidUnicodeId], total_count: 1, links: { next: null } })) }),
+    /URI-encodable Unicode text/,
+  );
+
+  const oversizedCategory = modelRow("openai/gpt-5.6-sol", null, [{
+    arena: "agents", category: "x".repeat(257), elo: 1_000, win_rate: 50, rank: 1,
+  }]);
+  assert.throws(
+    () => importSnapshot({ snapshot: snapshot(JSON.stringify({ data: [oversizedCategory], total_count: 1, links: { next: null } })) }),
+    /identity of at most 256 characters/,
+  );
+
+  assert.throws(
+    () => importSnapshot({ models: {
+      "openai/gpt-5.6-sol": {
+        model: { id: "x".repeat(1_025), revision: null, quantization: null },
+        validUntil: null,
+      },
+    } }),
+    /must be at most 1024 UTF-8 bytes/,
+  );
 });
 
 test("independently rejects a custom-registry source that launders the OpenRouter adapter identity", () => {
@@ -282,5 +312,25 @@ test("rejects mapped-row observation amplification before constructing observati
   assert.throws(
     () => importSnapshot({ snapshot: snapshot(amplifiedBody), models: amplifiedModels }),
     /mapped rows must expand to at most 10000 observations/,
+  );
+});
+
+test("rejects aggregate normalized-byte amplification below the observation-count ceiling", () => {
+  const designSamples = Array.from({ length: 4 }, (_, index) => ({
+    arena: "agents",
+    category: `category-${index}`,
+    elo: 1_000 + index,
+    win_rate: 50,
+    rank: index + 1,
+  }));
+  const rows = Array.from({ length: 400 }, (_, index) => modelRow(`mapped/model-${index}`, null, designSamples));
+  const amplifiedBody = JSON.stringify({ data: rows, total_count: rows.length, links: { next: null } });
+  const amplifiedModels = Object.fromEntries(rows.map((row) => [row.id, {
+    model: { id: row.id, revision: null, quantization: null },
+    validUntil: null,
+  }]));
+  assert.throws(
+    () => importSnapshot({ snapshot: snapshot(amplifiedBody), models: amplifiedModels }),
+    /estimated output bytes/,
   );
 });
