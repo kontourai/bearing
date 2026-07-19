@@ -1,4 +1,5 @@
 import { BearingError } from "./error.js";
+import { allowOnlyKeys, plainArray, plainRecord, requireOwnKeys } from "./structural.js";
 import {
   OBSERVATION_SCHEMA_VERSION,
   type ComponentIdentity,
@@ -27,23 +28,19 @@ const fail = (path: string, message: string): never => {
 };
 
 const record = (value: unknown, path: string): RecordValue => {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) {
-    fail(path, "must be an object");
-  }
-  return value as RecordValue;
+  return plainRecord(value, path, fail);
 };
 
 const allowedKeys = (value: RecordValue, keys: string[], path: string): void => {
-  const allowed = new Set(keys);
-  for (const key of Object.keys(value)) {
-    if (!allowed.has(key)) fail(`${path}.${key}`, "is not a supported field");
-  }
+  allowOnlyKeys(value, keys, path, fail, "is not a supported field");
 };
 
 const requiredKeys = (value: RecordValue, keys: string[], path: string): void => {
-  for (const key of keys) {
-    if (!(key in value)) fail(`${path}.${key}`, "is required");
-  }
+  requireOwnKeys(value, keys, path, fail);
+};
+
+const array = (value: unknown, path: string, allowEmpty: boolean): unknown[] => {
+  return plainArray(value, path, allowEmpty, fail);
 };
 
 const text = (value: unknown, path: string): string => {
@@ -78,10 +75,7 @@ export const isoTimestamp = (value: unknown, path: string): string => {
 };
 
 const stringArray = (value: unknown, path: string, allowEmpty: boolean): string[] => {
-  if (!Array.isArray(value) || (!allowEmpty && value.length === 0)) {
-    fail(path, allowEmpty ? "must be an array" : "must be a non-empty array");
-  }
-  const items = value as unknown[];
+  const items = array(value, path, allowEmpty);
   const result = items.map((item: unknown, index: number) => text(item, `${path}[${index}]`));
   if (new Set(result).size !== result.length) fail(path, "must not contain duplicates");
   return result;
@@ -267,13 +261,11 @@ export const validateObservation = (value: unknown): ObservationInput => {
   if (item.sourceClass !== "first-party" && item.sourceClass !== "external") {
     fail("$.sourceClass", "must be first-party or external");
   }
-  if (!Array.isArray(item.measurements) || item.measurements.length === 0) fail("$.measurements", "must be a non-empty array");
-  const measurementValues = item.measurements as unknown[];
+  const measurementValues = array(item.measurements, "$.measurements", false);
   const measurements = measurementValues.map((entry: unknown, index: number) => measurement(entry, `$.measurements[${index}]`));
   const measurementIds = measurements.map((entry) => `${entry.kind}:${entry.key}`);
   if (new Set(measurementIds).size !== measurementIds.length) fail("$.measurements", "must not repeat a kind/key pair");
-  if (!Array.isArray(item.evidence) || item.evidence.length === 0) fail("$.evidence", "must be a non-empty array");
-  const evidenceValues = item.evidence as unknown[];
+  const evidenceValues = array(item.evidence, "$.evidence", false);
   const evidenceItems = evidenceValues.map((entry: unknown, index: number) => evidence(entry, `$.evidence[${index}]`));
   if (new Set(evidenceItems.map((entry) => entry.id)).size !== evidenceItems.length) fail("$.evidence", "must not repeat evidence ids");
 

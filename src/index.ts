@@ -1,26 +1,50 @@
 export { canonicalJson, compareText, sha256 } from "./canonical.js";
-export { MAX_RANK_REQUEST_BYTES, createCatalogHandler, type CatalogHandler, type CatalogHandlerOptions } from "./api.js";
+export {
+  DEFAULT_MAX_CONCURRENT_RANK_REQUESTS,
+  DEFAULT_MAX_RANK_RESPONSE_BYTES,
+  MAX_RANK_REQUEST_BYTES,
+  createCatalogHandler,
+  type CatalogHandler,
+  type CatalogHandlerOptions,
+} from "./api.js";
 export { compileCatalog, normalizeObservation } from "./catalog.js";
 export { BearingError, type BearingErrorCode } from "./error.js";
 export {
+  MAX_RANK_V2_ADVISORIES,
+  MAX_RANK_V2_ADVISORY_CELLS,
+  MAX_RANK_V2_CANDIDATES,
+  MAX_RANK_V2_CRITERIA,
+  MAX_RANK_V2_TEXT_BYTES,
   RANK_REQUEST_SCHEMA_VERSION,
+  RANK_REQUEST_SCHEMA_VERSION_V2,
   RANK_RESULT_SCHEMA_VERSION,
+  RANK_RESULT_SCHEMA_VERSION_V2,
   createCatalogRanker,
   rankCatalog,
   validateRankRequest,
   type Aggregation,
+  type AnyRankRequest,
+  type AnyRankResult,
   type CatalogRanker,
   type ExcludedCandidate,
+  type ExcludedCandidateV2,
+  type RankAdvisoryProjection,
+  type RankAdvisoryRequest,
+  type RankAdvisoryStatus,
   type RankEvidence,
   type RankedCandidate,
+  type RankedCandidateV2,
   type RankPreference,
   type RankReason,
   type RankReasonCode,
   type RankRequest,
+  type RankRequestV2,
   type RankRequirement,
   type RankResult,
+  type RankResultV2,
   type RankTask,
   type RuntimeCandidate,
+  type VersionedCatalogRanker,
 } from "./rank.js";
 export { parseCatalog, serializeCatalog, validateCatalogSnapshot } from "./snapshot.js";
 export {

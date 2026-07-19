@@ -1,15 +1,49 @@
 import { canonicalJson } from "./canonical.js";
 import { BearingError } from "./error.js";
-import { createCatalogRanker, type RankRequest } from "./rank.js";
+import { createCatalogRanker, type AnyRankRequest } from "./rank.js";
 import { validateCatalogSnapshot } from "./snapshot.js";
 import type { CatalogSnapshot } from "./types.js";
 
 export interface CatalogHandlerOptions {
   catalog: CatalogSnapshot;
+  maxConcurrentRankRequests?: number;
+  maxRankResponseBytes?: number;
 }
 
 export type CatalogHandler = (request: Request) => Promise<Response>;
 export const MAX_RANK_REQUEST_BYTES = 1_048_576;
+export const DEFAULT_MAX_CONCURRENT_RANK_REQUESTS = 4;
+export const DEFAULT_MAX_RANK_RESPONSE_BYTES = 8 * 1_048_576;
+
+const byteLength = (value: string): number => new TextEncoder().encode(value).byteLength;
+
+const positiveInteger = (value: number, label: string): number => {
+  if (!Number.isSafeInteger(value) || value <= 0) throw new TypeError(`${label} must be a positive safe integer.`);
+  return value;
+};
+
+const readRequestTextLimited = async (request: Request, maxBytes: number): Promise<string | null> => {
+  if (request.body === null) return "";
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder();
+  let body = "";
+  let bytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytes += value.byteLength;
+      if (bytes > maxBytes) {
+        void reader.cancel().catch(() => undefined);
+        return null;
+      }
+      body += decoder.decode(value, { stream: true });
+    }
+    return body + decoder.decode();
+  } finally {
+    reader.releaseLock();
+  }
+};
 
 const matchesEtag = (header: string | null, etag: string): boolean => {
   if (header === null) return false;
@@ -41,6 +75,17 @@ const jsonResponse = (
   return new Response(head ? null : canonicalJson(body), { status, headers });
 };
 
+const serializedJsonResponse = (
+  catalog: CatalogSnapshot,
+  body: string,
+  status = 200,
+  extraHeaders?: Record<string, string>,
+): Response => {
+  const headers = responseHeaders(catalog);
+  for (const [key, value] of Object.entries(extraHeaders ?? {})) headers.set(key, value);
+  return new Response(body, { status, headers });
+};
+
 const errorResponse = (
   catalog: CatalogSnapshot,
   status: number,
@@ -56,6 +101,14 @@ const errorResponse = (
 
 export const createCatalogHandler = (options: CatalogHandlerOptions): CatalogHandler => {
   const catalog = validateCatalogSnapshot(options.catalog);
+  const maxConcurrentRankRequests = positiveInteger(
+    options.maxConcurrentRankRequests ?? DEFAULT_MAX_CONCURRENT_RANK_REQUESTS,
+    "maxConcurrentRankRequests",
+  );
+  const maxRankResponseBytes = positiveInteger(
+    options.maxRankResponseBytes ?? DEFAULT_MAX_RANK_RESPONSE_BYTES,
+    "maxRankResponseBytes",
+  );
   const etag = `"bearing-${catalog.digest}"`;
   const serializedCatalog = canonicalJson(catalog);
   const modelsByKey = new Map(catalog.models.map((model) => [model.key, model]));
@@ -72,6 +125,7 @@ export const createCatalogHandler = (options: CatalogHandlerOptions): CatalogHan
     conflictCount: conflictsByModel.get(model.key)?.length ?? 0,
   }));
   const rank = createCatalogRanker(catalog);
+  let activeRankRequests = 0;
 
   const notModified = (request: Request): Response | null =>
     matchesEtag(request.headers.get("if-none-match"), etag)
@@ -102,19 +156,33 @@ export const createCatalogHandler = (options: CatalogHandlerOptions): CatalogHan
       }
       const declaredLength = Number(request.headers.get("content-length"));
       if (Number.isFinite(declaredLength) && declaredLength > MAX_RANK_REQUEST_BYTES) {
+        void request.body?.cancel().catch(() => undefined);
         return errorResponse(catalog, 413, "PAYLOAD_TOO_LARGE", `Rank requests are limited to ${MAX_RANK_REQUEST_BYTES} bytes.`, false);
       }
-      const body = await request.text();
-      if (new TextEncoder().encode(body).byteLength > MAX_RANK_REQUEST_BYTES) {
-        return errorResponse(catalog, 413, "PAYLOAD_TOO_LARGE", `Rank requests are limited to ${MAX_RANK_REQUEST_BYTES} bytes.`, false);
+      if (activeRankRequests >= maxConcurrentRankRequests) {
+        void request.body?.cancel().catch(() => undefined);
+        return errorResponse(catalog, 503, "RANK_CAPACITY_EXCEEDED", "Rank request capacity is currently exhausted.", false, { "retry-after": "1" });
       }
+      activeRankRequests++;
       try {
-        return jsonResponse(catalog, rank(JSON.parse(body) as RankRequest));
-      } catch (error) {
-        if (error instanceof SyntaxError || (error instanceof BearingError && error.code === "INVALID_RANK_REQUEST")) {
-          return errorResponse(catalog, 400, "INVALID_RANK_REQUEST", error.message, false);
+        const body = await readRequestTextLimited(request, MAX_RANK_REQUEST_BYTES);
+        if (body === null) {
+          return errorResponse(catalog, 413, "PAYLOAD_TOO_LARGE", `Rank requests are limited to ${MAX_RANK_REQUEST_BYTES} bytes.`, false);
         }
-        throw error;
+        try {
+          const serialized = canonicalJson(rank(JSON.parse(body) as AnyRankRequest));
+          if (byteLength(serialized) > maxRankResponseBytes) {
+            return errorResponse(catalog, 422, "RANK_RESULT_TOO_LARGE", `Rank results are limited to ${maxRankResponseBytes} bytes.`, false);
+          }
+          return serializedJsonResponse(catalog, serialized);
+        } catch (error) {
+          if (error instanceof SyntaxError || (error instanceof BearingError && error.code === "INVALID_RANK_REQUEST")) {
+            return errorResponse(catalog, 400, "INVALID_RANK_REQUEST", error.message, false);
+          }
+          throw error;
+        }
+      } finally {
+        activeRankRequests--;
       }
     }
 
