@@ -153,6 +153,21 @@ test("count aggregation can enforce minimum sample volume", () => {
   assert.ok(result.excluded.every((candidate) => candidate.reasons.some((reason) => reason.code === "REQUIREMENT_NOT_MET")));
 });
 
+test("invalid evaluation measurements never contribute to ranking", () => {
+  const invalid: ObservationInput = {
+    ...sample(modelA, true, 1000, "invalid-pass"),
+    outcome: { status: "invalid", reason: "runner did not execute" },
+  };
+  const catalog = compileCatalog([...observations(), invalid], { asOf: "2026-07-18T22:00:00.000Z" });
+  const result = rankCatalog(catalog, request({
+    inventory: [inventory[0]],
+    requirements: [{ measurementKey: "task.accepted", aggregation: "count", operator: "gte", value: 3 }],
+    preferences: [],
+  }));
+  assert.equal(result.ranked.length, 0);
+  assert.equal(result.excluded[0].reasons.some((reason) => reason.code === "REQUIREMENT_NOT_MET"), true);
+});
+
 test("criteria can separate first-party measurements from external priors", () => {
   const externalSample: ObservationInput = {
     ...sample(modelA, true, 1000, "external-pass"),

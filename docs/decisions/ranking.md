@@ -16,6 +16,11 @@ volume. Missing, stale, conflicting, and incomparable evidence remain
 distinct reason codes. Result evidence references the contributing observation
 and evidence ids.
 
+Measurements retained on an evaluation whose outcome is `invalid` never enter
+ranking aggregation. Invalid runs remain auditable catalog diagnostics, but
+cannot satisfy requirements, affect sample counts, or contribute preference
+scores regardless of their measurement key.
+
 Requirements and preferences may independently filter `sourceClasses`. This
 keeps external priors available for declared facts without silently averaging
 them into first-party measured outcomes.

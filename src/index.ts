@@ -33,6 +33,15 @@ export {
   type AiderPolyglotRunMapping,
   type TrustedSourceSnapshot,
 } from "./sources/aider-polyglot.js";
+export {
+  KONTOUR_EVALS_SOURCE,
+  importKontourEvalsResults,
+  type KontourEvalsDiagnostic,
+  type KontourEvalsImportInput,
+  type KontourEvalsImportResult,
+  type KontourEvalsResultSet,
+  type KontourEvalsRunMapping,
+} from "./sources/kontour-evals.js";
 export { validateExecutionProfile, validateModelIdentity, validateObservation } from "./validate.js";
 export {
   CATALOG_SCHEMA_VERSION,

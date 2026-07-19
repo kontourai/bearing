@@ -67,6 +67,25 @@ same source bytes cannot double-weight one benchmark run. Observation evidence
 uses content-addressed source and row URNs; the acquisition record retains the
 exact commit-qualified URL and full snapshot reference needed to audit origin.
 
+`importKontourEvalsResults` converts first-party
+`kontour.console.economics` JSONL records into scoped observations. Every run
+requires an exact reviewed mapping for model revision, quantization, runtime,
+adapter, tool surface, context, hardware, workflow version, and evaluator; the
+adapter never derives those dimensions from a display name. Independent grader
+acceptance remains separate from Builder Kit engagement qualification, so a
+workflow-not-engaged result can retain its task outcome without becoming
+evidence of Kit effect. Missing runner evidence, dry runs, and nonzero runner
+exits become invalid outcomes; invalid evaluation measurements remain retained
+for diagnosis but are excluded from all Bearing ranking aggregations.
+
+Token fields remain `complete`, `partial`, or `unknown` according to the
+runner-owned usage signal. The Evals v0.1 record does not distinguish a true
+zero-dollar run from unavailable pricing, so estimated cost remains available
+through the content-addressed source record but is not promoted to a Bearing
+measurement. Source-set, per-record, grader, and optional Kit-provenance digests
+keep the normalized observation auditable without adding an Evals runtime
+dependency to Bearing.
+
 ## Development
 
 ```sh
@@ -74,8 +93,8 @@ npm install
 npm run verify
 ```
 
-Node.js 22 or newer is required. The trusted structured-source adapters use the
-bounded `yaml` parser; the catalog, ranking, and API paths remain deterministic
+Node.js 22 or newer is required. Trusted structured-source adapters use bounded
+YAML and JSON parsers; the catalog, ranking, and API paths remain deterministic
 and do not perform network access.
 
 ## Releases
