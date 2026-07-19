@@ -1,0 +1,74 @@
+- dirname: 2025-05-08-03-20-24--qwen3-32b-default
+  test_cases: 225
+  model: Qwen3 32B
+  edit_format: diff
+  commit_hash: aaacee5-dirty, aeaf259
+  pass_rate_1: 14.2
+  pass_rate_2: 40.0
+  percent_cases_well_formed: 83.6
+  prompt_tokens: 317591
+  completion_tokens: 120418
+  total_tests: 225
+  date: 2025-05-08
+  versions: 0.82.4.dev
+  seconds_per_case: 372.2
+  total_cost: 0.7603
+
+- dirname: 2025-05-09-17-02-02--qwen3-235b-a22b.unthink_16k_diff
+  test_cases: 225
+  model: Qwen3 235B A22B diff, no think, Alibaba API
+  edit_format: diff
+  commit_hash: 91d7fbd-dirty
+  pass_rate_1: 28.9
+  pass_rate_2: 59.6
+  percent_cases_well_formed: 92.9
+  prompt_tokens: 2816192
+  completion_tokens: 342062
+  total_tests: 225
+  date: 2025-05-09
+  versions: 0.82.4.dev
+  seconds_per_case: 45.4
+  total_cost: 0.0000
+
+- dirname: 2025-05-24-21-17-54--sonnet4-diff-exuser
+  test_cases: 225
+  model: claude-sonnet-4-20250514 (no thinking)
+  edit_format: diff
+  commit_hash: ef3f8bb-dirty
+  pass_rate_1: 20.4
+  pass_rate_2: 56.4
+  percent_cases_well_formed: 98.2
+  prompt_tokens: 3460663
+  completion_tokens: 433373
+  total_tests: 225
+  date: 2025-05-24
+  versions: 0.83.3.dev
+  seconds_per_case: 29.8
+  total_cost: 15.8155
+
+- dirname: 2025-01-28-16-00-03--qwen-max-2025-01-25-polyglot-diff
+  test_cases: 225
+  model: qwen-max-2025-01-25
+  edit_format: diff
+  commit_hash: ae7d459
+  pass_rate_1: 9.3
+  pass_rate_2: 21.8
+  percent_cases_well_formed: 90.2
+  total_tests: 225
+  date: 2025-01-28
+  versions: 0.72.4.dev
+  seconds_per_case: 39.5
+
+- dirname: 2025-04-12-04-55-50--gemini-25-pro-diff-fenced
+  test_cases: 225
+  model: Gemini 2.5 Pro Preview 03-25
+  edit_format: diff-fenced
+  commit_hash: 0282574
+  pass_rate_1: 40.9
+  pass_rate_2: 72.9
+  percent_cases_well_formed: 92.4
+  total_tests: 225
+  date: 2025-04-12
+  versions: 0.81.3.dev
+  seconds_per_case: 45.3
+  total_cost: 0

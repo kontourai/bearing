@@ -51,6 +51,22 @@ measurements only.
 Scores are explicitly request-relative and must not be compared across
 different inventories, requirements, preferences, or snapshot digests.
 
+## Trusted Source Ingestion
+
+`importAiderPolyglotSnapshot` converts explicitly mapped rows from the official
+Aider Polyglot leaderboard into scoped external observations. It never fuzzy
+matches model labels. Unmapped rows remain diagnostics, and missing or
+impossible measurements are not invented.
+
+The adapter accepts only a full-envelope `forage-snapshot:` reference bound to
+the immutable raw GitHub URL for the supplied commit and body digest. Bearing
+checks that binding but does not fetch or independently authenticate the origin;
+the input must come from a successful exact Forage/Lookout replay. Acquisition
+provenance is returned separately from stable observations so re-fetching the
+same source bytes cannot double-weight one benchmark run. Observation evidence
+uses content-addressed source and row URNs; the acquisition record retains the
+exact commit-qualified URL and full snapshot reference needed to audit origin.
+
 ## Development
 
 ```sh
@@ -58,7 +74,9 @@ npm install
 npm run verify
 ```
 
-Node.js 22 or newer is required. Bearing has no runtime dependencies.
+Node.js 22 or newer is required. The trusted structured-source adapters use the
+bounded `yaml` parser; the catalog, ranking, and API paths remain deterministic
+and do not perform network access.
 
 ## Releases
 
