@@ -108,6 +108,26 @@ measurement. Source-set, per-record, grader, and optional Kit-provenance digests
 keep the normalized observation auditable without adding an Evals runtime
 dependency to Bearing.
 
+`importLiveBenchSnapshots` applies the same boundary to LiveBench's official,
+release-addressed score table and category manifest. Both artifacts must arrive
+as successful exact Forage/Lookout resolutions; Bearing recomputes each full
+snapshot envelope before parsing the bytes it commits. Full artifact references
+remain in the acquisition record, while catalog observations carry stable
+content-addressed task-result, category-assignment, and exact mapping-entry
+evidence. This prevents an unrelated row correction from changing or
+double-weighting an unchanged task result.
+
+Every accepted model mapping becomes one sample per exact task, with the
+category-derived task family and runtime/workflow condition retained. Category
+semantics remain filterable through keys such as `livebench.coding.score` and
+`livebench.agentic-coding.score`; there is deliberately no aggregate
+"LiveBench quality" measurement. Lookout owns acquisition authentication and
+the calling refresh policy owns mapping-review acceptance. Bearing owns exact
+binding, deterministic normalization, and transparent mapping evidence. CSV
+schema drift, duplicate rows or tasks, duplicate JSON keys, unknown categories,
+invalid scores, mismatched releases, and excessive parse or observation
+expansion fail closed; unmapped model rows remain explicit diagnostics.
+
 ## Development
 
 ```sh
@@ -116,8 +136,10 @@ npm run verify
 ```
 
 Node.js 22 or newer is required. Trusted structured-source adapters use bounded
-YAML and JSON parsers; the catalog, ranking, and API paths remain deterministic
-and do not perform network access.
+YAML, CSV, and duplicate-aware JSON parsing. The LiveBench adapter composes the
+canonical snapshot-envelope contract from `@kontourai/forage`; it does not
+duplicate that provenance algorithm. Catalog, ranking, API, and source-adapter
+paths remain deterministic and do not perform network access.
 
 ## Releases
 
