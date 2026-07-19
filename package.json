@@ -49,7 +49,7 @@
     "verify": "npm run typecheck && npm test && npm run check:pack"
   },
   "dependencies": {
-    "@kontourai/forage": "0.4.0",
+    "@kontourai/forage": "0.4.1",
     "acorn": "^8.17.0",
     "csv-parse": "^7.0.1",
     "jsonc-parser": "3.3.1",
