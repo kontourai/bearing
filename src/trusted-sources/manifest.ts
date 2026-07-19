@@ -12,66 +12,67 @@ const MAX_ARTIFACTS = 32;
 const MAX_LIMIT_BYTES = 64 * 1024 * 1024;
 const MAX_JSON_DEPTH = 64;
 const MAX_JSON_STRUCTURAL_TOKENS = 100_000;
+const parsedManifests = new WeakSet<object>();
 
 export interface ApprovedSourceArtifact {
-  id: string;
-  required: boolean;
-  urlTemplate: string;
-  mediaType: string;
-  maxBytes: number;
+  readonly id: string;
+  readonly required: boolean;
+  readonly urlTemplate: string;
+  readonly mediaType: string;
+  readonly maxBytes: number;
 }
 
 export interface ApprovedSource {
-  id: string;
-  owner: string;
-  sourceClass: "external";
-  canonicalOrigin: string;
-  attribution: {
-    name: string;
-    url: string;
+  readonly id: string;
+  readonly owner: string;
+  readonly sourceClass: "external";
+  readonly canonicalOrigin: string;
+  readonly attribution: {
+    readonly name: string;
+    readonly url: string;
   };
-  license: {
-    identifier: string;
-    evidenceUrl: string | null;
+  readonly license: {
+    readonly identifier: string;
+    readonly evidenceUrl: string | null;
   };
-  trustRationale: string;
-  knownLimitations: string[];
-  freshness: {
-    refreshIntervalHours: number;
-    maxAgeHours: number;
+  readonly trustRationale: string;
+  readonly knownLimitations: readonly string[];
+  readonly freshness: {
+    readonly refreshIntervalHours: number;
+    readonly maxAgeHours: number;
   };
-  revision: {
-    kind: "release" | "commit" | "opaque";
-    grammar: "calendar-date" | "full-git-sha" | "opaque-token";
+  readonly revision: {
+    readonly kind: "release" | "commit" | "opaque";
+    readonly grammar: "calendar-date" | "full-git-sha" | "opaque-token";
   };
-  resolver: {
-    adapter: string;
-    version: string;
-    entrypoint: {
-      sourceId: string;
-      url: string;
-      mediaType: string;
-      maxBytes: number;
+  readonly resolver: {
+    readonly adapter: string;
+    readonly version: string;
+    readonly entrypoint: {
+      readonly sourceId: string;
+      readonly url: string;
+      readonly mediaType: string;
+      readonly maxBytes: number;
     };
-    derivedResourcePolicy: string;
-    maxBytes: number;
+    readonly derivedResourcePolicy: string;
+    readonly maxBytes: number;
   };
-  artifacts: {
-    adapter: string;
-    version: string;
-    items: ApprovedSourceArtifact[];
+  readonly artifacts: {
+    readonly adapter: string;
+    readonly version: string;
+    readonly items: readonly ApprovedSourceArtifact[];
   };
-  proposalPolicy: {
-    newRevision: "review";
-    unknownRows: "review";
-    mappingChanges: "review";
+  readonly proposalPolicy: {
+    readonly newRevision: "review";
+    readonly unknownRows: "review";
+    readonly mappingChanges: "review";
   };
 }
 
 export interface ApprovedSourceManifest {
-  schemaVersion: typeof APPROVED_SOURCE_MANIFEST_SCHEMA_VERSION;
-  sources: ApprovedSource[];
-  digest: string;
+  readonly schemaVersion: typeof APPROVED_SOURCE_MANIFEST_SCHEMA_VERSION;
+  readonly sources: readonly ApprovedSource[];
+  readonly digest: string;
 }
 
 export interface ApprovedSourceAdapterRegistry {
@@ -222,11 +223,104 @@ const parseArtifact = (value: unknown, path: string, origin: string): ApprovedSo
   };
 };
 
-const parseSource = (
+const parseFreshness = (value: unknown, path: string): ApprovedSource["freshness"] => {
+  const item = record(value, path);
+  exactKeys(item, ["refreshIntervalHours", "maxAgeHours"], path);
+  const refreshIntervalHours = integer(item.refreshIntervalHours, `${path}.refreshIntervalHours`, 24 * 365);
+  const maxAgeHours = integer(item.maxAgeHours, `${path}.maxAgeHours`, 24 * 365 * 10);
+  if (maxAgeHours < refreshIntervalHours) return fail(`${path}.maxAgeHours`, "must be at least refreshIntervalHours");
+  return { refreshIntervalHours, maxAgeHours };
+};
+
+const parseRevision = (value: unknown, path: string): ApprovedSource["revision"] => {
+  const item = record(value, path);
+  exactKeys(item, ["kind", "grammar"], path);
+  const kinds = ["release", "commit", "opaque"] as const;
+  const grammars = ["calendar-date", "full-git-sha", "opaque-token"] as const;
+  if (!kinds.includes(item.kind as never)) return fail(`${path}.kind`, "is unsupported");
+  if (!grammars.includes(item.grammar as never)) return fail(`${path}.grammar`, "is unsupported");
+  if (
+    (item.kind === "release" && item.grammar !== "calendar-date") ||
+    (item.kind === "commit" && item.grammar !== "full-git-sha") ||
+    (item.kind === "opaque" && item.grammar !== "opaque-token")
+  ) return fail(path, "kind and grammar are incompatible");
+  return item as unknown as ApprovedSource["revision"];
+};
+
+const parseResolver = (
   value: unknown,
   path: string,
+  origin: string,
   registry: ApprovedSourceAdapterRegistry,
-): ApprovedSource => {
+): ApprovedSource["resolver"] => {
+  const item = record(value, path);
+  exactKeys(item, ["adapter", "version", "entrypoint", "derivedResourcePolicy", "maxBytes"], path);
+  const adapter = text(item.adapter, `${path}.adapter`);
+  const version = text(item.version, `${path}.version`);
+  if (!registry.resolvers.includes(`${adapter}/${version}`)) return fail(path, `unsupported adapter ${adapter}/${version}`);
+  const derivedResourcePolicy = text(item.derivedResourcePolicy, `${path}.derivedResourcePolicy`);
+  if (!registry.derivedResourcePolicies.includes(derivedResourcePolicy)) return fail(`${path}.derivedResourcePolicy`, "is unsupported");
+  const entrypoint = record(item.entrypoint, `${path}.entrypoint`);
+  exactKeys(entrypoint, ["sourceId", "url", "mediaType", "maxBytes"], `${path}.entrypoint`);
+  const url = httpsUrl(entrypoint.url, `${path}.entrypoint.url`);
+  assertSameOrigin(url, origin, `${path}.entrypoint.url`);
+  return {
+    adapter,
+    version,
+    entrypoint: {
+      sourceId: text(entrypoint.sourceId, `${path}.entrypoint.sourceId`),
+      url,
+      mediaType: text(entrypoint.mediaType, `${path}.entrypoint.mediaType`),
+      maxBytes: integer(entrypoint.maxBytes, `${path}.entrypoint.maxBytes`),
+    },
+    derivedResourcePolicy,
+    maxBytes: integer(item.maxBytes, `${path}.maxBytes`),
+  };
+};
+
+const parseArtifacts = (
+  value: unknown,
+  path: string,
+  origin: string,
+  registry: ApprovedSourceAdapterRegistry,
+): ApprovedSource["artifacts"] => {
+  const item = record(value, path);
+  exactKeys(item, ["adapter", "version", "items"], path);
+  const adapter = text(item.adapter, `${path}.adapter`);
+  const version = text(item.version, `${path}.version`);
+  if (!registry.artifacts.includes(`${adapter}/${version}`)) return fail(path, `unsupported adapter ${adapter}/${version}`);
+  if (!Array.isArray(item.items) || item.items.length === 0 || item.items.length > MAX_ARTIFACTS) {
+    return fail(`${path}.items`, `must contain between 1 and ${MAX_ARTIFACTS} artifacts`);
+  }
+  const items = item.items.map((artifact, index) => parseArtifact(artifact, `${path}.items[${index}]`, origin));
+  if (new Set(items.map((artifact) => artifact.id)).size !== items.length) return fail(`${path}.items`, "must use unique artifact ids");
+  return { adapter, version, items };
+};
+
+const parseAttributionAndLicense = (item: Record<string, unknown>, path: string) => {
+  const attribution = record(item.attribution, `${path}.attribution`);
+  exactKeys(attribution, ["name", "url"], `${path}.attribution`);
+  const license = record(item.license, `${path}.license`);
+  exactKeys(license, ["identifier", "evidenceUrl"], `${path}.license`);
+  return {
+    attribution: { name: text(attribution.name, `${path}.attribution.name`), url: httpsUrl(attribution.url, `${path}.attribution.url`) },
+    license: {
+      identifier: text(license.identifier, `${path}.license.identifier`),
+      evidenceUrl: license.evidenceUrl === null ? null : httpsUrl(license.evidenceUrl, `${path}.license.evidenceUrl`),
+    },
+  };
+};
+
+const parseProposalPolicy = (value: unknown, path: string): ApprovedSource["proposalPolicy"] => {
+  const item = record(value, path);
+  exactKeys(item, ["newRevision", "unknownRows", "mappingChanges"], path);
+  for (const key of ["newRevision", "unknownRows", "mappingChanges"] as const) {
+    if (item[key] !== "review") return fail(`${path}.${key}`, "must be review");
+  }
+  return { newRevision: "review", unknownRows: "review", mappingChanges: "review" };
+};
+
+const parseSource = (value: unknown, path: string, registry: ApprovedSourceAdapterRegistry): ApprovedSource => {
   const item = record(value, path);
   exactKeys(item, [
     "id", "owner", "sourceClass", "canonicalOrigin", "attribution", "license",
@@ -236,110 +330,18 @@ const parseSource = (
   if (item.sourceClass !== "external") return fail(`${path}.sourceClass`, "must be external");
   const canonicalOriginUrl = httpsUrl(item.canonicalOrigin, `${path}.canonicalOrigin`);
   const canonicalOrigin = new URL(canonicalOriginUrl).origin;
-  if (canonicalOriginUrl !== `${canonicalOrigin}/`) {
-    return fail(`${path}.canonicalOrigin`, "must contain only the canonical HTTPS origin");
-  }
-
-  const attribution = record(item.attribution, `${path}.attribution`);
-  exactKeys(attribution, ["name", "url"], `${path}.attribution`);
-  const license = record(item.license, `${path}.license`);
-  exactKeys(license, ["identifier", "evidenceUrl"], `${path}.license`);
-  const freshness = record(item.freshness, `${path}.freshness`);
-  exactKeys(freshness, ["refreshIntervalHours", "maxAgeHours"], `${path}.freshness`);
-  const refreshIntervalHours = integer(freshness.refreshIntervalHours, `${path}.freshness.refreshIntervalHours`, 24 * 365);
-  const maxAgeHours = integer(freshness.maxAgeHours, `${path}.freshness.maxAgeHours`, 24 * 365 * 10);
-  if (maxAgeHours < refreshIntervalHours) {
-    return fail(`${path}.freshness.maxAgeHours`, "must be at least refreshIntervalHours");
-  }
-
-  const revision = record(item.revision, `${path}.revision`);
-  exactKeys(revision, ["kind", "grammar"], `${path}.revision`);
-  const revisionKinds = ["release", "commit", "opaque"] as const;
-  const revisionGrammars = ["calendar-date", "full-git-sha", "opaque-token"] as const;
-  if (!revisionKinds.includes(revision.kind as never)) return fail(`${path}.revision.kind`, "is unsupported");
-  if (!revisionGrammars.includes(revision.grammar as never)) return fail(`${path}.revision.grammar`, "is unsupported");
-  if (
-    (revision.kind === "release" && revision.grammar !== "calendar-date") ||
-    (revision.kind === "commit" && revision.grammar !== "full-git-sha") ||
-    (revision.kind === "opaque" && revision.grammar !== "opaque-token")
-  ) {
-    return fail(`${path}.revision`, "kind and grammar are incompatible");
-  }
-
-  const resolver = record(item.resolver, `${path}.resolver`);
-  exactKeys(resolver, ["adapter", "version", "entrypoint", "derivedResourcePolicy", "maxBytes"], `${path}.resolver`);
-  const resolverAdapter = `${text(resolver.adapter, `${path}.resolver.adapter`)}/${text(resolver.version, `${path}.resolver.version`)}`;
-  if (!registry.resolvers.includes(resolverAdapter)) return fail(`${path}.resolver`, `unsupported adapter ${resolverAdapter}`);
-  const derivedResourcePolicy = text(resolver.derivedResourcePolicy, `${path}.resolver.derivedResourcePolicy`);
-  if (!registry.derivedResourcePolicies.includes(derivedResourcePolicy)) {
-    return fail(`${path}.resolver.derivedResourcePolicy`, "is unsupported");
-  }
-  const entrypoint = record(resolver.entrypoint, `${path}.resolver.entrypoint`);
-  exactKeys(entrypoint, ["sourceId", "url", "mediaType", "maxBytes"], `${path}.resolver.entrypoint`);
-  const entrypointUrl = httpsUrl(entrypoint.url, `${path}.resolver.entrypoint.url`);
-  assertSameOrigin(entrypointUrl, canonicalOrigin, `${path}.resolver.entrypoint.url`);
-
-  const artifacts = record(item.artifacts, `${path}.artifacts`);
-  exactKeys(artifacts, ["adapter", "version", "items"], `${path}.artifacts`);
-  const artifactAdapter = `${text(artifacts.adapter, `${path}.artifacts.adapter`)}/${text(artifacts.version, `${path}.artifacts.version`)}`;
-  if (!registry.artifacts.includes(artifactAdapter)) return fail(`${path}.artifacts`, `unsupported adapter ${artifactAdapter}`);
-  if (!Array.isArray(artifacts.items) || artifacts.items.length === 0 || artifacts.items.length > MAX_ARTIFACTS) {
-    return fail(`${path}.artifacts.items`, `must contain between 1 and ${MAX_ARTIFACTS} artifacts`);
-  }
-  const parsedArtifacts = artifacts.items.map((artifact, index) => parseArtifact(artifact, `${path}.artifacts.items[${index}]`, canonicalOrigin));
-  if (new Set(parsedArtifacts.map((artifact) => artifact.id)).size !== parsedArtifacts.length) {
-    return fail(`${path}.artifacts.items`, "must use unique artifact ids");
-  }
-
-  const proposalPolicy = record(item.proposalPolicy, `${path}.proposalPolicy`);
-  exactKeys(proposalPolicy, ["newRevision", "unknownRows", "mappingChanges"], `${path}.proposalPolicy`);
-  for (const key of ["newRevision", "unknownRows", "mappingChanges"] as const) {
-    if (proposalPolicy[key] !== "review") return fail(`${path}.proposalPolicy.${key}`, "must be review");
-  }
-
-  if (!Array.isArray(item.knownLimitations) || item.knownLimitations.length > 128) {
-    return fail(`${path}.knownLimitations`, "must be a bounded array");
-  }
-  const knownLimitations = item.knownLimitations.map((entry, index) => text(entry, `${path}.knownLimitations[${index}]`));
-  const evidenceUrl = license.evidenceUrl === null
-    ? null
-    : httpsUrl(license.evidenceUrl, `${path}.license.evidenceUrl`);
-
+  if (canonicalOriginUrl !== `${canonicalOrigin}/`) return fail(`${path}.canonicalOrigin`, "must contain only the canonical HTTPS origin");
+  if (!Array.isArray(item.knownLimitations) || item.knownLimitations.length > 128) return fail(`${path}.knownLimitations`, "must be a bounded array");
   return {
-    id: text(item.id, `${path}.id`),
-    owner: text(item.owner, `${path}.owner`),
-    sourceClass: "external",
-    canonicalOrigin,
-    attribution: {
-      name: text(attribution.name, `${path}.attribution.name`),
-      url: httpsUrl(attribution.url, `${path}.attribution.url`),
-    },
-    license: {
-      identifier: text(license.identifier, `${path}.license.identifier`),
-      evidenceUrl,
-    },
+    id: text(item.id, `${path}.id`), owner: text(item.owner, `${path}.owner`), sourceClass: "external", canonicalOrigin,
+    ...parseAttributionAndLicense(item, path),
     trustRationale: text(item.trustRationale, `${path}.trustRationale`),
-    knownLimitations,
-    freshness: { refreshIntervalHours, maxAgeHours },
-    revision: revision as ApprovedSource["revision"],
-    resolver: {
-      adapter: text(resolver.adapter, `${path}.resolver.adapter`),
-      version: text(resolver.version, `${path}.resolver.version`),
-      entrypoint: {
-        sourceId: text(entrypoint.sourceId, `${path}.resolver.entrypoint.sourceId`),
-        url: entrypointUrl,
-        mediaType: text(entrypoint.mediaType, `${path}.resolver.entrypoint.mediaType`),
-        maxBytes: integer(entrypoint.maxBytes, `${path}.resolver.entrypoint.maxBytes`),
-      },
-      derivedResourcePolicy,
-      maxBytes: integer(resolver.maxBytes, `${path}.resolver.maxBytes`),
-    },
-    artifacts: {
-      adapter: text(artifacts.adapter, `${path}.artifacts.adapter`),
-      version: text(artifacts.version, `${path}.artifacts.version`),
-      items: parsedArtifacts,
-    },
-    proposalPolicy: { newRevision: "review", unknownRows: "review", mappingChanges: "review" },
+    knownLimitations: item.knownLimitations.map((entry, index) => text(entry, `${path}.knownLimitations[${index}]`)),
+    freshness: parseFreshness(item.freshness, `${path}.freshness`),
+    revision: parseRevision(item.revision, `${path}.revision`),
+    resolver: parseResolver(item.resolver, `${path}.resolver`, canonicalOrigin, registry),
+    artifacts: parseArtifacts(item.artifacts, `${path}.artifacts`, canonicalOrigin, registry),
+    proposalPolicy: parseProposalPolicy(item.proposalPolicy, `${path}.proposalPolicy`),
   };
 };
 
@@ -379,8 +381,13 @@ export const parseApprovedSourceManifest = (
     return fail("$.sources", "must use unique source ids");
   }
   const value = { schemaVersion: APPROVED_SOURCE_MANIFEST_SCHEMA_VERSION, sources };
-  return deepFreeze({ ...value, digest: sha256(value) });
+  const result = deepFreeze({ ...value, digest: sha256(value) });
+  parsedManifests.add(result);
+  return result;
 };
+
+export const isParsedApprovedSourceManifest = (value: unknown): value is ApprovedSourceManifest =>
+  value !== null && typeof value === "object" && parsedManifests.has(value);
 
 export const isApprovedRevision = (source: ApprovedSource, revision: string): boolean => {
   if (source.revision.grammar === "calendar-date") {

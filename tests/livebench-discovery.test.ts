@@ -25,7 +25,7 @@ const manifestSource = readFileSync(path.resolve(
 const manifest = parseApprovedSourceManifest(manifestSource);
 const indexBody = '<!doctype html><script src="https://example.test/analytics.js"></script><script defer src="./static/js/main.abcdef12.js"></script>';
 const bundleUrl = "https://livebench.ai/static/js/main.abcdef12.js";
-const bundleBody = 'const releases=["2024-06-24","2025-05-30","2026-06-25"];const unrelated="2026-07-01";';
+const bundleBody = '(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31","2026-06-25"],latest=releases[releases.length-1];function View(){useState(latest);return {releases}}jsx(View,{})})();';
 
 const snapshot = (
   sourceId: string,
@@ -78,13 +78,16 @@ test("derives a reviewable current release and exact artifact locators from offi
     bundleSnapshot: bundleSnapshot(),
   });
   assert.match(result.id, /^[a-f0-9]{64}$/);
-  assert.deepEqual(result.revisions, ["2024-06-24", "2025-05-30", "2026-06-25"]);
+  assert.deepEqual(result.revisions, ["2024-06-24", "2024-07-26", "2024-08-31", "2026-06-25"]);
   assert.equal(result.currentRevision, "2026-06-25");
   assert.deepEqual(result.artifacts.map((item) => [item.id, item.url]), [
     ["table", "https://livebench.ai/table_2026_06_25.csv"],
     ["categories", "https://livebench.ai/categories_2026_06_25.json"],
   ]);
   assert.equal(result.bundle.sourceRef.startsWith("forage-snapshot:"), true);
+  assert.equal(Object.isFrozen(result), true);
+  assert.equal(Object.isFrozen(result.artifacts), true);
+  assert.throws(() => (result.artifacts as unknown as Array<{ url: string }>)[0].url = "https://evil.example/table.csv", TypeError);
 });
 
 test("fails closed on off-origin, ambiguous, unhashed, or mismatched bundle discovery", () => {
@@ -93,6 +96,9 @@ test("fails closed on off-origin, ambiguous, unhashed, or mismatched bundle disc
     '<script src="./static/js/main.js"></script>',
     '<script src="./static/js/main.abcdef12.js"></script><script src="./static/js/main.1234abcd.js"></script>',
     '<script data-src="./static/js/main.abcdef12.js"></script>',
+    '<!-- <script src="./static/js/main.abcdef12.js"></script> -->',
+    '<template><script src="./static/js/main.abcdef12.js"></script></template>',
+    '<script type="application/json" src="./static/js/main.abcdef12.js"></script>',
   ];
   for (const body of badIndexes) {
     assert.throws(
@@ -112,11 +118,11 @@ test("fails closed on off-origin, ambiguous, unhashed, or mismatched bundle disc
 });
 
 test("rejects a manifest mutated after review and digesting", () => {
-  const mutable = structuredClone(manifest);
+  const mutable = structuredClone(manifest) as any;
   mutable.sources[0].resolver.entrypoint.url = "https://livebench.ai/changed";
   assert.throws(
     () => discoverLiveBenchBundle({ manifest: mutable, sourceId: "livebench", indexSnapshot: indexSnapshot() }),
-    /digest does not match/,
+    /parsed approved source manifest/,
   );
 });
 
@@ -130,9 +136,38 @@ test("does not mistake unrelated dates for releases and rejects schema drift", (
   assert.equal(oneArray.revisions.includes("2026-07-01"), false);
 
   for (const body of [
-    'const a=["2024-01-01","2025-01-01"],b=["2024-02-01","2025-02-01"];',
-    'const releases=["2025-01-01","2024-01-01"];',
-    'const releases=["2026-02-30","2026-03-01"];',
+    'const a=["2024-06-24","2024-07-26","2024-08-31"],b=["2024-06-24","2024-07-26","2024-08-31"];',
+    'const releases=["2024-06-24","2024-07-26","2024-08-31","2024-01-01"];',
+    'const releases=["2024-06-24","2024-07-26","2024-08-31","2026-02-30"];',
+    'const unrelated="[\\"2024-06-24\\",\\"2024-07-26\\",\\"2024-08-31\\",\\"2026-01-01\\"]";',
+    'const copyrightDates=["2025-01-01","2026-01-01"];',
+    'if(false){const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];const view={releases}}',
+    'const = ; (()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];const view={releases}})();',
+    '(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];function neverCalled(){useState(latest);return {releases}}})();',
+    '(()=>{return;const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];function View(){useState(latest);return {releases}}jsx(View,{})})();',
+    'if(false){(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];function View(){useState(latest);return {releases}}jsx(View,{})})()}',
+    '(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"];return;const latest=releases[releases.length-1];function View(){useState(latest);return {releases}}jsx(View,{})})();',
+    '(()=>{throw Error();const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];function View(){useState(latest);return {releases}}jsx(View,{})})();',
+    '(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];function View(){if(false){useState(latest);return {releases}}}jsx(View,{})})();',
+    '(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];function View(){useState(latest);return {releases}}if(false){jsx(View,{})}})();',
+    '(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases[length]-1];function View(){useState(latest);return {releases}}jsx(View,{})})();',
+    '(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];function View(releases,latest){useState(latest);return {releases}}jsx(View,{})})();',
+    '(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];function View(){false&&useState(latest);return {releases}}jsx(View,{})})();',
+    '(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];function View(){useState(latest);return {releases}}false&&jsx(View,{})})();',
+    '(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];function View(){function latest(){}useState(latest);return {releases}}jsx(View,{})})();',
+    '(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];function View(){class releases{}useState(latest);return {releases}}jsx(View,{})})();',
+    '(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];function View(){useState(latest);return {releases}}{const View=Other;jsx(View,{})}})();',
+    'false&&(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];function View(){useState(latest);return {releases}}jsx(View,{})})();',
+    '(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];function View(){null?.(latest);return {releases}}jsx(View,{})})();',
+    '(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];function View(){class Decoy{x=useState(latest);y={releases}}}jsx(View,{})})();',
+    '(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];function View(){useState(latest);return {releases}}with({View:Other})jsx(View,{})})();',
+    '(()=>{const latest=releases[releases.length-1],releases=["2024-06-24","2024-07-26","2024-08-31"];function View(){useState(latest);return {releases}}jsx(View,{})})();',
+    '(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];latest=Other;function View(){useState(latest);return {releases}}jsx(View,{})})();',
+    '(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];function View(){useState(latest);return {releases}}View=Other;jsx(View,{})})();',
+    '(()=>{if(true){return}const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];function View(){useState(latest);return {releases}}jsx(View,{})})();',
+    '(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];if(true){latest=Other}function View(){useState(latest);return {releases}}jsx(View,{})})();',
+    '(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];(()=>{latest=Other})();function View(){useState(latest);return {releases}}jsx(View,{})})();',
+    '(()=>{const releases=["2024-06-24","2024-07-26","2024-08-31"],latest=releases[releases.length-1];function View(){if(false){var latest}useState(latest);return {releases}}jsx(View,{})})();',
   ]) {
     assert.throws(
       () => resolveLiveBenchDiscovery({
@@ -167,5 +202,14 @@ test("requires full exact snapshot envelopes", () => {
   assert.throws(
     () => discoverLiveBenchBundle({ manifest, sourceId: "livebench", indexSnapshot: invalidTime }),
     /ISO-8601 UTC timestamp|valid canonical durable snapshot/,
+  );
+  const missingReference = { ...indexSnapshot(), reference: undefined } as any;
+  assert.throws(
+    () => discoverLiveBenchBundle({ manifest, sourceId: "livebench", indexSnapshot: missingReference }),
+    (error: unknown) => error instanceof BearingError && error.code === "INVALID_SOURCE_DISCOVERY",
+  );
+  assert.throws(
+    () => discoverLiveBenchBundle({ manifest: null as any, sourceId: "livebench", indexSnapshot: indexSnapshot() }),
+    (error: unknown) => error instanceof BearingError && error.code === "INVALID_SOURCE_DISCOVERY",
   );
 });

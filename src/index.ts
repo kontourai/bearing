@@ -83,6 +83,7 @@ export {
   APPROVED_SOURCE_MANIFEST_SCHEMA_VERSION,
   DEFAULT_APPROVED_SOURCE_ADAPTER_REGISTRY,
   isApprovedRevision,
+  isParsedApprovedSourceManifest,
   parseApprovedSourceManifest,
   renderApprovedArtifactUrl,
   type ApprovedSource,

@@ -49,8 +49,10 @@
   },
   "dependencies": {
     "@kontourai/forage": "0.4.0",
+    "acorn": "^8.17.0",
     "csv-parse": "^7.0.1",
     "jsonc-parser": "3.3.1",
+    "parse5": "^8.0.1",
     "yaml": "^2.9.0"
   },
   "devDependencies": {
