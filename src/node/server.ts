@@ -1,11 +1,10 @@
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
+import { Readable } from "node:stream";
 
-import { createCatalogHandler, MAX_RANK_REQUEST_BYTES } from "../api.js";
-import type { CatalogSnapshot } from "../types.js";
+import { createCatalogHandler, type CatalogHandlerOptions } from "../api.js";
 
-export interface StartCatalogServerOptions {
-  catalog: CatalogSnapshot;
+export interface StartCatalogServerOptions extends CatalogHandlerOptions {
   host?: string;
   port?: number;
 }
@@ -15,29 +14,12 @@ export interface RunningCatalogServer {
   close(): Promise<void>;
 }
 
-const readRequestBody = async (incoming: import("node:http").IncomingMessage): Promise<Buffer | undefined> => {
-  if (incoming.method === "GET" || incoming.method === "HEAD") return undefined;
-  const declared = Number(incoming.headers["content-length"]);
-  if (Number.isFinite(declared) && declared > MAX_RANK_REQUEST_BYTES) {
-    incoming.resume();
-    return Buffer.alloc(MAX_RANK_REQUEST_BYTES + 1);
-  }
-  const chunks: Buffer[] = [];
-  let total = 0;
-  for await (const chunk of incoming) {
-    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
-    total += buffer.length;
-    if (total > MAX_RANK_REQUEST_BYTES) {
-      incoming.resume();
-      return Buffer.alloc(MAX_RANK_REQUEST_BYTES + 1);
-    }
-    chunks.push(buffer);
-  }
-  return Buffer.concat(chunks);
-};
-
 export const startCatalogServer = async (options: StartCatalogServerOptions): Promise<RunningCatalogServer> => {
-  const handler = createCatalogHandler({ catalog: options.catalog });
+  const handler = createCatalogHandler({
+    catalog: options.catalog,
+    maxConcurrentRankRequests: options.maxConcurrentRankRequests,
+    maxRankResponseBytes: options.maxRankResponseBytes,
+  });
   const host = options.host ?? "127.0.0.1";
   const port = options.port ?? 4244;
   const server = createServer(async (incoming, outgoing) => {
@@ -47,11 +29,15 @@ export const startCatalogServer = async (options: StartCatalogServerOptions): Pr
         if (value === undefined) continue;
         requestHeaders.set(name, Array.isArray(value) ? value.join(", ") : value);
       }
+      const method = incoming.method ?? "GET";
       const request = new Request(`http://bearing.local${incoming.url ?? "/"}`, {
-        method: incoming.method ?? "GET",
+        method,
         headers: requestHeaders,
-        body: (await readRequestBody(incoming))?.toString("utf8"),
-      });
+        body: method === "GET" || method === "HEAD"
+          ? undefined
+          : Readable.toWeb(incoming) as ReadableStream<Uint8Array>,
+        duplex: "half",
+      } as RequestInit & { duplex: "half" });
       const response = await handler(request);
       outgoing.writeHead(response.status, Object.fromEntries(response.headers.entries()));
       if (response.body === null) {

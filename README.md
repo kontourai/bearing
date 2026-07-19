@@ -22,7 +22,8 @@ provides an optional local server adapter. Both serve the same validated,
 content-addressed snapshot.
 
 ```sh
-bearing serve --catalog ./catalog.json --host 127.0.0.1 --port 4244
+bearing serve --catalog ./catalog.json --host 127.0.0.1 --port 4244 \
+  --max-concurrent-rank-requests 4 --max-rank-response-bytes 8388608
 curl http://127.0.0.1:4244/v1/models
 curl http://127.0.0.1:4244/v1/catalog/snapshot
 ```
@@ -30,6 +31,9 @@ curl http://127.0.0.1:4244/v1/catalog/snapshot
 The API supports `GET`, `HEAD`, `ETag`, and `If-None-Match`. Model list entries
 carry a stable model key; `GET /v1/models/<key>` returns the complete retained
 observations, evidence references, and conflict sets for that identity.
+Rank bodies are read incrementally with a 1 MiB limit. Rank responses and
+concurrent rank work are bounded by configurable handler budgets; deployments
+remain responsible for identity-aware rate limiting at their ingress.
 
 ## Runtime-Aware Ranking
 
@@ -50,6 +54,24 @@ measurements only.
 
 Scores are explicitly request-relative and must not be compared across
 different inventories, requirements, preferences, or snapshot digests.
+
+Version 2 rank requests may also declare caller-owned `advisories`. Each
+advisory projects one explicitly named measurement and aggregation onto every
+ranked or excluded inventory candidate. The projection reports `present`,
+`missing`, `stale`, `conflicting`, or `incomparable`, together with evidence and
+uncertainty. Scalar fact values, including strings, are returned only when
+present. Present projections also return the agreed measurement unit, or
+`null` for unitless and derived aggregations. Mixed or partially declared units
+are incomparable rather than silently averaged. Advisories never change
+requirements, eligibility, scores, ordering,
+or the version 1 result shape; they let Datum and other consumers use benchmark
+and provider facts without duplicating Bearing's scope, freshness, conflict, or
+source-class logic.
+
+The `/v1/rank` path is the version of the HTTP resource, while
+`bearing.rank.request/v1` and `/v2` are versions of the message contract. The
+same endpoint accepts both message versions and returns the corresponding
+result version.
 
 ## Trusted Source Ingestion
 

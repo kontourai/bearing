@@ -74,6 +74,8 @@ try {
     "dist/src/sources/aider-polyglot.js",
     "dist/src/sources/kontour-evals.d.ts",
     "dist/src/sources/kontour-evals.js",
+    "dist/src/structural.d.ts",
+    "dist/src/structural.js",
     "dist/src/types.d.ts",
     "dist/src/types.js",
     "dist/src/validate.d.ts",

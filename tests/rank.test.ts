@@ -1,15 +1,19 @@
 import assert from "node:assert/strict";
+import { request as httpRequest } from "node:http";
 import test from "node:test";
 
 import {
   BearingError,
+  canonicalJson,
   compileCatalog,
   createCatalogHandler,
   rankCatalog,
   type ExecutionProfile,
+  type CatalogRanker,
   type ModelIdentity,
   type ObservationInput,
   type RankRequest,
+  type RankRequestV2,
 } from "../src/index.js";
 import { startCatalogServer } from "../src/node/index.js";
 
@@ -122,6 +126,16 @@ const request = (overrides: Partial<RankRequest> = {}): RankRequest => ({
   ...overrides,
 });
 
+const requestV2 = (overrides: Partial<Omit<RankRequestV2, "schemaVersion">> = {}): RankRequestV2 => {
+  const { schemaVersion: _schemaVersion, ...base } = request();
+  return {
+    schemaVersion: "bearing.rank.request/v2",
+    ...base,
+    advisories: [],
+    ...overrides,
+  };
+};
+
 test("hard requirements filter before request-relative preference ranking", () => {
   const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
   const result = rankCatalog(catalog, request());
@@ -221,12 +235,237 @@ test("rank results are deterministic across observation and inventory ordering",
   assert.deepEqual(rankCatalog(a, request()), rankCatalog(b, request({ inventory: [...inventory].reverse() })));
 });
 
+test("v2 advisories project scalar facts without changing v1 eligibility, scores, or ordering", () => {
+  const catalog = compileCatalog([
+    ...observations(),
+    fact(modelA, "model.license", "Apache-2.0", "a-license"),
+    fact(modelB, "model.license", "MIT", "b-license"),
+  ], { asOf: "2026-07-18T22:00:00.000Z" });
+  const v1 = rankCatalog(catalog, request());
+  const v2 = rankCatalog(catalog, requestV2({
+    advisories: [
+      { id: "license", measurementKey: "model.license", aggregation: "fact" },
+      { id: "context", measurementKey: "model.context.max_tokens", aggregation: "fact" },
+    ],
+  }));
+
+  assert.equal(v2.schemaVersion, "bearing.rank.result/v2");
+  assert.deepEqual(v2.ranked.map((candidate) => candidate.advisories.map((item) => item.id)), [
+    ["context", "license"],
+    ["context", "license"],
+  ]);
+  assert.equal(v2.ranked[1].advisories.find((item) => item.id === "license")?.value, "Apache-2.0");
+  const withoutAdvisories = {
+    ...v2,
+    schemaVersion: "bearing.rank.result/v1",
+    ranked: v2.ranked.map(({ advisories: _advisories, ...candidate }) => candidate),
+    excluded: v2.excluded.map(({ advisories: _advisories, ...candidate }) => candidate),
+  };
+  assert.deepEqual(withoutAdvisories, v1);
+});
+
+test("v2 advisories distinguish missing, stale, conflicting, incomparable, and source-filtered evidence", () => {
+  const stale = fact(modelA, "tool.edit.supported", true, "stale-edit", execution, "2026-07-18T21:00:00.000Z");
+  const conflict = fact(modelA, "model.context.max_tokens", 65_536, "a-context-conflict");
+  const incomparable: ObservationInput = {
+    ...sample(modelA, true, 1000, "a-incomparable"),
+    measurements: [{ key: "quality.band", kind: "sample", value: "high" }],
+  };
+  const unitSample = (key: string, value: number, unit: string | undefined, id: string): ObservationInput => ({
+    ...sample(modelA, true, 1000, id),
+    measurements: [{ key, kind: "sample", value, ...(unit === undefined ? {} : { unit }) }],
+  });
+  const catalog = compileCatalog([
+    ...observations(),
+    stale,
+    conflict,
+    incomparable,
+    unitSample("latency.consistent", 1, "seconds", "latency-consistent-1"),
+    unitSample("latency.consistent", 2, "seconds", "latency-consistent-2"),
+    unitSample("latency.mixed", 1, "seconds", "latency-mixed-1"),
+    unitSample("latency.mixed", 1000, "milliseconds", "latency-mixed-2"),
+    unitSample("latency.partial", 1, "seconds", "latency-partial-1"),
+    unitSample("latency.partial", 2, undefined, "latency-partial-2"),
+  ], { asOf: "2026-07-18T22:00:00.000Z" });
+  const result = rankCatalog(catalog, requestV2({
+    inventory: [inventory[0]],
+    requirements: [],
+    preferences: [],
+    advisories: [
+      { id: "missing", measurementKey: "model.unknown", aggregation: "fact" },
+      { id: "stale", measurementKey: "tool.edit.supported", aggregation: "fact" },
+      { id: "conflict", measurementKey: "model.context.max_tokens", aggregation: "fact" },
+      { id: "incomparable", measurementKey: "quality.band", aggregation: "mean" },
+      { id: "first-party-context", measurementKey: "model.context.max_tokens", aggregation: "fact", sourceClasses: ["first-party"] },
+      { id: "consistent-unit", measurementKey: "latency.consistent", aggregation: "mean" },
+      { id: "mixed-unit", measurementKey: "latency.mixed", aggregation: "mean" },
+      { id: "partial-unit", measurementKey: "latency.partial", aggregation: "mean" },
+    ],
+  }));
+  const projections = new Map(result.ranked[0].advisories.map((item) => [item.id, item]));
+
+  assert.equal(projections.get("missing")?.status, "missing");
+  assert.equal(projections.get("stale")?.status, "stale");
+  assert.deepEqual(projections.get("stale")?.evidence.evidenceIds, ["stale-edit"]);
+  assert.equal(projections.get("conflict")?.status, "conflicting");
+  assert.equal(projections.get("conflict")?.evidence.observationIds.length, 2);
+  assert.equal(projections.get("incomparable")?.status, "incomparable");
+  assert.equal(projections.get("first-party-context")?.status, "missing");
+  assert.equal("value" in projections.get("conflict")!, false);
+  assert.ok(projections.get("stale")?.uncertainty.gaps.includes("ADVISORY_STALE"));
+  assert.equal(projections.get("consistent-unit")?.status, "present");
+  assert.equal(projections.get("consistent-unit")?.value, 1.5);
+  assert.equal(projections.get("consistent-unit")?.unit, "seconds");
+  assert.equal(projections.get("mixed-unit")?.status, "incomparable");
+  assert.equal(projections.get("partial-unit")?.status, "incomparable");
+});
+
+test("v2 advisories remain available on excluded candidates and deterministic across input ordering", () => {
+  const inputs = [
+    ...observations(),
+    fact(modelA, "model.license", "Apache-2.0", "a-license"),
+    fact(modelB, "model.license", "MIT", "b-license"),
+  ];
+  const first = compileCatalog(inputs, { asOf: "2026-07-18T22:00:00.000Z" });
+  const second = compileCatalog([...inputs].reverse(), { asOf: "2026-07-18T22:00:00.000Z" });
+  const base = requestV2({
+    requirements: [{ measurementKey: "task.accepted", aggregation: "count", operator: "gte", value: 3 }],
+    preferences: [],
+    advisories: [
+      { id: "license", measurementKey: "model.license", aggregation: "fact" },
+      { id: "context", measurementKey: "model.context.max_tokens", aggregation: "fact" },
+    ],
+  });
+  const result = rankCatalog(first, base);
+  assert.equal(result.ranked.length, 0);
+  assert.ok(result.excluded.every((candidate) => candidate.advisories.every((item) => item.status === "present")));
+  assert.equal(
+    canonicalJson(result),
+    canonicalJson(rankCatalog(second, { ...base, inventory: [...base.inventory].reverse(), advisories: [...base.advisories].reverse() })),
+  );
+});
+
 test("invalid rank requests fail with typed diagnostics", () => {
   const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
+  const v1OnlyRanker: CatalogRanker = (input) => rankCatalog(catalog, input);
+  assert.equal(v1OnlyRanker(request()).schemaVersion, "bearing.rank.result/v1");
   assert.throws(
     () => rankCatalog(catalog, { ...request(), inventory: [] }),
     (error: unknown) => error instanceof BearingError && error.code === "INVALID_RANK_REQUEST",
   );
+  assert.throws(
+    () => rankCatalog(catalog, { ...requestV2(), advisories: [
+      { id: "duplicate", measurementKey: "model.context.max_tokens", aggregation: "fact" },
+      { id: "duplicate", measurementKey: "model.license", aggregation: "fact" },
+    ] }),
+    (error: unknown) => error instanceof BearingError && error.code === "INVALID_RANK_REQUEST",
+  );
+  assert.throws(
+    () => rankCatalog(catalog, { ...request(), advisories: [] } as RankRequest),
+    (error: unknown) => error instanceof BearingError && error.code === "INVALID_RANK_REQUEST",
+  );
+  const expandedInventory = Array.from({ length: 33 }, (_, index) => ({ ...inventory[0], id: `candidate-${index}` }));
+  const expandedAdvisories = Array.from({ length: 32 }, (_, index) => ({
+    id: `advisory-${index}`,
+    measurementKey: "model.context.max_tokens",
+    aggregation: "fact" as const,
+  }));
+  assert.throws(
+    () => rankCatalog(catalog, requestV2({ inventory: expandedInventory, advisories: expandedAdvisories })),
+    (error: unknown) => error instanceof BearingError
+      && error.code === "INVALID_RANK_REQUEST"
+      && error.message.includes("projection cells"),
+  );
+  assert.throws(
+    () => rankCatalog(catalog, requestV2({ advisories: [{
+      id: "x".repeat(257),
+      measurementKey: "model.context.max_tokens",
+      aggregation: "fact",
+    }] })),
+    (error: unknown) => error instanceof BearingError
+      && error.code === "INVALID_RANK_REQUEST"
+      && error.message.includes("256 UTF-8 bytes"),
+  );
+
+  const inheritedRoot = Object.create(requestV2()) as RankRequestV2;
+  const inheritedCandidate = requestV2({ inventory: [Object.create(inventory[0])] });
+  const inheritedRequirement = requestV2({ requirements: [Object.create(request().requirements[0])] });
+  const inheritedAdvisory = requestV2({ advisories: [Object.create({
+    id: "context",
+    measurementKey: "model.context.max_tokens",
+    aggregation: "fact",
+  })] });
+  for (const inherited of [inheritedRoot, inheritedCandidate, inheritedRequirement, inheritedAdvisory]) {
+    assert.throws(
+      () => rankCatalog(catalog, inherited),
+      (error: unknown) => error instanceof BearingError && error.code === "INVALID_RANK_REQUEST",
+    );
+  }
+
+  let getterReads = 0;
+  const accessorModel = { revision: modelA.revision, quantization: modelA.quantization } as Record<string, unknown>;
+  Object.defineProperty(accessorModel, "id", {
+    enumerable: true,
+    get() { getterReads++; return modelA.id; },
+  });
+  const accessorTools = ["edit"];
+  Object.defineProperty(accessorTools, "0", {
+    enumerable: true,
+    get() { getterReads++; return "edit"; },
+  });
+  const nestedInputs = [
+    requestV2({ inventory: [{ ...inventory[0], model: Object.create(modelA) }] }),
+    requestV2({ inventory: [{ ...inventory[0], model: accessorModel as unknown as ModelIdentity }] }),
+    requestV2({ inventory: [{ ...inventory[0], execution: { ...execution, runtime: Object.create(execution.runtime) } }] }),
+    requestV2({ inventory: [{ ...inventory[0], execution: { ...execution, toolSurface: accessorTools } }] }),
+  ];
+  for (const nested of nestedInputs) {
+    assert.throws(
+      () => rankCatalog(catalog, nested),
+      (error: unknown) => error instanceof BearingError && error.code === "INVALID_RANK_REQUEST",
+    );
+  }
+  assert.equal(getterReads, 0);
+
+  const inheritedInventory = new Array(1);
+  const inheritedInventoryPrototype = Object.create(Array.prototype) as unknown[];
+  Object.defineProperty(inheritedInventoryPrototype, "0", {
+    enumerable: true,
+    get() { getterReads++; return inventory[0]; },
+  });
+  Object.setPrototypeOf(inheritedInventory, inheritedInventoryPrototype);
+  const accessorAdvisories: unknown[] = [];
+  Object.defineProperty(accessorAdvisories, "0", {
+    enumerable: true,
+    configurable: true,
+    get() {
+      getterReads++;
+      return { id: "context", measurementKey: "model.context.max_tokens", aggregation: "fact" };
+    },
+  });
+  const accessorSources: unknown[] = [];
+  Object.defineProperty(accessorSources, "0", {
+    enumerable: true,
+    configurable: true,
+    get() { getterReads++; return "external"; },
+  });
+  const rankArrayInputs = [
+    requestV2({ inventory: inheritedInventory }),
+    requestV2({ advisories: accessorAdvisories as RankRequestV2["advisories"] }),
+    requestV2({ advisories: [{
+      id: "context",
+      measurementKey: "model.context.max_tokens",
+      aggregation: "fact",
+      sourceClasses: accessorSources as RankRequestV2["advisories"][number]["sourceClasses"],
+    }] }),
+  ];
+  for (const rankArrayInput of rankArrayInputs) {
+    assert.throws(
+      () => rankCatalog(catalog, rankArrayInput),
+      (error: unknown) => error instanceof BearingError && error.code === "INVALID_RANK_REQUEST",
+    );
+  }
+  assert.equal(getterReads, 0);
 });
 
 test("POST /v1/rank exposes the same deterministic operation", async () => {
@@ -241,12 +480,29 @@ test("POST /v1/rank exposes the same deterministic operation", async () => {
   const result = await response.json() as { ranked: Array<{ candidateId: string }> };
   assert.equal(result.ranked[0].candidateId, "runtime:model-b");
 
+  const advisoryResponse = await handler(new Request("https://bearing.example/v1/rank", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(requestV2({ advisories: [{ id: "context", measurementKey: "model.context.max_tokens", aggregation: "fact" }] })),
+  }));
+  assert.equal(advisoryResponse.status, 200);
+  const advisoryResult = await advisoryResponse.json() as { schemaVersion: string; ranked: Array<{ advisories: Array<{ value?: unknown }> }> };
+  assert.equal(advisoryResult.schemaVersion, "bearing.rank.result/v2");
+  assert.equal(advisoryResult.ranked[0].advisories[0].value, 131_072);
+
   const malformed = await handler(new Request("https://bearing.example/v1/rank", {
     method: "POST",
     body: "not json",
   }));
   assert.equal(malformed.status, 400);
   assert.equal((await malformed.json() as { error: { code: string } }).error.code, "INVALID_RANK_REQUEST");
+
+  const malformedNested = await handler(new Request("https://bearing.example/v1/rank", {
+    method: "POST",
+    body: JSON.stringify(requestV2({ inventory: [{ ...inventory[0], model: {} as ModelIdentity }] })),
+  }));
+  assert.equal(malformedNested.status, 400);
+  assert.equal((await malformedNested.json() as { error: { code: string } }).error.code, "INVALID_RANK_REQUEST");
 
   const preflight = await handler(new Request("https://bearing.example/v1/rank", { method: "OPTIONS" }));
   assert.equal(preflight.status, 204);
@@ -258,11 +514,69 @@ test("POST /v1/rank exposes the same deterministic operation", async () => {
     body: "{}",
   }));
   assert.equal(tooLarge.status, 413);
+
+  let pulls = 0;
+  let canceled = false;
+  const chunkedBody = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      pulls++;
+      controller.enqueue(new Uint8Array(600_000).fill(0x20));
+      if (pulls === 4) controller.close();
+    },
+    cancel() { canceled = true; },
+  });
+  const chunked = await handler(new Request("https://bearing.example/v1/rank", {
+    method: "POST",
+    body: chunkedBody,
+    duplex: "half",
+  } as RequestInit & { duplex: "half" }));
+  assert.equal(chunked.status, 413);
+  assert.equal(canceled, true);
+  assert.ok(pulls < 4);
+});
+
+test("rank HTTP responses and concurrent work are bounded", async () => {
+  const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
+  const responseBounded = createCatalogHandler({ catalog, maxRankResponseBytes: 100 });
+  const oversizedResult = await responseBounded(new Request("https://bearing.example/v1/rank", {
+    method: "POST",
+    body: JSON.stringify(request()),
+  }));
+  assert.equal(oversizedResult.status, 422);
+  assert.equal((await oversizedResult.json() as { error: { code: string } }).error.code, "RANK_RESULT_TOO_LARGE");
+
+  let release!: () => void;
+  let started!: () => void;
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  const reading = new Promise<void>((resolve) => { started = resolve; });
+  const slowBody = new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      started();
+      await gate;
+      controller.enqueue(new TextEncoder().encode(JSON.stringify(request())));
+      controller.close();
+    },
+  });
+  const capacityBounded = createCatalogHandler({ catalog, maxConcurrentRankRequests: 1 });
+  const first = capacityBounded(new Request("https://bearing.example/v1/rank", {
+    method: "POST",
+    body: slowBody,
+    duplex: "half",
+  } as RequestInit & { duplex: "half" }));
+  await reading;
+  const second = await capacityBounded(new Request("https://bearing.example/v1/rank", {
+    method: "POST",
+    body: JSON.stringify(request()),
+  }));
+  assert.equal(second.status, 503);
+  assert.equal(second.headers.get("retry-after"), "1");
+  release();
+  assert.equal((await first).status, 200);
 });
 
 test("the Node adapter carries rank request bodies into the same handler", async () => {
   const catalog = compileCatalog(observations(), { asOf: "2026-07-18T22:00:00.000Z" });
-  const server = await startCatalogServer({ catalog, host: "127.0.0.1", port: 0 });
+  const server = await startCatalogServer({ catalog, host: "127.0.0.1", port: 0, maxConcurrentRankRequests: 1 });
   try {
     const response = await fetch(`${server.url}/v1/rank`, {
       method: "POST",
@@ -271,7 +585,47 @@ test("the Node adapter carries rank request bodies into the same handler", async
     });
     assert.equal(response.status, 200);
     assert.equal((await response.json() as { ranked: Array<{ candidateId: string }> }).ranked[0].candidateId, "runtime:model-b");
+
+    const body = JSON.stringify(request());
+    let stalled!: ReturnType<typeof httpRequest>;
+    const firstResponse = new Promise<number>((resolve, reject) => {
+      stalled = httpRequest(`${server.url}/v1/rank`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+      }, (incoming) => {
+        incoming.resume();
+        incoming.once("end", () => resolve(incoming.statusCode ?? 0));
+      });
+      stalled.once("error", reject);
+    });
+    stalled.write(body.slice(0, 1));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const capacity = await fetch(`${server.url}/v1/rank`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body,
+    });
+    assert.equal(capacity.status, 503);
+    stalled.end(body.slice(1));
+    assert.equal(await firstResponse, 200);
   } finally {
     await server.close();
+  }
+
+  const responseBounded = await startCatalogServer({
+    catalog,
+    host: "127.0.0.1",
+    port: 0,
+    maxRankResponseBytes: 100,
+  });
+  try {
+    const response = await fetch(`${responseBounded.url}/v1/rank`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(request()),
+    });
+    assert.equal(response.status, 422);
+  } finally {
+    await responseBounded.close();
   }
 });

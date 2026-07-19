@@ -4,6 +4,7 @@ import { readCatalogFile, startCatalogServer } from "../dist/src/node/index.js";
 
 const usage = `Usage:
   bearing serve --catalog <file> [--host <host>] [--port <port>]
+    [--max-concurrent-rank-requests <count>] [--max-rank-response-bytes <bytes>]
   bearing --help`;
 
 const fail = (message) => {
@@ -17,6 +18,17 @@ const valueFor = (args, name) => {
   const value = args[index + 1];
   if (value === undefined || value.startsWith("--")) {
     fail(`${name} requires a value.`);
+    return undefined;
+  }
+  return value;
+};
+
+const positiveIntegerFor = (args, name) => {
+  const raw = valueFor(args, name);
+  if (raw === undefined) return undefined;
+  const value = Number(raw);
+  if (!Number.isSafeInteger(value) || value <= 0) {
+    fail(`${name} must be a positive safe integer.`);
     return undefined;
   }
   return value;
@@ -39,6 +51,8 @@ const main = async () => {
   }
   const configuredHost = valueFor(args, "--host");
   const configuredPort = valueFor(args, "--port");
+  const maxConcurrentRankRequests = positiveIntegerFor(args, "--max-concurrent-rank-requests");
+  const maxRankResponseBytes = positiveIntegerFor(args, "--max-rank-response-bytes");
   if (process.exitCode) return;
   const host = configuredHost ?? "127.0.0.1";
   const rawPort = configuredPort ?? "4244";
@@ -47,7 +61,13 @@ const main = async () => {
     fail("--port must be an integer from 0 through 65535.");
     return;
   }
-  const server = await startCatalogServer({ catalog: await readCatalogFile(catalogFile), host, port });
+  const server = await startCatalogServer({
+    catalog: await readCatalogFile(catalogFile),
+    host,
+    port,
+    ...(maxConcurrentRankRequests === undefined ? {} : { maxConcurrentRankRequests }),
+    ...(maxRankResponseBytes === undefined ? {} : { maxRankResponseBytes }),
+  });
   process.stdout.write(`${server.url}\n`);
   const stop = async () => {
     await server.close();

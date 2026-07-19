@@ -38,6 +38,11 @@ sets and performs no model ranking by itself.
 **Runtime Inventory**: A caller-owned list of models it can actually launch.
 Bearing may rank that list but never discovers or expands it.
 
+**Advisory Projection**: A caller-requested, evidence-bearing view of one
+measurement and aggregation for each runtime candidate. It preserves missing,
+stale, conflicting, and incomparable states and never affects ranking
+eligibility, scores, or order.
+
 ## Product Boundary
 
 - Evals and external adapters produce observations.
