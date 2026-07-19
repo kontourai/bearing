@@ -45,10 +45,10 @@ const fact = (
   scopedExecution: ExecutionProfile | null = null,
   validUntil: string | null = null,
 ): ObservationInput => ({
-  schemaVersion: "bearing.observation/v1",
+  schemaVersion: "bearing.observation/v2",
   kind: "declaration",
   model,
-  execution: scopedExecution,
+  execution: scopedExecution === null ? null : { kind: "exact", ...scopedExecution },
   task: null,
   measurements: [{ key, kind: "fact", value }],
   outcome: null,
@@ -65,10 +65,10 @@ const sample = (
   tokens: number,
   id: string,
 ): ObservationInput => ({
-  schemaVersion: "bearing.observation/v1",
+  schemaVersion: "bearing.observation/v2",
   kind: "evaluation",
   model,
-  execution,
+  execution: { kind: "exact", ...execution },
   task: {
     family: "software-engineering",
     suite: "example-suite",
@@ -209,6 +209,199 @@ test("runtime tool ordering is normalized before exact profile matching", () => 
   const reversedTools = { ...inventory[0], execution: { ...execution, toolSurface: ["shell", "edit"] } };
   const result = rankCatalog(catalog, request({ inventory: [reversedTools] }));
   assert.equal(result.ranked.length, 1);
+});
+
+test("partial declarations match asserted runtime dimensions and explain wildcarded fields", () => {
+  const partial: ObservationInput = {
+    ...fact(modelA, "openrouter.model.context.max_tokens", 1_050_000, "openrouter-context"),
+    execution: {
+      kind: "partial",
+      runtime: { id: "openrouter", version: null },
+      adapter: null,
+      effectiveContextTokens: null,
+      toolSurface: null,
+      hardware: null,
+      workflow: null,
+    },
+  };
+  const catalog = compileCatalog([partial], { asOf: "2026-07-18T22:00:00.000Z" });
+  const openrouter = {
+    id: "openrouter:model-a",
+    model: modelA,
+    execution: {
+      ...execution,
+      runtime: { id: "openrouter", version: "2026-07-18" },
+      adapter: { id: "caller-openrouter-adapter", version: "9.0.0" },
+      toolSurface: ["browser", "shell"],
+    },
+  };
+  const local = { id: "local:model-a", model: modelA, execution };
+  const result = rankCatalog(catalog, request({
+    inventory: [local, openrouter],
+    requirements: [{
+      measurementKey: "openrouter.model.context.max_tokens",
+      aggregation: "fact",
+      operator: "gte",
+      value: 1_000_000,
+    }],
+    preferences: [],
+  }));
+
+  assert.deepEqual(result.ranked.map((candidate) => candidate.candidateId), ["openrouter:model-a"]);
+  const matched = result.ranked[0].reasons[0].executionApplicability!;
+  assert.deepEqual(matched.matchedKinds, ["partial"]);
+  assert.deepEqual(matched.assertedDimensions, ["runtime.id"]);
+  assert.deepEqual(matched.wildcardedDimensions, [
+    "adapter",
+    "effectiveContextTokens",
+    "hardware",
+    "runtime.version",
+    "toolSurface",
+    "workflow",
+  ]);
+  const rejected = result.excluded[0].reasons[0];
+  assert.equal(rejected.code, "INCOMPARABLE_EVIDENCE");
+  assert.deepEqual(rejected.executionApplicability?.mismatchedDimensions, ["runtime.id"]);
+  assert.deepEqual(result.excluded[0].evidence[0].evidenceIds, ["openrouter-context"]);
+});
+
+test("partial scope nulls are wildcards while empty tools remain known-empty", () => {
+  const partial: ObservationInput = {
+    ...fact(modelA, "runtime.ready", true, "partial-runtime-ready"),
+    execution: {
+      kind: "partial",
+      runtime: { id: "local-runtime", version: null },
+      adapter: { id: "agent-adapter", version: null },
+      effectiveContextTokens: 32_768,
+      toolSurface: [],
+      hardware: { class: "desktop-gpu", accelerator: null, memoryBytes: null },
+      workflow: { id: "builder", version: null, condition: "kit" },
+    },
+  };
+  const catalog = compileCatalog([partial], { asOf: "2026-07-18T22:00:00.000Z" });
+  const knownEmpty = { ...execution, toolSurface: [] };
+  const matching = rankCatalog(catalog, request({
+    inventory: [{ id: "empty-tools", model: modelA, execution: knownEmpty }],
+    requirements: [{ measurementKey: "runtime.ready", aggregation: "fact", operator: "eq", value: true }],
+    preferences: [],
+  }));
+  assert.equal(matching.ranked.length, 1);
+  const applicability = matching.ranked[0].reasons[0].executionApplicability!;
+  assert.ok(applicability.assertedDimensions.includes("toolSurface"));
+  assert.ok(applicability.wildcardedDimensions.includes("hardware.accelerator"));
+  assert.ok(applicability.wildcardedDimensions.includes("hardware.memoryBytes"));
+  assert.ok(applicability.wildcardedDimensions.includes("workflow.version"));
+
+  const nonEmpty = rankCatalog(catalog, request({
+    inventory: [{ id: "non-empty-tools", model: modelA, execution }],
+    requirements: [{ measurementKey: "runtime.ready", aggregation: "fact", operator: "eq", value: true }],
+    preferences: [],
+  }));
+  assert.equal(nonEmpty.excluded[0].reasons[0].code, "INCOMPARABLE_EVIDENCE");
+  assert.deepEqual(nonEmpty.excluded[0].reasons[0].executionApplicability?.mismatchedDimensions, ["toolSurface"]);
+
+  const mismatches: Array<[string, ExecutionProfile]> = [
+    ["adapter.id", { ...knownEmpty, adapter: { id: "other-adapter", version: "4.2.0" } }],
+    ["effectiveContextTokens", { ...knownEmpty, effectiveContextTokens: 16_384 }],
+    ["hardware.class", { ...knownEmpty, hardware: { ...knownEmpty.hardware!, class: "server-gpu" } }],
+    ["workflow.condition", { ...knownEmpty, workflow: { ...knownEmpty.workflow!, condition: "bare" } }],
+  ];
+  for (const [dimension, candidateExecution] of mismatches) {
+    const mismatch = rankCatalog(catalog, request({
+      inventory: [{ id: dimension, model: modelA, execution: candidateExecution }],
+      requirements: [{ measurementKey: "runtime.ready", aggregation: "fact", operator: "eq", value: true }],
+      preferences: [],
+    }));
+    assert.deepEqual(
+      mismatch.excluded[0].reasons[0].executionApplicability?.mismatchedDimensions,
+      [dimension],
+    );
+  }
+});
+
+test("partial nested versions and optional hardware fields match only when asserted", () => {
+  const partial: ObservationInput = {
+    ...fact(modelA, "runtime.ready", true, "partial-versioned-runtime"),
+    execution: {
+      kind: "partial",
+      runtime: { id: "local-runtime", version: "1.2.3" },
+      adapter: { id: "agent-adapter", version: "4.2.0" },
+      effectiveContextTokens: null,
+      toolSurface: null,
+      hardware: { class: "desktop-gpu", accelerator: "gpu-1", memoryBytes: 24_000_000_000 },
+      workflow: { id: "builder", version: "2.0.0", condition: null },
+    },
+  };
+  const catalog = compileCatalog([partial], { asOf: "2026-07-18T22:00:00.000Z" });
+  const requirement = [{ measurementKey: "runtime.ready", aggregation: "fact" as const, operator: "eq" as const, value: true }];
+  const matchingExecution: ExecutionProfile = {
+    ...execution,
+    runtime: { ...execution.runtime, version: "1.2.3" },
+    hardware: { ...execution.hardware!, accelerator: "gpu-1" },
+    workflow: { ...execution.workflow!, version: "2.0.0" },
+  };
+  const mismatches: Array<[string, ExecutionProfile]> = [
+    ["runtime.version", { ...matchingExecution, runtime: { ...matchingExecution.runtime, version: "1.2.4" } }],
+    ["adapter.version", { ...matchingExecution, adapter: { ...matchingExecution.adapter!, version: "4.3.0" } }],
+    ["hardware.accelerator", { ...matchingExecution, hardware: { ...matchingExecution.hardware!, accelerator: "gpu-2" } }],
+    ["hardware.memoryBytes", { ...matchingExecution, hardware: { ...matchingExecution.hardware!, memoryBytes: 16_000_000_000 } }],
+    ["workflow.version", { ...matchingExecution, workflow: { ...matchingExecution.workflow!, version: "2.1.0" } }],
+  ];
+
+  for (const [dimension, candidateExecution] of mismatches) {
+    const result = rankCatalog(catalog, request({
+      inventory: [{ id: dimension, model: modelA, execution: candidateExecution }],
+      requirements: requirement,
+      preferences: [],
+    }));
+    assert.deepEqual(
+      result.excluded[0].reasons[0].executionApplicability?.mismatchedDimensions,
+      [dimension],
+    );
+  }
+});
+
+test("exact evaluation scopes remain exact after partial matching is introduced", () => {
+  const catalog = compileCatalog([sample(modelA, true, 1000, "exact-sample")], { asOf: "2026-07-18T22:00:00.000Z" });
+  const otherAdapter = { ...execution, adapter: { id: "other-adapter", version: "1.0.0" } };
+  const result = rankCatalog(catalog, request({
+    inventory: [{ id: "other-adapter", model: modelA, execution: otherAdapter }],
+    requirements: [{ measurementKey: "task.accepted", aggregation: "count", operator: "gte", value: 1 }],
+    preferences: [],
+  }));
+  assert.equal(result.ranked.length, 0);
+  assert.equal(result.excluded[0].reasons[0].code, "INCOMPARABLE_EVIDENCE");
+  assert.deepEqual(result.excluded[0].reasons[0].executionApplicability?.mismatchedDimensions, ["adapter"]);
+});
+
+test("advisories expose partial-scope applicability without changing ranking", () => {
+  const partial: ObservationInput = {
+    ...fact(modelA, "runtime.context", 1_050_000, "advisory-partial"),
+    execution: {
+      kind: "partial",
+      runtime: { id: "openrouter", version: null },
+      adapter: null,
+      effectiveContextTokens: null,
+      toolSurface: null,
+      hardware: null,
+      workflow: null,
+    },
+  };
+  const catalog = compileCatalog([partial], { asOf: "2026-07-18T22:00:00.000Z" });
+  const candidate = {
+    id: "openrouter:model-a",
+    model: modelA,
+    execution: { ...execution, runtime: { id: "openrouter", version: "2026-07-18" } },
+  };
+  const result = rankCatalog(catalog, requestV2({
+    inventory: [candidate],
+    requirements: [],
+    preferences: [],
+    advisories: [{ id: "context", measurementKey: "runtime.context", aggregation: "fact" }],
+  }));
+  assert.equal(result.ranked[0].advisories[0].status, "present");
+  assert.deepEqual(result.ranked[0].advisories[0].executionApplicability.matchedKinds, ["partial"]);
+  assert.deepEqual(result.ranked[0].advisories[0].executionApplicability.assertedDimensions, ["runtime.id"]);
 });
 
 test("missing, stale, and conflicting requirement evidence exclude explicitly", () => {

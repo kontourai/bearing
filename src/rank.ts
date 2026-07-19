@@ -4,6 +4,7 @@ import type {
   CapabilityObservation,
   CatalogSnapshot,
   ExecutionProfile,
+  ExecutionScope,
   ModelIdentity,
   ScalarValue,
   SourceClass,
@@ -96,12 +97,22 @@ export interface RankReason {
   actual?: ScalarValue;
   expected?: ScalarValue;
   contribution?: number;
+  executionApplicability?: ExecutionApplicabilitySummary;
 }
 
 export interface RankEvidence {
   measurementKey: string;
   observationIds: string[];
   evidenceIds: string[];
+}
+
+export type ObservationExecutionScopeKind = "global" | "exact" | "partial";
+
+export interface ExecutionApplicabilitySummary {
+  matchedKinds: ObservationExecutionScopeKind[];
+  assertedDimensions: string[];
+  wildcardedDimensions: string[];
+  mismatchedDimensions: string[];
 }
 
 export type RankAdvisoryStatus = "present" | "missing" | "stale" | "conflicting" | "incomparable";
@@ -113,6 +124,7 @@ interface RankAdvisoryProjectionBase {
   sourceClasses?: SourceClass[];
   evidence: RankEvidence;
   uncertainty: Uncertainty;
+  executionApplicability: ExecutionApplicabilitySummary;
 }
 
 export type RankAdvisoryProjection =
@@ -391,13 +403,103 @@ const combinedUncertainty = (observations: CapabilityObservation[], extraGaps: s
   };
 };
 
-const applicable = (observation: CapabilityObservation, candidate: RuntimeCandidate, task: RankTask): boolean => {
+const taskApplicable = (observation: CapabilityObservation, candidate: RuntimeCandidate, task: RankTask): boolean => {
   if (canonicalJson(observation.model) !== canonicalJson(candidate.model)) return false;
-  if (observation.execution !== null && canonicalJson(observation.execution) !== canonicalJson(candidate.execution)) return false;
   if (observation.task === null) return true;
   if (observation.task.family !== task.family) return false;
   return task.suite === null || observation.task.suite === task.suite;
 };
+
+interface ExecutionScopeEvaluation {
+  matches: boolean;
+  kind: ObservationExecutionScopeKind;
+  asserted: string[];
+  wildcarded: string[];
+  mismatched: string[];
+}
+
+const exactDimensions = ["runtime", "adapter", "effectiveContextTokens", "toolSurface", "hardware", "workflow"];
+
+const evaluateExecutionScope = (
+  scope: ExecutionScope | null,
+  candidate: ExecutionProfile,
+): ExecutionScopeEvaluation => {
+  if (scope === null) {
+    return { matches: true, kind: "global", asserted: [], wildcarded: ["execution"], mismatched: [] };
+  }
+  if (scope.kind === "exact") {
+    const mismatched = exactDimensions.filter((dimension) =>
+      canonicalJson(scope[dimension as keyof ExecutionProfile]) !== canonicalJson(candidate[dimension as keyof ExecutionProfile]));
+    return {
+      matches: mismatched.length === 0,
+      kind: "exact",
+      asserted: [...exactDimensions],
+      wildcarded: [],
+      mismatched,
+    };
+  }
+
+  const asserted: string[] = [];
+  const wildcarded: string[] = [];
+  const mismatched: string[] = [];
+  const compare = (dimension: string, expected: unknown, actual: unknown): void => {
+    asserted.push(dimension);
+    if (canonicalJson(expected) !== canonicalJson(actual)) mismatched.push(dimension);
+  };
+  const optional = (dimension: string, expected: unknown, actual: unknown): void => {
+    if (expected === null) wildcarded.push(dimension);
+    else compare(dimension, expected, actual);
+  };
+
+  compare("runtime.id", scope.runtime.id, candidate.runtime.id);
+  optional("runtime.version", scope.runtime.version, candidate.runtime.version);
+  if (scope.adapter === null) wildcarded.push("adapter");
+  else if (candidate.adapter === null) {
+    asserted.push("adapter.id");
+    if (scope.adapter.version !== null) asserted.push("adapter.version");
+    else wildcarded.push("adapter.version");
+    mismatched.push("adapter");
+  } else {
+    compare("adapter.id", scope.adapter.id, candidate.adapter.id);
+    optional("adapter.version", scope.adapter.version, candidate.adapter.version);
+  }
+  optional("effectiveContextTokens", scope.effectiveContextTokens, candidate.effectiveContextTokens);
+  optional("toolSurface", scope.toolSurface, candidate.toolSurface);
+  if (scope.hardware === null) wildcarded.push("hardware");
+  else if (candidate.hardware === null) {
+    asserted.push("hardware.class");
+    if (scope.hardware.accelerator === null) wildcarded.push("hardware.accelerator");
+    else asserted.push("hardware.accelerator");
+    if (scope.hardware.memoryBytes === null) wildcarded.push("hardware.memoryBytes");
+    else asserted.push("hardware.memoryBytes");
+    mismatched.push("hardware");
+  } else {
+    compare("hardware.class", scope.hardware.class, candidate.hardware.class);
+    optional("hardware.accelerator", scope.hardware.accelerator, candidate.hardware.accelerator);
+    optional("hardware.memoryBytes", scope.hardware.memoryBytes, candidate.hardware.memoryBytes);
+  }
+  if (scope.workflow === null) wildcarded.push("workflow");
+  else if (candidate.workflow === null) {
+    asserted.push("workflow.id");
+    if (scope.workflow.version === null) wildcarded.push("workflow.version");
+    else asserted.push("workflow.version");
+    if (scope.workflow.condition === null) wildcarded.push("workflow.condition");
+    else asserted.push("workflow.condition");
+    mismatched.push("workflow");
+  } else {
+    compare("workflow.id", scope.workflow.id, candidate.workflow.id);
+    optional("workflow.version", scope.workflow.version, candidate.workflow.version);
+    optional("workflow.condition", scope.workflow.condition, candidate.workflow.condition);
+  }
+  return { matches: mismatched.length === 0, kind: "partial", asserted, wildcarded, mismatched };
+};
+
+const summarizeExecutionApplicability = (evaluations: ExecutionScopeEvaluation[]): ExecutionApplicabilitySummary => ({
+  matchedKinds: [...new Set(evaluations.filter((item) => item.matches).map((item) => item.kind))].sort(),
+  assertedDimensions: [...new Set(evaluations.flatMap((item) => item.asserted))].sort(),
+  wildcardedDimensions: [...new Set(evaluations.flatMap((item) => item.wildcarded))].sort(),
+  mismatchedDimensions: [...new Set(evaluations.filter((item) => !item.matches).flatMap((item) => item.mismatched))].sort(),
+});
 
 interface AggregateResult {
   status: "ok" | "missing" | "stale" | "conflict" | "incomparable";
@@ -408,6 +510,7 @@ interface AggregateResult {
   /** Includes stale matches for advisory diagnosis without changing v1 ranking evidence. */
   diagnosticObservations: CapabilityObservation[];
   diagnosticEvidence: RankEvidence;
+  executionApplicability: ExecutionApplicabilitySummary;
 }
 
 const evidenceFor = (measurementKey: string, observations: CapabilityObservation[]): RankEvidence => ({
@@ -425,50 +528,57 @@ const aggregateFor = (
   mode: Aggregation,
   allowedSources?: SourceClass[],
 ): AggregateResult => {
-  const all = observations
-    .filter((observation) => applicable(observation, candidate, task))
+  const expectedKind = mode === "fact" ? "fact" : "sample";
+  const scoped = observations
+    .filter((observation) => taskApplicable(observation, candidate, task))
     .filter((observation) => observation.outcome?.status !== "invalid")
     .filter((observation) => allowedSources === undefined || allowedSources.includes(observation.sourceClass))
     .flatMap((observation) => observation.measurements
       .filter((measurement) => measurement.key === measurementKey)
-      .map((measurement) => ({ observation, measurement })));
-  const expectedKind = mode === "fact" ? "fact" : "sample";
-  const matching = all.filter(({ measurement }) => measurement.kind === expectedKind);
+      .filter((measurement) => measurement.kind === expectedKind)
+      .map((measurement) => ({ observation, measurement, scope: evaluateExecutionScope(observation.execution, candidate.execution) })));
+  const applicability = summarizeExecutionApplicability(scoped.map((item) => item.scope));
+  const matching = scoped.filter(({ scope }) => scope.matches);
   const fresh = matching.filter(({ observation }) => observation.freshness.validUntil === null || observation.freshness.validUntil > asOf);
   const contributingObservations = fresh.map(({ observation }) => observation);
   const matchingObservations = matching.map(({ observation }) => observation);
   const evidence = evidenceFor(measurementKey, contributingObservations);
-  const diagnosticObservations = contributingObservations.length > 0 ? contributingObservations : matchingObservations;
+  const diagnosticObservations = contributingObservations.length > 0
+    ? contributingObservations
+    : matchingObservations.length > 0 ? matchingObservations : scoped.map(({ observation }) => observation);
   const diagnosticEvidence = evidenceFor(measurementKey, diagnosticObservations);
+  if (matching.length === 0 && scoped.length > 0) {
+    return { status: "incomparable", observations: [], evidence, diagnosticObservations, diagnosticEvidence, executionApplicability: applicability };
+  }
   if (fresh.length === 0) {
-    return { status: matching.length > 0 ? "stale" : "missing", observations: [], evidence, diagnosticObservations, diagnosticEvidence };
+    return { status: matching.length > 0 ? "stale" : "missing", observations: [], evidence, diagnosticObservations, diagnosticEvidence, executionApplicability: applicability };
   }
   const values = fresh.map(({ measurement }) => measurement.value);
   const unitSensitive = mode === "fact" || mode === "mean" || mode === "min" || mode === "max";
   const units = new Map(fresh.map(({ measurement }) => [measurement.unit ?? null, measurement.unit ?? null]));
   if (unitSensitive && units.size > 1) {
-    return { status: "incomparable", observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence };
+    return { status: "incomparable", observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence, executionApplicability: applicability };
   }
   const unit = unitSensitive ? [...units.values()][0] ?? null : null;
   if (mode === "fact") {
     const unique = new Map(values.map((value) => [canonicalJson(value), value]));
     return unique.size === 1
-      ? { status: "ok", value: [...unique.values()][0], unit, observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence }
-      : { status: "conflict", observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence };
+      ? { status: "ok", value: [...unique.values()][0], unit, observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence, executionApplicability: applicability }
+      : { status: "conflict", observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence, executionApplicability: applicability };
   }
   if (mode === "success-rate") {
-    if (!values.every((value) => typeof value === "boolean")) return { status: "incomparable", observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence };
-    return { status: "ok", value: values.filter(Boolean).length / values.length, unit, observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence };
+    if (!values.every((value) => typeof value === "boolean")) return { status: "incomparable", observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence, executionApplicability: applicability };
+    return { status: "ok", value: values.filter(Boolean).length / values.length, unit, observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence, executionApplicability: applicability };
   }
   if (mode === "count") {
-    return { status: "ok", value: values.length, unit, observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence };
+    return { status: "ok", value: values.length, unit, observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence, executionApplicability: applicability };
   }
-  if (!values.every((value) => typeof value === "number")) return { status: "incomparable", observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence };
+  if (!values.every((value) => typeof value === "number")) return { status: "incomparable", observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence, executionApplicability: applicability };
   const numbers = values as number[];
   const value = mode === "mean"
     ? numbers.reduce((sum, current) => sum + current, 0) / numbers.length
     : mode === "min" ? Math.min(...numbers) : Math.max(...numbers);
-  return { status: "ok", value, unit, observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence };
+  return { status: "ok", value, unit, observations: contributingObservations, evidence, diagnosticObservations, diagnosticEvidence, executionApplicability: applicability };
 };
 
 const advisoryStatus = (status: AggregateResult["status"]): RankAdvisoryStatus =>
@@ -502,6 +612,7 @@ const projectAdvisories = (
     ...(advisory.sourceClasses === undefined ? {} : { sourceClasses: advisory.sourceClasses }),
     evidence: aggregate.diagnosticEvidence,
     uncertainty,
+    executionApplicability: aggregate.executionApplicability,
   };
   return status === "present"
     ? { ...common, status, value: aggregate.value!, unit: aggregate.unit ?? null }
@@ -514,7 +625,12 @@ const evidenceReason = (aggregate: AggregateResult, key: string, preference: boo
     ? (preference ? "PREFERENCE_EVIDENCE_MISSING" : "MISSING_EVIDENCE")
     : aggregate.status === "stale" ? "STALE_EVIDENCE"
       : aggregate.status === "conflict" ? "CONFLICTING_EVIDENCE" : "INCOMPARABLE_EVIDENCE";
-  return { code, measurementKey: key, summary: `${aggregate.status} evidence for ${key}` };
+  return {
+    code,
+    measurementKey: key,
+    summary: `${aggregate.status} evidence for ${key}`,
+    executionApplicability: aggregate.executionApplicability,
+  };
 };
 
 const requirementMet = (actual: ScalarValue, requirement: RankRequirement): boolean => {
@@ -577,8 +693,8 @@ const evaluateRequirements = (
   let failed = false;
   for (const requirement of request.requirements) {
     const aggregate = aggregateCriterion(catalog, working.candidate, request.task, requirement, observationsFor);
-    working.evidence.push(aggregate.evidence);
-    working.observations.push(...aggregate.observations);
+    working.evidence.push(aggregate.status === "ok" ? aggregate.evidence : aggregate.diagnosticEvidence);
+    working.observations.push(...(aggregate.status === "ok" ? aggregate.observations : aggregate.diagnosticObservations));
     const unavailable = evidenceReason(aggregate, requirement.measurementKey, false);
     if (unavailable !== null) {
       working.reasons.push(unavailable);
@@ -592,6 +708,7 @@ const evaluateRequirements = (
       summary: `${requirement.measurementKey} ${met ? "satisfied" : "did not satisfy"} ${requirement.operator}`,
       actual: aggregate.value,
       expected: requirement.value,
+      executionApplicability: aggregate.executionApplicability,
     });
     if (!met) failed = true;
   }
@@ -606,8 +723,8 @@ const collectPreferences = (
 ): void => {
   for (const preference of request.preferences) {
     const aggregate = aggregateCriterion(catalog, working.candidate, request.task, preference, observationsFor);
-    working.evidence.push(aggregate.evidence);
-    working.observations.push(...aggregate.observations);
+    working.evidence.push(aggregate.status === "ok" ? aggregate.evidence : aggregate.diagnosticEvidence);
+    working.observations.push(...(aggregate.status === "ok" ? aggregate.observations : aggregate.diagnosticObservations));
     const unavailable = evidenceReason(aggregate, preference.measurementKey, true);
     if (unavailable !== null) working.reasons.push(unavailable);
     else if (typeof aggregate.value === "number") working.preferenceValues.set(canonicalJson(preference), aggregate.value);

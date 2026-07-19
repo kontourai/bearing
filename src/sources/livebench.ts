@@ -467,6 +467,7 @@ const observationFor = (
     kind: "evaluation",
     model: mapping.model,
     execution: {
+      kind: "exact",
       runtime: mapping.runtime,
       adapter: { id: "livebench", version: release },
       effectiveContextTokens: null,

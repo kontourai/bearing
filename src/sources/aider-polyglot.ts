@@ -296,6 +296,7 @@ const observationFor = (
     kind: "evaluation",
     model: mapping.model,
     execution: {
+      kind: "exact",
       runtime: mapping.runtime,
       adapter: { id: "aider", version: row.aiderVersion },
       effectiveContextTokens: null,

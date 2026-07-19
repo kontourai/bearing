@@ -119,7 +119,10 @@ test("imports exact OpenRouter runtime facts and attributed benchmark samples", 
   const facts = result.observations.filter((item) => item.task === null);
   const fact = (key: string) => facts.find((item) => item.measurements[0]?.key === key)?.measurements[0];
   assert.equal(facts.length, 17);
+  assert.equal(facts[0].execution?.kind, "partial");
   assert.equal(facts[0].execution?.runtime.id, "openrouter");
+  assert.equal(facts[0].execution?.adapter, null);
+  assert.equal(facts[0].execution?.toolSurface, null);
   assert.equal(fact("openrouter.model.context.max_tokens")?.value, 1_050_000);
   assert.equal(fact("openrouter.top_provider.context.max_tokens")?.value, 1_050_000);
   assert.equal(fact("openrouter.reasoning.effort.xhigh")?.value, true);

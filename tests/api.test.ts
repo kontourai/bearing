@@ -17,7 +17,7 @@ import {
 import { readCatalogFile, startCatalogServer } from "../src/node/index.js";
 
 const observation = (): ObservationInput => ({
-  schemaVersion: "bearing.observation/v1",
+  schemaVersion: "bearing.observation/v2",
   kind: "declaration",
   model: { id: "example/model-7b", revision: "r1", quantization: null },
   execution: null,
