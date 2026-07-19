@@ -65,6 +65,56 @@
         "unknownRows": "review",
         "mappingChanges": "review"
       }
+    },
+    {
+      "id": "openrouter-models",
+      "owner": "OpenRouter",
+      "sourceClass": "external",
+      "canonicalOrigin": "https://openrouter.ai/",
+      "attribution": {
+        "name": "OpenRouter Models API",
+        "url": "https://openrouter.ai/docs/api/reference/models/get-models"
+      },
+      "license": {
+        "identifier": "NOASSERTION",
+        "evidenceUrl": "https://openrouter.ai/terms"
+      },
+      "trustRationale": "Official OpenRouter API for metadata about models and endpoints available through the OpenRouter runtime.",
+      "knownLimitations": [
+        "Availability, context, parameters, pricing, and defaults are OpenRouter-scoped and are not universal provider facts.",
+        "Third-party benchmark values are attributed by OpenRouter but this source does not establish their exact upstream revision or methodology.",
+        "Model rows require separately reviewed exact mappings before they can contribute observations."
+      ],
+      "freshness": {
+        "refreshIntervalHours": 6,
+        "maxAgeHours": 24
+      },
+      "revision": {
+        "kind": "snapshot",
+        "grammar": "sha256"
+      },
+      "resolver": {
+        "adapter": "openrouter-model-api",
+        "version": "v1",
+        "entrypoint": {
+          "sourceId": "openrouter-models",
+          "url": "https://openrouter.ai/api/v1/models",
+          "mediaType": "application/json",
+          "maxBytes": 8388608
+        },
+        "derivedResourcePolicy": "direct-entrypoint/v1",
+        "maxBytes": 8388608
+      },
+      "artifacts": {
+        "adapter": "openrouter-models",
+        "version": "v1",
+        "items": []
+      },
+      "proposalPolicy": {
+        "newRevision": "review",
+        "unknownRows": "review",
+        "mappingChanges": "review"
+      }
     }
   ]
 }

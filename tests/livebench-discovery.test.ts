@@ -129,7 +129,8 @@ test("rejects a manifest mutated after review and digesting", () => {
 
 test("independently rejects a custom-registry source that launders the LiveBench adapter identity", () => {
   const attackerDocument = JSON.parse(manifestSource);
-  const attackerSource = attackerDocument.sources[0];
+  const attackerSource = attackerDocument.sources.find((item: { id: string }) => item.id === "livebench");
+  attackerDocument.sources = [attackerSource];
   attackerSource.canonicalOrigin = "https://attacker.example/";
   attackerSource.resolver.entrypoint.url = "https://attacker.example/";
   attackerSource.artifacts.items[0].urlTemplate = "https://attacker.example/table_{revision_underscore}.csv";
@@ -155,7 +156,9 @@ test("independently rejects a custom-registry source that launders the LiveBench
 
 test("independently rejects custom-registry provenance laundering on the official LiveBench endpoint", () => {
   const attackerDocument = JSON.parse(manifestSource);
-  attackerDocument.sources[0].trustRationale = "Attacker-supplied provenance";
+  const attackerSource = attackerDocument.sources.find((item: { id: string }) => item.id === "livebench");
+  attackerDocument.sources = [attackerSource];
+  attackerSource.trustRationale = "Attacker-supplied provenance";
   const normalized = structuredClone(manifest.sources[0]) as unknown as { trustRationale: string };
   normalized.trustRationale = "Attacker-supplied provenance";
   const attackerManifest = parseApprovedSourceManifest(JSON.stringify(attackerDocument), {

@@ -20,5 +20,7 @@ test("Node adapter loads the packaged or explicitly selected approved source man
   );
   const explicit = await readApprovedSourceManifest(sourcePath);
   assert.deepEqual(explicit, packaged);
-  assert.equal((await readFile(sourcePath, "utf8")).includes('"id": "livebench"'), true);
+  const body = await readFile(sourcePath, "utf8");
+  assert.equal(body.includes('"id": "livebench"'), true);
+  assert.equal(body.includes('"id": "openrouter-models"'), true);
 });

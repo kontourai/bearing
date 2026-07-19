@@ -128,6 +128,21 @@ schema drift, duplicate rows or tasks, duplicate JSON keys, unknown categories,
 invalid scores, mismatched releases, and excessive parse or observation
 expansion fail closed; unmapped model rows remain explicit diagnostics.
 
+`importOpenRouterModelsSnapshot` imports exact reviewed rows from OpenRouter's
+official models API under the packaged approved-source policy. Context,
+top-provider context, completion limits, pricing, input modalities, tool and
+structured-output support, and reasoning efforts remain OpenRouter runtime
+facts; they are not promoted to provider-global declarations. OpenRouter's
+`-1` variable-price sentinel becomes unknown rather than a negative price.
+
+Artificial Analysis indexes and Design Arena category results remain separate
+high-uncertainty external samples attributed to their upstream evaluators. The
+API snapshot does not establish their exact upstream revision or execution
+profile, so those samples carry `execution: null` and never inherit OpenRouter
+runtime semantics. Unmapped rows remain diagnostics, exact mapping is required,
+and caller-supplied Datum/Station inventory remains the final availability
+constraint.
+
 ## Development
 
 ```sh
@@ -140,6 +155,14 @@ YAML, CSV, and duplicate-aware JSON parsing. The LiveBench adapter composes the
 canonical snapshot-envelope contract from `@kontourai/forage`; it does not
 duplicate that provenance algorithm. Catalog, ranking, API, and source-adapter
 paths remain deterministic and do not perform network access.
+
+Guarded live proofs are explicit development commands and write only beneath
+`.kontourai/bearing/`:
+
+```sh
+npm run prove:livebench-discovery
+npm run prove:openrouter-models
+```
 
 ## Trusted source discovery
 
