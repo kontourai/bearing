@@ -31,6 +31,24 @@ for the same overlapping fact scope form a Conflict Set.
 **Sample Measurement**: One measured result, such as a benchmark task outcome or
 latency. Different sample values are observations of variation, not conflicts.
 
+**Trusted Source Mapping**: A reviewed exact association between one upstream
+row identity and its model, runtime, and workflow condition. Source adapters may
+report unknown rows but never infer this association from a display label. A
+derived observation content-addresses the exact mapping entry; the refresh
+policy, not the adapter, decides whether the mapping's review evidence is
+accepted.
+
+**Release Artifact Set**: Multiple structured source files that jointly define
+one benchmark release. Each file keeps its own snapshot envelope and digest;
+the adapter accepts the set only when release identity and cross-file schema
+agree.
+
+**Acquisition Record**: The exact release-wide snapshot references, URLs, byte
+digests, and fetch times returned beside imported observations. Acquisition
+authenticates where the artifact set came from. Observation evidence addresses
+only the task result, category assignment, and mapping that determine that
+observation, so unrelated artifact changes do not churn its identity.
+
 **Catalog Snapshot**: A deterministic, content-addressed compilation of valid
 observations at a caller-supplied `asOf`. It retains observations and conflict
 sets and performs no model ranking by itself.

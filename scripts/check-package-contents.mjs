@@ -14,6 +14,10 @@ const consumer = path.join(temporary, "consumer");
 const packageDestination = process.env.BEARING_PACK_DESTINATION
   ? path.resolve(process.env.BEARING_PACK_DESTINATION)
   : path.join(temporary, "artifacts");
+const preinstallTarballs = (process.env.KONTOUR_PACK_PREINSTALL_TARBALLS ?? "")
+  .split(path.delimiter)
+  .filter(Boolean)
+  .map((tarball) => path.resolve(tarball));
 
 try {
   await mkdir(packageDestination, { recursive: true });
@@ -76,6 +80,8 @@ try {
     "dist/src/sources/kontour-evals.js",
     "dist/src/structural.d.ts",
     "dist/src/structural.js",
+    "dist/src/sources/livebench.d.ts",
+    "dist/src/sources/livebench.js",
     "dist/src/types.d.ts",
     "dist/src/types.js",
     "dist/src/validate.d.ts",
@@ -95,6 +101,22 @@ try {
 
   await mkdir(consumer);
   await writeFile(path.join(consumer, "package.json"), '{"private":true,"type":"module"}\n');
+  if (preinstallTarballs.length > 0) {
+    await execFileAsync(
+      "npm",
+      [
+        "install",
+        "--dry-run=false",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund",
+        "--cache",
+        npmCache,
+        ...preinstallTarballs,
+      ],
+      { cwd: consumer, maxBuffer: 10 * 1024 * 1024 },
+    );
+  }
   await execFileAsync(
     "npm",
     [

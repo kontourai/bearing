@@ -66,6 +66,18 @@ export {
   type KontourEvalsResultSet,
   type KontourEvalsRunMapping,
 } from "./sources/kontour-evals.js";
+export {
+  LIVEBENCH_SOURCE,
+  importLiveBenchSnapshots,
+  liveBenchSourceId,
+  liveBenchSourceUrl,
+  type LiveBenchArtifact,
+  type LiveBenchDiagnostic,
+  type LiveBenchImportInput,
+  type LiveBenchImportResult,
+  type LiveBenchRunMapping,
+  type LiveBenchTrustedSnapshot,
+} from "./sources/livebench.js";
 export { validateExecutionProfile, validateModelIdentity, validateObservation } from "./validate.js";
 export {
   CATALOG_SCHEMA_VERSION,
