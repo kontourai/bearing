@@ -141,6 +141,25 @@ canonical snapshot-envelope contract from `@kontourai/forage`; it does not
 duplicate that provenance algorithm. Catalog, ranking, API, and source-adapter
 paths remain deterministic and do not perform network access.
 
+## Trusted source discovery
+
+`sources/approved-sources.v1.json` is the reviewed trust-onboarding manifest for
+external model-intelligence sources. Runtime discovery may find a new resource
+or release only within a source's approved origin, closed resolver adapter, and
+artifact templates. Discovery never adds a source, trusts a model label, or
+contributes a benchmark row by itself.
+
+The first resolver follows LiveBench's official index to its current same-origin
+hashed main bundle, then derives the release set and manifest-bound artifact
+locators from exact Forage/Lookout snapshot envelopes. The bundle name is not
+hard-coded. New releases and unknown model rows are review proposals; only exact
+reviewed model mappings can enter `importLiveBenchSnapshots`.
+
+Acquisition remains outside the offline catalog core. Lookout and Forage guard
+network access, persist immutable snapshots, and replay exact references.
+Bearing validates those envelopes, performs deterministic model-domain
+discovery/import, and ranks only caller-supplied runtime inventory.
+
 ## Releases
 
 Package contents are checked by `npm run verify`. Release Please and npm

@@ -80,6 +80,27 @@ export {
 } from "./sources/livebench.js";
 export { validateExecutionProfile, validateModelIdentity, validateObservation } from "./validate.js";
 export {
+  APPROVED_SOURCE_MANIFEST_SCHEMA_VERSION,
+  DEFAULT_APPROVED_SOURCE_ADAPTER_REGISTRY,
+  isApprovedRevision,
+  parseApprovedSourceManifest,
+  renderApprovedArtifactUrl,
+  type ApprovedSource,
+  type ApprovedSourceAdapterRegistry,
+  type ApprovedSourceArtifact,
+  type ApprovedSourceManifest,
+} from "./trusted-sources/manifest.js";
+export {
+  LIVEBENCH_DISCOVERY_SCHEMA_VERSION,
+  discoverLiveBenchBundle,
+  liveBenchBundleSourceId,
+  resolveLiveBenchDiscovery,
+  type LiveBenchBundleDiscovery,
+  type LiveBenchBundleLocator,
+  type LiveBenchRevisionProposal,
+  type TrustedDiscoverySnapshot,
+} from "./trusted-sources/livebench-discovery.js";
+export {
   CATALOG_SCHEMA_VERSION,
   OBSERVATION_SCHEMA_VERSION,
   type CapabilityObservation,
