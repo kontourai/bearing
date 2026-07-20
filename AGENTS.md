@@ -45,3 +45,8 @@ invokes a model.
   #12; use the locally verified publication path during that period.
 - Do not treat an installed workflow as executed CI evidence.
 - Do not add automatic workflow triggers while hosted CI is out of budget.
+
+<!-- veritas:governance-block:start -->
+This repo uses Veritas for AI governance. Read `.veritas/GOVERNANCE.md` before making changes.
+After changes, run `veritas readiness` and address any FAIL lines before finishing.
+<!-- veritas:governance-block:end -->
