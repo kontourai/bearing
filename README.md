@@ -9,11 +9,77 @@ provider credentials, discover a caller's launchable models, or make model calls
 Datum combines Bearing snapshots with local configuration and runtime inventory;
 Station and other runtimes consume that resolution.
 
+See [CONTEXT.md](./CONTEXT.md) for the vocabulary (Datum, Station, Observation,
+etc.) and product boundaries used throughout this README.
+
 ## Status
 
-The catalog, read API, and runtime-aware ranking contracts are available. See
-[Bearing issue #1](https://github.com/kontourai/bearing/issues/1) for the
-remaining ingestion and hosted-service delivery graph.
+Catalog compilation, the read API, and runtime-aware ranking are implemented.
+Trusted-source ingestion also ships for a scoped set of adapters (Aider
+Polyglot, Kontour Evals, LiveBench, and OpenRouter; see
+[Trusted Source Ingestion](#trusted-source-ingestion) below). See
+[Bearing issue #6](https://github.com/kontourai/bearing/issues/6) for
+remaining source coverage and
+[issue #7](https://github.com/kontourai/bearing/issues/7) for hosted-service
+delivery.
+
+## Usage
+
+```js
+import { compileCatalog, rankCatalog } from "@kontourai/bearing";
+
+const model = { id: "example/model-a", revision: "r1", quantization: "q8" };
+
+// A fact observation: one provenance-bearing claim about the model.
+const observation = {
+  schemaVersion: "bearing.observation/v2",
+  kind: "declaration",
+  model,
+  execution: null,
+  task: null,
+  measurements: [{ key: "model.context.max_tokens", kind: "fact", value: 32768 }],
+  outcome: null,
+  usage: null,
+  sourceClass: "external",
+  evidence: [{
+    id: "example-context",
+    kind: "model-card",
+    uri: null,
+    digest: null,
+    observedAt: "2026-07-18T20:00:00.000Z",
+  }],
+  freshness: { observedAt: "2026-07-18T20:00:00.000Z", validUntil: null },
+  uncertainty: { level: "moderate", basis: ["published specification"], gaps: [] },
+};
+
+// Compile a deterministic, content-addressed snapshot as of a given time.
+const snapshot = compileCatalog([observation], { asOf: "2026-07-18T22:00:00.000Z" });
+
+// Rank a caller-supplied runtime inventory against that snapshot.
+const result = rankCatalog(snapshot, {
+  schemaVersion: "bearing.rank.request/v1",
+  task: { family: "software-engineering", suite: null },
+  inventory: [{
+    id: "runtime:model-a",
+    model,
+    execution: {
+      runtime: { id: "local-runtime", version: "1.0.0" },
+      adapter: { id: "agent-adapter", version: "4.2.0" },
+      effectiveContextTokens: 32768,
+      toolSurface: [],
+      hardware: { class: "desktop-gpu", accelerator: "gpu", memoryBytes: 24000000000 },
+      workflow: { id: "builder", version: "4.2.0", condition: "kit" },
+    },
+  }],
+  requirements: [
+    { measurementKey: "model.context.max_tokens", aggregation: "fact", operator: "gte", value: 16000 },
+  ],
+  preferences: [],
+});
+
+console.log(result.ranked.map((candidate) => candidate.candidateId));
+// ["runtime:model-a"]
+```
 
 ## Read API
 
@@ -204,10 +270,10 @@ discovery/import, and ranks only caller-supplied runtime inventory.
 Package contents are checked by `npm run verify`. Release Please and npm
 provenance workflows are installed as manual dispatch surfaces while hosted CI
 is out of budget. The Release Please workflow does not dispatch publication
-until the npm trusted publisher exists. Releases are locally verified and
-published until
-[Bearing issue #12](https://github.com/kontourai/bearing/issues/12) enables the
-automatic triggers and npm trusted publisher.
+until the npm trusted publisher exists. Until
+[Bearing issue #12](https://github.com/kontourai/bearing/issues/12) enables
+automatic triggers and the npm trusted publisher, releases are verified and
+published locally.
 
 ## License
 
