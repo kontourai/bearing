@@ -1,0 +1,63 @@
+# Trust Verify — adopts the Flow Agents external trust anchor on this repo (ADVISORY).
+#
+# On every PR, re-runs this repo's canonical verification FRESH in a clean CI
+# environment an agent does not control — the same `npm run verify` that
+# publish-npm.yml's "verify" job runs before a release (typecheck, build+test,
+# and the package-contents check). If a Flow Agents session has published
+# delivery/trust.bundle, it also RECONCILES the agent's claimed passes against
+# CI's own fresh results and fails on any divergence. When no bundle is present,
+# only the fresh verify is enforced (fail-open on bundle absence; fail-closed on
+# divergence when present).
+#
+# NOTE: this repo has no PR-triggered comprehensive-verify workflow today — only
+# veritas-advisory.yml (governance readiness) runs on pull_request, and
+# publish-npm.yml's verify job is workflow_dispatch/tag-only. This workflow is
+# the first PR-triggered comprehensive verify gate for this repo, mirroring
+# publish-npm.yml's `npm run verify` step.
+#
+# ADVISORY PHASE: this workflow runs and reports but does NOT block merges yet.
+# To ARM it: add "Trust Verify" as a required, no-bypass status check in this
+# repo's branch protection (Settings → Branches → main).
+#
+# Adoption guide: https://github.com/kontourai/flow-agents/blob/main/docs/trust-anchor-adoption.md
+name: Trust Verify
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  trust-verify:
+    name: Trust Verify
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth 0: the reconciler binds delivery bundles to commits via
+      # `git merge-base --is-ancestor`, which cannot walk a shallow clone —
+      # with the default depth-1 checkout every committed bundle looks stale
+      # in CI (sealed commit never equals the synthetic merge SHA).
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm ci --no-fund --no-audit
+
+      # The external anchor: re-run this repo's real verify fresh + reconcile any
+      # delivered bundle. SHA-pinned (mutable tags are not trusted for a cross-repo
+      # action that gates merges).
+      #
+      # verify-command mirrors publish-npm.yml's "verify" job exactly: `npm run
+      # verify`, i.e. typecheck, npm test (build + node --test suite), then
+      # check:pack.
+      - uses: kontourai/flow-agents/.github/actions/trust-verify@f2efb33ef683793bbec01dcf7e909f3e1423c04d # flow-agents @ locked action runtime dependencies
+        with:
+          verify-command: "npm run verify"
