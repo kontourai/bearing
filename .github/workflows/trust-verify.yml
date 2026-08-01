@@ -31,6 +31,8 @@ permissions:
 jobs:
   trust-verify:
     name: Trust Verify
+    outputs:
+      failure-summary: ${{ steps.trust-verify.outputs.failure-summary }}
     runs-on: ubuntu-latest
     steps:
       # fetch-depth 0: the reconciler binds delivery bundles to commits via
@@ -58,6 +60,22 @@ jobs:
       # verify-command mirrors publish-npm.yml's "verify" job exactly: `npm run
       # verify`, i.e. typecheck, npm test (build + node --test suite), then
       # check:pack.
-      - uses: kontourai/flow-agents/.github/actions/trust-verify@f2efb33ef683793bbec01dcf7e909f3e1423c04d # flow-agents @ locked action runtime dependencies
+      - id: trust-verify
+        uses: kontourai/flow-agents/.github/actions/trust-verify@90b260996e1c4477c56317935f0362d48a8cf8d5 # flow-agents Trust failure summary output
         with:
           verify-command: "npm run verify"
+
+  trust-advisory-comment:
+    if: >-
+      ${{ always() && github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository }}
+    needs: trust-verify
+    permissions:
+      pull-requests: write
+    uses: kontourai/.github/.github/workflows/trust-advisory-comment.yml@e6dfe1bea874266a98059c682c21a6b73ae9c71e
+    with:
+      check-name: Trust Verify
+      pr-number: ${{ github.event.pull_request.number }}
+      result: ${{ needs['trust-verify'].result }}
+      details: ${{ needs['trust-verify'].outputs.failure-summary }}
+      run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
