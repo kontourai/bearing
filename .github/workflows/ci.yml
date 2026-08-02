@@ -1,0 +1,58 @@
+# CI — the repo's own verification gate on every pull request and every push to
+# main, matching the shape kontourai/forage and kontourai/lookout already run.
+#
+# Until this existed, no workflow in this repo ran `npm run verify` on a pull
+# request under a stable, protectable check name: publish-npm.yml's verify job is
+# workflow_dispatch/tag-only, veritas-advisory.yml checks governance readiness
+# rather than the suite, and trust-verify.yml is an advisory external anchor. A
+# pull request therefore reported no verification result at all, which is
+# indistinguishable on the UI from one that verified cleanly.
+#
+# The job names are `verify (22)` / `verify (24)`, matching the required status
+# checks kontourai/forage and kontourai/lookout protect `main` with, so this
+# repo's branch protection can be configured identically. (Gap found alongside
+# issue #36; it is the same class — absence of signal reading as success.)
+#
+# Actions are SHA-pinned, following this repo's existing workflow convention.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  # Suite-wide secret-scan gate, one normative source (kontourai/.github).
+  secret-scan:
+    name: Secret Scan
+    uses: kontourai/.github/.github/workflows/secret-scan.yml@main
+    permissions:
+      contents: read
+
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['22', '24']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install
+        run: npm ci --no-fund --no-audit
+
+      # typecheck + build/test (test discovery is floor-guarded by
+      # scripts/run-tests.mjs) + package-contents check.
+      - name: Verify
+        run: npm run verify
