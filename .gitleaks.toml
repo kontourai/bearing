@@ -1,0 +1,28 @@
+# gitleaks configuration for @kontourai/bearing.
+#
+# The suite-wide secret scan (kontourai/.github `secret-scan.yml`) runs gitleaks
+# with its default rule set. The entropy-based `generic-api-key` rule fires on
+# this repo's benchmark measurement identifiers, because the field holding them
+# is literally named `key`:
+#
+#   { key: "aider.polyglot.pass_rate_1", kind: "sample", value: ..., unit: "percent" }
+#
+# Three findings, all of them Aider Polyglot metric names — public benchmark
+# vocabulary, not credentials. Verified by running the scan unredacted: the
+# matched strings are `aider.polyglot.pass_rate_1` and `aider.polyglot.pass_rate_2`.
+#
+# The allowlist is scoped to that identifier shape rather than to the rule, the
+# files, or the commits. A real credential committed to the same lines still
+# fails the gate, and a metric name outside this namespace still gets scanned —
+# checked by planting an AWS key and a Stripe live key in `src/` and confirming
+# the scan still fails.
+
+title = "bearing"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Aider Polyglot benchmark measurement identifiers are metric names, not credentials."
+regexTarget = "secret"
+regexes = ['''^aider\.polyglot\.[a-z0-9_]+$''']
