@@ -44,7 +44,10 @@ invokes a model.
 - The Release Please workflow must not dispatch npm publication before issue
   #12; use the locally verified publication path during that period.
 - Do not treat an installed workflow as executed CI evidence.
-- Do not add automatic workflow triggers while hosted CI is out of budget.
+- Do not add automatic **release or publication** triggers while hosted CI is
+  out of budget. This does not cover `.github/workflows/ci.yml`: verification on
+  pull requests is the repo's merge gate, not release automation, and it runs on
+  every pull request and every push to `main` (issue #36).
 
 <!-- veritas:governance-block:start -->
 This repo uses Veritas for AI governance. Read `.veritas/GOVERNANCE.md` before making changes.
