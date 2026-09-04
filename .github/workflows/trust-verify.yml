@@ -44,14 +44,18 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Reads the exact pnpm version from package.json's packageManager field.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+
       - name: Setup Node
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 24
-          cache: npm
+          cache: pnpm
 
       - name: Install
-        run: npm ci --no-fund --no-audit
+        run: pnpm install --frozen-lockfile
 
       # The external anchor: re-run this repo's real verify fresh + reconcile any
       # delivered bundle. SHA-pinned (mutable tags are not trusted for a cross-repo

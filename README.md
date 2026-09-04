@@ -223,7 +223,7 @@ constraint.
 ## Development
 
 ```sh
-npm install
+pnpm install
 npm run verify
 ```
 
