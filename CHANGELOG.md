@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.3.0](https://github.com/kontourai/bearing/compare/v0.2.0...v0.3.0) (2026-09-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* quarantine unreadable OpenRouter rows instead of voiding the catalogue ([#44](https://github.com/kontourai/bearing/issues/44))
+
+### Features
+
+* **kit:** declare builder.build workflow routing ([#39](https://github.com/kontourai/bearing/issues/39)) ([eb47245](https://github.com/kontourai/bearing/commit/eb4724552b03bb482782d22d889e7a369e08b94b))
+* quarantine unreadable OpenRouter rows instead of voiding the catalogue ([#44](https://github.com/kontourai/bearing/issues/44)) ([0bc506a](https://github.com/kontourai/bearing/commit/0bc506af671ad8f4e0f0a0dc4a26060f8e460241)), closes [#41](https://github.com/kontourai/bearing/issues/41)
+
+
+### Fixes
+
+* fail the test suite when zero test files are discovered ([#38](https://github.com/kontourai/bearing/issues/38)) ([3e8ffd0](https://github.com/kontourai/bearing/commit/3e8ffd0c25ed2426020fea3a4fa0b0a30a7f73e3)), closes [#36](https://github.com/kontourai/bearing/issues/36)
+
+
+### Documentation
+
+* content sweep — accuracy and clarity fixes ([#31](https://github.com/kontourai/bearing/issues/31)) ([8704fc4](https://github.com/kontourai/bearing/commit/8704fc4746c3faabf400bfcc8ad443507970e79b))
+
 ## [0.2.0](https://github.com/kontourai/bearing/compare/v0.1.0...v0.2.0) (2026-07-19)
 
 
