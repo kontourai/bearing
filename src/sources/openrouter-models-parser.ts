@@ -51,8 +51,11 @@ export interface ParsedOpenRouterModelRow {
  *
  * It is matched against caller-supplied ids by exact string equality, so it does
  * act as a lookup key. What it is not is proof the row was that model: the row
- * failed validation, and only its id was read. A null id means the row cannot be
- * matched at all, so a caller must treat "no match" as "unknown", not "absent".
+ * failed validation, and only its id was read.
+ *
+ * A null id is not an unknown model. An id this helper cannot read is an id no
+ * valid mapping can equal, so the row never claimed to be any configured model
+ * and needs no match.
  */
 export interface OpenRouterRowRejection {
   index: number;
