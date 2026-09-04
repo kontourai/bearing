@@ -55,14 +55,18 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Reads the exact pnpm version from package.json's packageManager field.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+
       - name: Setup Node
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: pnpm
 
       - name: Install
-        run: npm ci --no-fund --no-audit
+        run: pnpm install --frozen-lockfile
 
       - name: Verify
         run: npm run verify
@@ -83,6 +87,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+
+      # Publishing stays on the npm CLI: provenance and the registry binding are
+      # properties of the publisher, not the installer, and `npm publish` needs
+      # only the packed tarball.
       - name: Setup Node
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
@@ -91,7 +101,7 @@ jobs:
           package-manager-cache: false
 
       - name: Install
-        run: npm ci --no-fund --no-audit
+        run: pnpm install --frozen-lockfile
 
       - name: Check Published Version
         id: published
