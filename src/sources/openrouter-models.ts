@@ -21,6 +21,7 @@ import {
   OPENROUTER_MAX_ROWS,
   parseOpenRouterModelRows,
   type ParsedOpenRouterModelRow,
+  type ParsedOpenRouterModelRows,
 } from "./openrouter-models-parser.js";
 
 const MAX_SOURCE_REF_LENGTH = 16 * 1024;
@@ -60,7 +61,11 @@ export interface OpenRouterModelsImportInput {
 }
 
 export interface OpenRouterModelsDiagnostic {
-  code: "unmapped-model" | "configured-model-missing";
+  code:
+    | "unmapped-model"
+    | "configured-model-missing"
+    | "configured-model-unreadable"
+    | "unreadable-row";
   path: string;
   message: string;
 }
@@ -74,7 +79,10 @@ export interface OpenRouterModelsImportResult {
     sourceUrl: string;
     bodySha256: string;
     fetchedAt: string;
+    /** Rows this import could read. Not the number of rows the snapshot carried. */
     rowCount: number;
+    /** Rows the parser quarantined. Non-zero means `rowCount` is a partial view. */
+    rejectedRowCount: number;
     manifestDigest: string;
     revision: string;
   };
@@ -471,24 +479,44 @@ const assertObservationBound = (
 };
 
 const importRows = (
-  rows: ParsedOpenRouterModelRow[],
+  parsed: ParsedOpenRouterModelRows,
   models: ReadonlyMap<string, OpenRouterModelMapping>,
   fetchedAt: string,
   validUntil: string,
 ): { observations: ObservationInput[]; diagnostics: OpenRouterModelsDiagnostic[] } => {
   const observations: ObservationInput[] = [];
   const diagnostics: OpenRouterModelsDiagnostic[] = [];
-  rows.forEach((row, index) => {
+  parsed.rows.forEach((row) => {
     const mapping = models.get(row.id);
     if (mapping === undefined) {
-      diagnostics.push({ code: "unmapped-model", path: `$.snapshot.body.data[${index}]`, message: `Skipped unmapped OpenRouter model ${row.id}` });
+      // The source index, not the position in the compacted array: a quarantined row
+      // ahead of this one would otherwise point provenance at the wrong source row.
+      diagnostics.push({ code: "unmapped-model", path: `$.snapshot.body.data[${row.sourceIndex}]`, message: `Skipped unmapped OpenRouter model ${row.id}` });
       return;
     }
     observations.push(...mappedRowObservations(row, mapping, fetchedAt, validUntil));
   });
-  const rowIds = new Set(rows.map((row) => row.id));
+  for (const rejection of parsed.rejected) {
+    diagnostics.push({
+      code: "unreadable-row",
+      path: rejection.path,
+      message: `Quarantined unreadable OpenRouter row ${rejection.id ?? `at index ${rejection.index}`}: ${rejection.message}`,
+    });
+  }
+  const rowIds = new Set(parsed.rows.map((row) => row.id));
+  const rejectedIds = new Set(
+    parsed.rejected.map((rejection) => rejection.id).filter((id): id is string => id !== null),
+  );
   [...models.keys()].sort(compareText).forEach((modelId) => {
-    if (!rowIds.has(modelId)) diagnostics.push({ code: "configured-model-missing", path: `$.models.${modelId}`, message: `Configured OpenRouter model ${modelId} is absent from the source snapshot` });
+    if (rowIds.has(modelId)) return;
+    // A configured model whose row was quarantined is present in the snapshot and
+    // unreadable. Reporting it as absent would blame the source for a limit of
+    // this parser, and would send a caller to fix the wrong mapping.
+    if (rejectedIds.has(modelId)) {
+      diagnostics.push({ code: "configured-model-unreadable", path: `$.models.${modelId}`, message: `Configured OpenRouter model ${modelId} is present in the source snapshot but was quarantined as unreadable` });
+      return;
+    }
+    diagnostics.push({ code: "configured-model-missing", path: `$.models.${modelId}`, message: `Configured OpenRouter model ${modelId} is absent from the readable rows of the source snapshot` });
   });
   return { observations, diagnostics };
 };
@@ -500,9 +528,9 @@ export const importOpenRouterModelsSnapshot = (input: OpenRouterModelsImportInpu
     new Date(snapshot.fetchedAt).getTime() + source.freshness.maxAgeHours * 60 * 60 * 1_000,
   ).toISOString();
   const models = validateMappings(input.models);
-  const rows = parseOpenRouterModelRows(snapshot.body);
-  assertObservationBound(rows, models);
-  const { observations, diagnostics } = importRows(rows, models, snapshot.fetchedAt, sourceValidUntil);
+  const parsed = parseOpenRouterModelRows(snapshot.body);
+  assertObservationBound(parsed.rows, models);
+  const { observations, diagnostics } = importRows(parsed, models, snapshot.fetchedAt, sourceValidUntil);
   observations.sort((left, right) => {
     const model = compareText(left.model.id, right.model.id);
     if (model !== 0) return model;
@@ -518,7 +546,8 @@ export const importOpenRouterModelsSnapshot = (input: OpenRouterModelsImportInpu
       sourceUrl: source.resolver.entrypoint.url,
       bodySha256: snapshot.bodyHash,
       fetchedAt: snapshot.fetchedAt,
-      rowCount: rows.length,
+      rowCount: parsed.rows.length,
+      rejectedRowCount: parsed.rejected.length,
       manifestDigest: input.manifest.digest,
       revision: snapshot.bodyHash,
     },

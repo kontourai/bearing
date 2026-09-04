@@ -175,7 +175,25 @@ test("mapping and output are deterministic and exact rather than fuzzy", () => {
   assert.equal(fuzzy.diagnostics.some((item) => item.code === "configured-model-missing"), true);
 });
 
-test("fails closed on unparsed policy, snapshot tampering, duplicate keys, and schema drift", () => {
+/**
+ * Quarantines a row and returns the diagnostics, asserting the document still
+ * imported. Every case pairs the bad row with a good mapped row so the specific
+ * validation message stays under test: a document in which nothing is readable
+ * throws a single generic error, which would retire these assertions.
+ */
+const quarantine = (badRow: unknown) => {
+  const document = { data: [modelRow("openai/gpt-5.6-sol"), badRow], total_count: 2, links: { next: null } };
+  const result = importSnapshot({ snapshot: snapshot(JSON.stringify(document)) });
+  assert.equal(result.acquisition.rowCount, 1);
+  assert.equal(result.acquisition.rejectedRowCount, 1);
+  // The surviving row still produced its observations.
+  assert.equal(result.observations.length > 0, true);
+  const unreadable = result.diagnostics.filter((item) => item.code === "unreadable-row");
+  assert.equal(unreadable.length, 1);
+  return unreadable[0]!;
+};
+
+test("fails closed on unparsed policy, snapshot tampering, duplicate keys, and document drift", () => {
   assert.throws(
     () => importSnapshot({ manifest: structuredClone(manifest) }),
     (error: unknown) => error instanceof BearingError && error.code === "INVALID_SOURCE_SNAPSHOT",
@@ -194,19 +212,6 @@ test("fails closed on unparsed policy, snapshot tampering, duplicate keys, and s
   const unsafe = body.replace('"default_parameters":{}', '"default_parameters":{"__proto__":{"polluted":true}}');
   assert.throws(() => importSnapshot({ snapshot: snapshot(unsafe) }), /forbidden key __proto__/);
 
-  const unsupportedEffort = body.replace('"max","xhigh"', '"unreviewed","xhigh"');
-  assert.throws(() => importSnapshot({ snapshot: snapshot(unsupportedEffort) }), /unsupported efforts/);
-
-  const underflow = body.replace('"prompt":"0.00000175"', '"prompt":"1e-9999"');
-  assert.throws(() => importSnapshot({ snapshot: snapshot(underflow) }), /fixed-point|decimal string/);
-
-  const ignoredFieldAmplification = JSON.parse(body);
-  ignoredFieldAmplification.data[0].default_parameters.temperature = Array.from({ length: 1_000 }, () => 0);
-  assert.throws(
-    () => importSnapshot({ snapshot: snapshot(JSON.stringify(ignoredFieldAmplification)) }),
-    /null or a finite number/,
-  );
-
   const structuralAmplification = JSON.parse(body);
   structuralAmplification.data[0].default_parameters.temperature = Array.from({ length: 110_000 }, () => 0);
   assert.throws(
@@ -219,26 +224,6 @@ test("fails closed on unparsed policy, snapshot tampering, duplicate keys, and s
     /between 1 and 5000 model rows/,
   );
 
-  const oversizedId = modelRow(`provider/${"x".repeat(504)}`);
-  assert.throws(
-    () => importSnapshot({ snapshot: snapshot(JSON.stringify({ data: [oversizedId], total_count: 1, links: { next: null } })) }),
-    /identity of at most 512 characters/,
-  );
-
-  const invalidUnicodeId = modelRow("provider/\ud800");
-  assert.throws(
-    () => importSnapshot({ snapshot: snapshot(JSON.stringify({ data: [invalidUnicodeId], total_count: 1, links: { next: null } })) }),
-    /URI-encodable Unicode text/,
-  );
-
-  const oversizedCategory = modelRow("openai/gpt-5.6-sol", null, [{
-    arena: "agents", category: "x".repeat(257), elo: 1_000, win_rate: 50, rank: 1,
-  }]);
-  assert.throws(
-    () => importSnapshot({ snapshot: snapshot(JSON.stringify({ data: [oversizedCategory], total_count: 1, links: { next: null } })) }),
-    /identity of at most 256 characters/,
-  );
-
   assert.throws(
     () => importSnapshot({ models: {
       "openai/gpt-5.6-sol": {
@@ -248,6 +233,82 @@ test("fails closed on unparsed policy, snapshot tampering, duplicate keys, and s
     } }),
     /must be at most 1024 UTF-8 bytes/,
   );
+});
+
+test("quarantines a row the parser cannot read rather than voiding the document", () => {
+  const unsupportedEffort = structuredClone(modelRow("drift/unsupported-effort"));
+  unsupportedEffort.reasoning.supported_efforts = ["unreviewed", "xhigh"];
+  assert.match(quarantine(unsupportedEffort).message, /unsupported efforts/);
+
+  const underflow = structuredClone(modelRow("drift/underflow"));
+  underflow.pricing.prompt = "1e-9999";
+  assert.match(quarantine(underflow).message, /fixed-point|decimal string/);
+
+  const ignoredFieldAmplification = structuredClone(modelRow("drift/amplified-parameter"));
+  ignoredFieldAmplification.default_parameters = { temperature: Array.from({ length: 1_000 }, () => 0) };
+  assert.match(quarantine(ignoredFieldAmplification).message, /null or a finite number/);
+
+  assert.match(quarantine(modelRow(`provider/${"x".repeat(504)}`)).message, /identity of at most 512 characters/);
+  assert.match(quarantine(modelRow("provider/\ud800")).message, /URI-encodable Unicode text/);
+
+  const oversizedCategory = modelRow("drift/oversized-category", null, [{
+    arena: "agents", category: "x".repeat(257), elo: 1_000, win_rate: 50, rank: 1,
+  }]);
+  assert.match(quarantine(oversizedCategory).message, /identity of at most 256 characters/);
+
+  // A field this parser has never reviewed costs the row carrying it, not the catalogue.
+  const unreviewedField = { ...structuredClone(modelRow("drift/unreviewed-field")), alias_target: { name: "x", slug: "y" } };
+  const rejection = quarantine(unreviewedField);
+  assert.match(rejection.message, /contains unsupported fields: alias_target/);
+  assert.equal(rejection.path, "$.snapshot.body.data[1]");
+});
+
+test("a document with no readable row is not a partial catalogue", () => {
+  // Every row unreadable must throw: zero rows plus a rejection record would let a
+  // caller present "the source has nothing to say" as a successful observation.
+  const allBad = modelRow(`provider/${"x".repeat(504)}`);
+  assert.throws(
+    () => importSnapshot({ snapshot: snapshot(JSON.stringify({ data: [allBad], total_count: 1, links: { next: null } })) }),
+    /at least one readable model row/,
+  );
+});
+
+test("a duplicate id cannot hide behind a quarantine", () => {
+  // The invalid twin is quarantined; without a document-level check its valid
+  // partner would import unchallenged, where before the quarantine the whole
+  // document failed. Unique ids are a property of the source, not of survivors.
+  const twin = { ...structuredClone(modelRow("openai/gpt-5.6-sol")), alias_target: { name: "x", slug: "y" } };
+  const document = { data: [modelRow("openai/gpt-5.6-sol"), twin], total_count: 2, links: { next: null } };
+  assert.throws(
+    () => importSnapshot({ snapshot: snapshot(JSON.stringify(document)) }),
+    /must use unique model ids/,
+  );
+});
+
+test("provenance paths keep the source index across a quarantine", () => {
+  const bad = { ...structuredClone(modelRow("drift/unreviewed-field")), alias_target: { name: "x", slug: "y" } };
+  const document = { data: [bad, modelRow("unmapped/example"), modelRow("openai/gpt-5.6-sol")], total_count: 3, links: { next: null } };
+  const result = importSnapshot({ snapshot: snapshot(JSON.stringify(document)) });
+
+  const unmapped = result.diagnostics.find((item) => item.code === "unmapped-model")!;
+  // "unmapped/example" is data[1] in the source but rows[0] after compaction.
+  assert.equal(unmapped.path, "$.snapshot.body.data[1]");
+  assert.match(unmapped.message, /unmapped\/example/);
+  assert.equal(result.diagnostics.find((item) => item.code === "unreadable-row")!.path, "$.snapshot.body.data[0]");
+});
+
+test("a configured model whose row was quarantined is not reported as absent", () => {
+  const quarantined = structuredClone(modelRow("openai/gpt-5.6-sol"));
+  quarantined.reasoning.supported_efforts = ["unreviewed"];
+  const document = { data: [quarantined, modelRow("unmapped/example")], total_count: 2, links: { next: null } };
+  const result = importSnapshot({ snapshot: snapshot(JSON.stringify(document)) });
+
+  assert.equal(result.observations.length, 0);
+  // Reporting this as absent would blame the source for a limit of this parser.
+  assert.equal(result.diagnostics.some((item) => item.code === "configured-model-missing"), false);
+  const unreadable = result.diagnostics.find((item) => item.code === "configured-model-unreadable")!;
+  assert.equal(unreadable.path, "$.models.openai/gpt-5.6-sol");
+  assert.match(unreadable.message, /present in the source snapshot but was quarantined/);
 });
 
 test("independently rejects a custom-registry source that launders the OpenRouter adapter identity", () => {

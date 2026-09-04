@@ -66,6 +66,11 @@ const models = Object.fromEntries(reviewedIds.map((id) => [id, {
 const imported = importOpenRouterModelsSnapshot({ manifest, sourceId: source.id, snapshot, models });
 const missing = imported.diagnostics.filter((item) => item.code === "configured-model-missing");
 if (missing.length > 0) throw new Error(`Reviewed OpenRouter rows are missing: ${missing.map((item) => item.path).join(", ")}`);
+// A reviewed row the parser could not read is a proof failure too. It is present in
+// the snapshot and produced no observations, so proceeding would write a proof report
+// that certifies a source it did not actually read.
+const unreadable = imported.diagnostics.filter((item) => item.code === "configured-model-unreadable");
+if (unreadable.length > 0) throw new Error(`Reviewed OpenRouter rows are unreadable: ${unreadable.map((item) => item.path).join(", ")}`);
 const replay = await resolveSnapshotSourceRef(store, sourceRef);
 if (!replay.ok) throw new Error(`Exact offline replay failed: ${replay.error.kind}: ${replay.error.message}`);
 const replayed = importOpenRouterModelsSnapshot({ manifest, sourceId: source.id, snapshot: replay, models });
@@ -91,9 +96,12 @@ process.stdout.write(`${JSON.stringify({
   revision: imported.acquisition.revision,
   bytes,
   rowCount: imported.acquisition.rowCount,
-  mappedRows: reviewedIds.length,
+  rejectedRowCount: imported.acquisition.rejectedRowCount,
+  mappedRows: new Set(imported.observations.map((item) => item.model.id)).size,
+  reviewedMappings: reviewedIds.length,
   observationCount: imported.observations.length,
   unmappedRows: imported.diagnostics.filter((item) => item.code === "unmapped-model").length,
+  unreadableRows: imported.diagnostics.filter((item) => item.code === "unreadable-row").length,
   replayVerified: true,
   report: path.join(proofRoot, "report.json"),
 })}\n`);
