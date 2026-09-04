@@ -486,10 +486,12 @@ const importRows = (
 ): { observations: ObservationInput[]; diagnostics: OpenRouterModelsDiagnostic[] } => {
   const observations: ObservationInput[] = [];
   const diagnostics: OpenRouterModelsDiagnostic[] = [];
-  parsed.rows.forEach((row, index) => {
+  parsed.rows.forEach((row) => {
     const mapping = models.get(row.id);
     if (mapping === undefined) {
-      diagnostics.push({ code: "unmapped-model", path: `$.snapshot.body.data[${index}]`, message: `Skipped unmapped OpenRouter model ${row.id}` });
+      // The source index, not the position in the compacted array: a quarantined row
+      // ahead of this one would otherwise point provenance at the wrong source row.
+      diagnostics.push({ code: "unmapped-model", path: `$.snapshot.body.data[${row.sourceIndex}]`, message: `Skipped unmapped OpenRouter model ${row.id}` });
       return;
     }
     observations.push(...mappedRowObservations(row, mapping, fetchedAt, validUntil));

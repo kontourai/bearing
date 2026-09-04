@@ -1,0 +1,3684 @@
+{
+  "schemaVersion": 1,
+  "kind": "surface-console-read-model",
+  "contract": "surface.analytics-compatible",
+  "generatedAt": "2026-09-04T14:26:59.252Z",
+  "source": "veritas:veritas-1788532019252",
+  "producer": {
+    "name": "veritas",
+    "runId": "veritas-1788532019252",
+    "sourceRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sourceKind": "working-tree",
+    "sourceScope": [
+      "staged",
+      "unstaged",
+      "untracked"
+    ],
+    "evidenceArtifactPath": ".kontourai/veritas/evidence/veritas-1788532019252.json",
+    "claimInputPaths": [
+      ".kontourai/veritas/claims/bearing.surface.governance.guidance.input.json",
+      ".kontourai/veritas/claims/bearing.surface.governance.root-manifests.input.json",
+      ".kontourai/veritas/claims/bearing.surface.delivery.workflows.input.json",
+      ".kontourai/veritas/claims/bearing.surface.tooling.scripts.input.json",
+      ".kontourai/veritas/claims/bearing.surface.app.src.input.json",
+      ".kontourai/veritas/claims/bearing.surface.docs.docs.input.json",
+      ".kontourai/veritas/claims/bearing.surface.verification.tests.input.json",
+      ".kontourai/veritas/claims/bearing.governance.input.json",
+      ".kontourai/veritas/claims/bearing.evidence-check.npm-run-verify.input.json",
+      ".kontourai/veritas/claims/veritas.policy.bearing.bearing-default.policy-changes-require-attestation.input.json",
+      ".kontourai/veritas/claims/veritas.policy.bearing.bearing-default.required-veritas-artifacts.input.json",
+      ".kontourai/veritas/claims/veritas.policy.bearing.bearing-default.ai-instruction-files-synced.input.json",
+      ".kontourai/veritas/claims/veritas.policy.bearing.bearing-default.prefer-veritas-routed-delivery.input.json",
+      ".kontourai/veritas/claims/veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.input.json"
+    ]
+  },
+  "summary": {
+    "claimCount": 14,
+    "evidenceCount": 8,
+    "policyCount": 5,
+    "eventCount": 7,
+    "transparencyGapCount": 22,
+    "statusCounts": {
+      "unknown": 7,
+      "disputed": 2,
+      "verified": 3,
+      "rejected": 2
+    },
+    "claimTypeCounts": {
+      "veritas-affected-surface": 7,
+      "veritas-governance-artifact": 1,
+      "software-evidence-check": 1,
+      "veritas-policy-result": 4,
+      "software-readiness-verdict": 1
+    },
+    "facetCounts": {
+      "veritas.affected-surface": 7,
+      "veritas.governance": 1,
+      "veritas.evidence-check": 1,
+      "veritas.policy-results": 4,
+      "veritas.readiness": 1
+    },
+    "domainCounts": {
+      "veritas": 14
+    },
+    "policyCounts": {
+      "veritas.surface": 7,
+      "veritas.governance-artifact": 1,
+      "veritas.evidence-check": 1,
+      "veritas.policy-result": 4,
+      "veritas.readiness-verdict": 1
+    },
+    "evidenceTypeCounts": {
+      "test_output": 1,
+      "policy_rule": 6,
+      "attestation": 1
+    },
+    "evidenceMethodCounts": {
+      "validation": 6,
+      "attestation": 1,
+      "auditability": 1
+    },
+    "reviewerAuthorityCounts": {
+      "unknown": 14
+    },
+    "impactLevelCounts": {
+      "medium": 7,
+      "high": 6,
+      "low": 1
+    },
+    "transparencyGapTypeCounts": {
+      "provenance_gap": 7,
+      "policy_violation": 15
+    },
+    "attentionClaimIds": [
+      "bearing.surface.governance.guidance",
+      "bearing.surface.governance.root-manifests",
+      "bearing.surface.delivery.workflows",
+      "bearing.surface.tooling.scripts",
+      "bearing.surface.app.src",
+      "bearing.surface.docs.docs",
+      "bearing.surface.verification.tests",
+      "bearing.governance",
+      "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+      "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+      "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    ]
+  },
+  "analytics": {
+    "reportId": "veritas.veritas-1788532019252.surface-report",
+    "generatedAt": "2026-09-04T14:26:59.252Z",
+    "source": "veritas:veritas-1788532019252",
+    "totals": {
+      "claims": 14,
+      "evidence": 8,
+      "policies": 5,
+      "events": 7,
+      "transparencyGaps": 22
+    },
+    "coverageByFacet": [
+      {
+        "facet": "veritas.affected-surface",
+        "totalClaims": 7,
+        "verifiedClaims": 0,
+        "staleClaims": 0,
+        "disputedClaims": 0,
+        "unsupportedClaims": 7,
+        "verificationCoverage": 0
+      },
+      {
+        "facet": "veritas.evidence-check",
+        "totalClaims": 1,
+        "verifiedClaims": 1,
+        "staleClaims": 0,
+        "disputedClaims": 0,
+        "unsupportedClaims": 0,
+        "verificationCoverage": 1
+      },
+      {
+        "facet": "veritas.governance",
+        "totalClaims": 1,
+        "verifiedClaims": 0,
+        "staleClaims": 0,
+        "disputedClaims": 1,
+        "unsupportedClaims": 0,
+        "verificationCoverage": 0
+      },
+      {
+        "facet": "veritas.policy-results",
+        "totalClaims": 4,
+        "verifiedClaims": 2,
+        "staleClaims": 0,
+        "disputedClaims": 1,
+        "unsupportedClaims": 0,
+        "verificationCoverage": 0.5
+      },
+      {
+        "facet": "veritas.readiness",
+        "totalClaims": 1,
+        "verifiedClaims": 0,
+        "staleClaims": 0,
+        "disputedClaims": 0,
+        "unsupportedClaims": 0,
+        "verificationCoverage": 0
+      }
+    ],
+    "staleClaims": [],
+    "disputedClaims": [
+      {
+        "claimId": "bearing.governance",
+        "facet": "veritas.governance",
+        "status": "disputed",
+        "impactLevel": "high",
+        "claimType": "veritas-governance-artifact",
+        "subject": {
+          "subjectType": "repository",
+          "subjectId": "bearing"
+        },
+        "policyId": "veritas.governance-artifact"
+      },
+      {
+        "claimId": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+        "facet": "veritas.policy-results",
+        "status": "disputed",
+        "impactLevel": "high",
+        "claimType": "veritas-policy-result",
+        "subject": {
+          "subjectType": "policy-rule",
+          "subjectId": "bearing:bearing-default:ai-instruction-files-synced"
+        },
+        "policyId": "veritas.policy-result"
+      }
+    ],
+    "highImpactUnsupportedClaims": [],
+    "transparencyGaps": {
+      "byType": {
+        "contradiction": 0,
+        "provenance_gap": 7,
+        "policy_violation": 15,
+        "freshness_breach": 0,
+        "corroboration_absent": 0,
+        "unsupported_inference": 0
+      },
+      "bySeverity": {
+        "low": 0,
+        "medium": 14,
+        "high": 8,
+        "critical": 0
+      },
+      "items": [
+        {
+          "transparencyGapId": "bearing.surface.governance.guidance.gap.provenance-gap",
+          "claimId": "bearing.surface.governance.guidance",
+          "type": "provenance_gap",
+          "severity": "medium",
+          "message": "Missing required evidence: policy_rule.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "transparencyGapId": "bearing.surface.governance.guidance.gap.policy-violation",
+          "claimId": "bearing.surface.governance.guidance",
+          "type": "policy_violation",
+          "severity": "medium",
+          "message": "Missing required verification method: auditability.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "transparencyGapId": "bearing.surface.governance.root-manifests.gap.provenance-gap",
+          "claimId": "bearing.surface.governance.root-manifests",
+          "type": "provenance_gap",
+          "severity": "medium",
+          "message": "Missing required evidence: policy_rule.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "transparencyGapId": "bearing.surface.governance.root-manifests.gap.policy-violation",
+          "claimId": "bearing.surface.governance.root-manifests",
+          "type": "policy_violation",
+          "severity": "medium",
+          "message": "Missing required verification method: auditability.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "transparencyGapId": "bearing.surface.delivery.workflows.gap.provenance-gap",
+          "claimId": "bearing.surface.delivery.workflows",
+          "type": "provenance_gap",
+          "severity": "medium",
+          "message": "Missing required evidence: policy_rule.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "transparencyGapId": "bearing.surface.delivery.workflows.gap.policy-violation",
+          "claimId": "bearing.surface.delivery.workflows",
+          "type": "policy_violation",
+          "severity": "medium",
+          "message": "Missing required verification method: auditability.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "transparencyGapId": "bearing.surface.tooling.scripts.gap.provenance-gap",
+          "claimId": "bearing.surface.tooling.scripts",
+          "type": "provenance_gap",
+          "severity": "medium",
+          "message": "Missing required evidence: policy_rule.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "transparencyGapId": "bearing.surface.tooling.scripts.gap.policy-violation",
+          "claimId": "bearing.surface.tooling.scripts",
+          "type": "policy_violation",
+          "severity": "medium",
+          "message": "Missing required verification method: auditability.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "transparencyGapId": "bearing.surface.app.src.gap.provenance-gap",
+          "claimId": "bearing.surface.app.src",
+          "type": "provenance_gap",
+          "severity": "medium",
+          "message": "Missing required evidence: policy_rule.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "transparencyGapId": "bearing.surface.app.src.gap.policy-violation",
+          "claimId": "bearing.surface.app.src",
+          "type": "policy_violation",
+          "severity": "medium",
+          "message": "Missing required verification method: auditability.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "transparencyGapId": "bearing.surface.docs.docs.gap.provenance-gap",
+          "claimId": "bearing.surface.docs.docs",
+          "type": "provenance_gap",
+          "severity": "medium",
+          "message": "Missing required evidence: policy_rule.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "transparencyGapId": "bearing.surface.docs.docs.gap.policy-violation",
+          "claimId": "bearing.surface.docs.docs",
+          "type": "policy_violation",
+          "severity": "medium",
+          "message": "Missing required verification method: auditability.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "transparencyGapId": "bearing.surface.verification.tests.gap.provenance-gap",
+          "claimId": "bearing.surface.verification.tests",
+          "type": "provenance_gap",
+          "severity": "medium",
+          "message": "Missing required evidence: policy_rule.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "transparencyGapId": "bearing.surface.verification.tests.gap.policy-violation",
+          "claimId": "bearing.surface.verification.tests",
+          "type": "policy_violation",
+          "severity": "medium",
+          "message": "Missing required verification method: auditability.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "transparencyGapId": "bearing.governance.gap.evidence-veritas-1788532019252.governance.bearing.governance.attestation.evidence",
+          "claimId": "bearing.governance",
+          "type": "policy_violation",
+          "severity": "high",
+          "message": "Evidence explicitly reported a non-passing result.",
+          "evidenceIds": [
+            "veritas-1788532019252.governance.bearing.governance.attestation.evidence"
+          ],
+          "policyId": "veritas.governance-artifact"
+        },
+        {
+          "transparencyGapId": "bearing.governance.gap.evidence-veritas-1788532019252.governance.bearing.governance.audit.evidence",
+          "claimId": "bearing.governance",
+          "type": "policy_violation",
+          "severity": "high",
+          "message": "Evidence explicitly reported a non-passing result.",
+          "evidenceIds": [
+            "veritas-1788532019252.governance.bearing.governance.audit.evidence"
+          ],
+          "policyId": "veritas.governance-artifact"
+        },
+        {
+          "transparencyGapId": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation.gap.evidence-veritas-1788532019252.policy.policy-changes-require-attestation.evidence",
+          "claimId": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+          "type": "policy_violation",
+          "severity": "high",
+          "message": "Evidence explicitly reported a non-passing result.",
+          "evidenceIds": [
+            "veritas-1788532019252.policy.policy-changes-require-attestation.evidence"
+          ],
+          "policyId": "veritas.policy-result"
+        },
+        {
+          "transparencyGapId": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation.gap.hint-1",
+          "claimId": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+          "type": "policy_violation",
+          "severity": "high",
+          "message": "Protected standards changes require a fresh authority-backed attestation.",
+          "evidenceIds": [
+            "veritas-1788532019252.policy.policy-changes-require-attestation.evidence"
+          ],
+          "policyId": "veritas.policy-result"
+        },
+        {
+          "transparencyGapId": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced.gap.evidence-veritas-1788532019252.policy.ai-instruction-files-synced.evidence",
+          "claimId": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+          "type": "policy_violation",
+          "severity": "high",
+          "message": "Evidence explicitly reported a non-passing result.",
+          "evidenceIds": [
+            "veritas-1788532019252.policy.ai-instruction-files-synced.evidence"
+          ],
+          "policyId": "veritas.policy-result"
+        },
+        {
+          "transparencyGapId": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced.gap.hint-1",
+          "claimId": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+          "type": "policy_violation",
+          "severity": "high",
+          "message": "All required AI tool instruction files must contain the Veritas guidance block.",
+          "evidenceIds": [
+            "veritas-1788532019252.policy.ai-instruction-files-synced.evidence"
+          ],
+          "policyId": "veritas.policy-result"
+        },
+        {
+          "transparencyGapId": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gap.evidence-veritas-1788532019252.readiness-verdict.evidence",
+          "claimId": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "policy_violation",
+          "severity": "high",
+          "message": "Evidence explicitly reported a non-passing result.",
+          "evidenceIds": [
+            "veritas-1788532019252.readiness-verdict.evidence"
+          ],
+          "policyId": "veritas.readiness-verdict"
+        },
+        {
+          "transparencyGapId": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gap.hint-1",
+          "claimId": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "policy_violation",
+          "severity": "high",
+          "message": "Blocking readiness requirement failed: policy-changes-require-attestation.",
+          "evidenceIds": [
+            "veritas-1788532019252.readiness-verdict.evidence"
+          ],
+          "policyId": "veritas.readiness-verdict"
+        }
+      ]
+    },
+    "evidenceGaps": [
+      {
+        "claimId": "bearing.governance",
+        "facet": "veritas.governance",
+        "impactLevel": "high",
+        "gapType": "policy_violation",
+        "message": "Evidence explicitly reported a non-passing result.",
+        "evidenceIds": [
+          "veritas-1788532019252.governance.bearing.governance.attestation.evidence"
+        ],
+        "policyId": "veritas.governance-artifact"
+      },
+      {
+        "claimId": "bearing.governance",
+        "facet": "veritas.governance",
+        "impactLevel": "high",
+        "gapType": "policy_violation",
+        "message": "Evidence explicitly reported a non-passing result.",
+        "evidenceIds": [
+          "veritas-1788532019252.governance.bearing.governance.audit.evidence"
+        ],
+        "policyId": "veritas.governance-artifact"
+      },
+      {
+        "claimId": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+        "facet": "veritas.policy-results",
+        "impactLevel": "high",
+        "gapType": "policy_violation",
+        "message": "Evidence explicitly reported a non-passing result.",
+        "evidenceIds": [
+          "veritas-1788532019252.policy.ai-instruction-files-synced.evidence"
+        ],
+        "policyId": "veritas.policy-result"
+      },
+      {
+        "claimId": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+        "facet": "veritas.policy-results",
+        "impactLevel": "high",
+        "gapType": "policy_violation",
+        "message": "All required AI tool instruction files must contain the Veritas guidance block.",
+        "evidenceIds": [
+          "veritas-1788532019252.policy.ai-instruction-files-synced.evidence"
+        ],
+        "policyId": "veritas.policy-result"
+      },
+      {
+        "claimId": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+        "facet": "veritas.policy-results",
+        "impactLevel": "high",
+        "gapType": "policy_violation",
+        "message": "Evidence explicitly reported a non-passing result.",
+        "evidenceIds": [
+          "veritas-1788532019252.policy.policy-changes-require-attestation.evidence"
+        ],
+        "policyId": "veritas.policy-result"
+      },
+      {
+        "claimId": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+        "facet": "veritas.policy-results",
+        "impactLevel": "high",
+        "gapType": "policy_violation",
+        "message": "Protected standards changes require a fresh authority-backed attestation.",
+        "evidenceIds": [
+          "veritas-1788532019252.policy.policy-changes-require-attestation.evidence"
+        ],
+        "policyId": "veritas.policy-result"
+      },
+      {
+        "claimId": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "facet": "veritas.readiness",
+        "impactLevel": "high",
+        "gapType": "policy_violation",
+        "message": "Evidence explicitly reported a non-passing result.",
+        "evidenceIds": [
+          "veritas-1788532019252.readiness-verdict.evidence"
+        ],
+        "policyId": "veritas.readiness-verdict"
+      },
+      {
+        "claimId": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "facet": "veritas.readiness",
+        "impactLevel": "high",
+        "gapType": "policy_violation",
+        "message": "Blocking readiness requirement failed: policy-changes-require-attestation.",
+        "evidenceIds": [
+          "veritas-1788532019252.readiness-verdict.evidence"
+        ],
+        "policyId": "veritas.readiness-verdict"
+      },
+      {
+        "claimId": "bearing.surface.app.src",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "policy_violation",
+        "message": "Missing required verification method: auditability.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.app.src",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "provenance_gap",
+        "message": "Missing required evidence: policy_rule.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.delivery.workflows",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "policy_violation",
+        "message": "Missing required verification method: auditability.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.delivery.workflows",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "provenance_gap",
+        "message": "Missing required evidence: policy_rule.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.docs.docs",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "policy_violation",
+        "message": "Missing required verification method: auditability.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.docs.docs",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "provenance_gap",
+        "message": "Missing required evidence: policy_rule.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.governance.guidance",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "policy_violation",
+        "message": "Missing required verification method: auditability.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.governance.guidance",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "provenance_gap",
+        "message": "Missing required evidence: policy_rule.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.governance.root-manifests",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "policy_violation",
+        "message": "Missing required verification method: auditability.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.governance.root-manifests",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "provenance_gap",
+        "message": "Missing required evidence: policy_rule.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.tooling.scripts",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "policy_violation",
+        "message": "Missing required verification method: auditability.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.tooling.scripts",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "provenance_gap",
+        "message": "Missing required evidence: policy_rule.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.verification.tests",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "policy_violation",
+        "message": "Missing required verification method: auditability.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.verification.tests",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "provenance_gap",
+        "message": "Missing required evidence: policy_rule.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      }
+    ],
+    "evidenceRequirementGaps": [
+      {
+        "claimId": "bearing.governance",
+        "facet": "veritas.governance",
+        "impactLevel": "high",
+        "gapType": "attestation_actor_missing",
+        "message": "Attestation veritas-1788532019252.governance.bearing.governance.attestation.evidence has no actor reference.",
+        "policyId": "veritas.governance-artifact",
+        "evidenceIds": [
+          "veritas-1788532019252.governance.bearing.governance.attestation.evidence"
+        ]
+      },
+      {
+        "claimId": "bearing.governance",
+        "facet": "veritas.governance",
+        "impactLevel": "high",
+        "gapType": "attestation_authority_unverified",
+        "message": "Attestation veritas-1788532019252.governance.bearing.governance.attestation.evidence has no authority source for veritas plus authority attestation.",
+        "policyId": "veritas.governance-artifact",
+        "evidenceIds": [
+          "veritas-1788532019252.governance.bearing.governance.attestation.evidence"
+        ]
+      },
+      {
+        "claimId": "bearing.governance",
+        "facet": "veritas.governance",
+        "impactLevel": "high",
+        "gapType": "attestation_identity_unverified",
+        "message": "Attestation veritas-1788532019252.governance.bearing.governance.attestation.evidence has no identity evidenceCheck reference.",
+        "policyId": "veritas.governance-artifact",
+        "evidenceIds": [
+          "veritas-1788532019252.governance.bearing.governance.attestation.evidence"
+        ]
+      },
+      {
+        "claimId": "bearing.governance",
+        "facet": "veritas.governance",
+        "impactLevel": "high",
+        "gapType": "policy_violation",
+        "message": "Evidence explicitly reported a non-passing result.",
+        "evidenceIds": [
+          "veritas-1788532019252.governance.bearing.governance.attestation.evidence"
+        ],
+        "policyId": "veritas.governance-artifact"
+      },
+      {
+        "claimId": "bearing.governance",
+        "facet": "veritas.governance",
+        "impactLevel": "high",
+        "gapType": "policy_violation",
+        "message": "Evidence explicitly reported a non-passing result.",
+        "evidenceIds": [
+          "veritas-1788532019252.governance.bearing.governance.audit.evidence"
+        ],
+        "policyId": "veritas.governance-artifact"
+      },
+      {
+        "claimId": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+        "facet": "veritas.policy-results",
+        "impactLevel": "high",
+        "gapType": "policy_violation",
+        "message": "Evidence explicitly reported a non-passing result.",
+        "evidenceIds": [
+          "veritas-1788532019252.policy.ai-instruction-files-synced.evidence"
+        ],
+        "policyId": "veritas.policy-result"
+      },
+      {
+        "claimId": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+        "facet": "veritas.policy-results",
+        "impactLevel": "high",
+        "gapType": "policy_violation",
+        "message": "All required AI tool instruction files must contain the Veritas guidance block.",
+        "evidenceIds": [
+          "veritas-1788532019252.policy.ai-instruction-files-synced.evidence"
+        ],
+        "policyId": "veritas.policy-result"
+      },
+      {
+        "claimId": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+        "facet": "veritas.policy-results",
+        "impactLevel": "high",
+        "gapType": "policy_violation",
+        "message": "Evidence explicitly reported a non-passing result.",
+        "evidenceIds": [
+          "veritas-1788532019252.policy.policy-changes-require-attestation.evidence"
+        ],
+        "policyId": "veritas.policy-result"
+      },
+      {
+        "claimId": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+        "facet": "veritas.policy-results",
+        "impactLevel": "high",
+        "gapType": "policy_violation",
+        "message": "Protected standards changes require a fresh authority-backed attestation.",
+        "evidenceIds": [
+          "veritas-1788532019252.policy.policy-changes-require-attestation.evidence"
+        ],
+        "policyId": "veritas.policy-result"
+      },
+      {
+        "claimId": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "facet": "veritas.readiness",
+        "impactLevel": "high",
+        "gapType": "policy_violation",
+        "message": "Evidence explicitly reported a non-passing result.",
+        "evidenceIds": [
+          "veritas-1788532019252.readiness-verdict.evidence"
+        ],
+        "policyId": "veritas.readiness-verdict"
+      },
+      {
+        "claimId": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "facet": "veritas.readiness",
+        "impactLevel": "high",
+        "gapType": "policy_violation",
+        "message": "Blocking readiness requirement failed: policy-changes-require-attestation.",
+        "evidenceIds": [
+          "veritas-1788532019252.readiness-verdict.evidence"
+        ],
+        "policyId": "veritas.readiness-verdict"
+      },
+      {
+        "claimId": "bearing.surface.app.src",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "policy_violation",
+        "message": "Missing required verification method: auditability.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.app.src",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "provenance_gap",
+        "message": "Missing required evidence: policy_rule.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.delivery.workflows",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "policy_violation",
+        "message": "Missing required verification method: auditability.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.delivery.workflows",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "provenance_gap",
+        "message": "Missing required evidence: policy_rule.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.docs.docs",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "policy_violation",
+        "message": "Missing required verification method: auditability.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.docs.docs",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "provenance_gap",
+        "message": "Missing required evidence: policy_rule.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.governance.guidance",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "policy_violation",
+        "message": "Missing required verification method: auditability.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.governance.guidance",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "provenance_gap",
+        "message": "Missing required evidence: policy_rule.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.governance.root-manifests",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "policy_violation",
+        "message": "Missing required verification method: auditability.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.governance.root-manifests",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "provenance_gap",
+        "message": "Missing required evidence: policy_rule.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.tooling.scripts",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "policy_violation",
+        "message": "Missing required verification method: auditability.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.tooling.scripts",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "provenance_gap",
+        "message": "Missing required evidence: policy_rule.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.verification.tests",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "policy_violation",
+        "message": "Missing required verification method: auditability.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      },
+      {
+        "claimId": "bearing.surface.verification.tests",
+        "facet": "veritas.affected-surface",
+        "impactLevel": "medium",
+        "gapType": "provenance_gap",
+        "message": "Missing required evidence: policy_rule.",
+        "evidenceIds": [],
+        "policyId": "veritas.surface"
+      }
+    ],
+    "confidenceBasis": {
+      "sourceQuality": {},
+      "reviewerAuthority": {},
+      "evidenceStrength": {},
+      "corroboratedClaims": 0,
+      "averageExtractionConfidence": null,
+      "freshnessAtRisk": [],
+      "conflictedClaims": []
+    },
+    "actionQueues": {
+      "reviewNow": [
+        {
+          "claimId": "bearing.governance",
+          "facet": "veritas.governance",
+          "status": "disputed",
+          "impactLevel": "high",
+          "claimType": "veritas-governance-artifact",
+          "subject": {
+            "subjectType": "repository",
+            "subjectId": "bearing"
+          },
+          "policyId": "veritas.governance-artifact"
+        },
+        {
+          "claimId": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+          "facet": "veritas.policy-results",
+          "status": "rejected",
+          "impactLevel": "high",
+          "claimType": "veritas-policy-result",
+          "subject": {
+            "subjectType": "policy-rule",
+            "subjectId": "bearing:bearing-default:policy-changes-require-attestation"
+          },
+          "policyId": "veritas.policy-result"
+        },
+        {
+          "claimId": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+          "facet": "veritas.policy-results",
+          "status": "disputed",
+          "impactLevel": "high",
+          "claimType": "veritas-policy-result",
+          "subject": {
+            "subjectType": "policy-rule",
+            "subjectId": "bearing:bearing-default:ai-instruction-files-synced"
+          },
+          "policyId": "veritas.policy-result"
+        },
+        {
+          "claimId": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "facet": "veritas.readiness",
+          "status": "rejected",
+          "impactLevel": "high",
+          "claimType": "software-readiness-verdict",
+          "subject": {
+            "subjectType": "repository-change",
+            "subjectId": "bearing-default:working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "policyId": "veritas.readiness-verdict"
+        }
+      ],
+      "reverifyStale": [],
+      "resolveConflicts": [],
+      "strengthenEvidence": [
+        {
+          "claimId": "bearing.governance",
+          "facet": "veritas.governance",
+          "impactLevel": "high",
+          "gapType": "attestation_actor_missing",
+          "message": "Attestation veritas-1788532019252.governance.bearing.governance.attestation.evidence has no actor reference.",
+          "policyId": "veritas.governance-artifact",
+          "evidenceIds": [
+            "veritas-1788532019252.governance.bearing.governance.attestation.evidence"
+          ]
+        },
+        {
+          "claimId": "bearing.governance",
+          "facet": "veritas.governance",
+          "impactLevel": "high",
+          "gapType": "attestation_authority_unverified",
+          "message": "Attestation veritas-1788532019252.governance.bearing.governance.attestation.evidence has no authority source for veritas plus authority attestation.",
+          "policyId": "veritas.governance-artifact",
+          "evidenceIds": [
+            "veritas-1788532019252.governance.bearing.governance.attestation.evidence"
+          ]
+        },
+        {
+          "claimId": "bearing.governance",
+          "facet": "veritas.governance",
+          "impactLevel": "high",
+          "gapType": "attestation_identity_unverified",
+          "message": "Attestation veritas-1788532019252.governance.bearing.governance.attestation.evidence has no identity evidenceCheck reference.",
+          "policyId": "veritas.governance-artifact",
+          "evidenceIds": [
+            "veritas-1788532019252.governance.bearing.governance.attestation.evidence"
+          ]
+        },
+        {
+          "claimId": "bearing.governance",
+          "facet": "veritas.governance",
+          "impactLevel": "high",
+          "gapType": "policy_violation",
+          "message": "Evidence explicitly reported a non-passing result.",
+          "evidenceIds": [
+            "veritas-1788532019252.governance.bearing.governance.attestation.evidence"
+          ],
+          "policyId": "veritas.governance-artifact"
+        },
+        {
+          "claimId": "bearing.governance",
+          "facet": "veritas.governance",
+          "impactLevel": "high",
+          "gapType": "policy_violation",
+          "message": "Evidence explicitly reported a non-passing result.",
+          "evidenceIds": [
+            "veritas-1788532019252.governance.bearing.governance.audit.evidence"
+          ],
+          "policyId": "veritas.governance-artifact"
+        },
+        {
+          "claimId": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+          "facet": "veritas.policy-results",
+          "impactLevel": "high",
+          "gapType": "policy_violation",
+          "message": "Evidence explicitly reported a non-passing result.",
+          "evidenceIds": [
+            "veritas-1788532019252.policy.ai-instruction-files-synced.evidence"
+          ],
+          "policyId": "veritas.policy-result"
+        },
+        {
+          "claimId": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+          "facet": "veritas.policy-results",
+          "impactLevel": "high",
+          "gapType": "policy_violation",
+          "message": "All required AI tool instruction files must contain the Veritas guidance block.",
+          "evidenceIds": [
+            "veritas-1788532019252.policy.ai-instruction-files-synced.evidence"
+          ],
+          "policyId": "veritas.policy-result"
+        },
+        {
+          "claimId": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+          "facet": "veritas.policy-results",
+          "impactLevel": "high",
+          "gapType": "policy_violation",
+          "message": "Evidence explicitly reported a non-passing result.",
+          "evidenceIds": [
+            "veritas-1788532019252.policy.policy-changes-require-attestation.evidence"
+          ],
+          "policyId": "veritas.policy-result"
+        },
+        {
+          "claimId": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+          "facet": "veritas.policy-results",
+          "impactLevel": "high",
+          "gapType": "policy_violation",
+          "message": "Protected standards changes require a fresh authority-backed attestation.",
+          "evidenceIds": [
+            "veritas-1788532019252.policy.policy-changes-require-attestation.evidence"
+          ],
+          "policyId": "veritas.policy-result"
+        },
+        {
+          "claimId": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "facet": "veritas.readiness",
+          "impactLevel": "high",
+          "gapType": "policy_violation",
+          "message": "Evidence explicitly reported a non-passing result.",
+          "evidenceIds": [
+            "veritas-1788532019252.readiness-verdict.evidence"
+          ],
+          "policyId": "veritas.readiness-verdict"
+        },
+        {
+          "claimId": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "facet": "veritas.readiness",
+          "impactLevel": "high",
+          "gapType": "policy_violation",
+          "message": "Blocking readiness requirement failed: policy-changes-require-attestation.",
+          "evidenceIds": [
+            "veritas-1788532019252.readiness-verdict.evidence"
+          ],
+          "policyId": "veritas.readiness-verdict"
+        },
+        {
+          "claimId": "bearing.surface.app.src",
+          "facet": "veritas.affected-surface",
+          "impactLevel": "medium",
+          "gapType": "policy_violation",
+          "message": "Missing required verification method: auditability.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "claimId": "bearing.surface.app.src",
+          "facet": "veritas.affected-surface",
+          "impactLevel": "medium",
+          "gapType": "provenance_gap",
+          "message": "Missing required evidence: policy_rule.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "claimId": "bearing.surface.delivery.workflows",
+          "facet": "veritas.affected-surface",
+          "impactLevel": "medium",
+          "gapType": "policy_violation",
+          "message": "Missing required verification method: auditability.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "claimId": "bearing.surface.delivery.workflows",
+          "facet": "veritas.affected-surface",
+          "impactLevel": "medium",
+          "gapType": "provenance_gap",
+          "message": "Missing required evidence: policy_rule.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "claimId": "bearing.surface.docs.docs",
+          "facet": "veritas.affected-surface",
+          "impactLevel": "medium",
+          "gapType": "policy_violation",
+          "message": "Missing required verification method: auditability.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "claimId": "bearing.surface.docs.docs",
+          "facet": "veritas.affected-surface",
+          "impactLevel": "medium",
+          "gapType": "provenance_gap",
+          "message": "Missing required evidence: policy_rule.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "claimId": "bearing.surface.governance.guidance",
+          "facet": "veritas.affected-surface",
+          "impactLevel": "medium",
+          "gapType": "policy_violation",
+          "message": "Missing required verification method: auditability.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "claimId": "bearing.surface.governance.guidance",
+          "facet": "veritas.affected-surface",
+          "impactLevel": "medium",
+          "gapType": "provenance_gap",
+          "message": "Missing required evidence: policy_rule.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "claimId": "bearing.surface.governance.root-manifests",
+          "facet": "veritas.affected-surface",
+          "impactLevel": "medium",
+          "gapType": "policy_violation",
+          "message": "Missing required verification method: auditability.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "claimId": "bearing.surface.governance.root-manifests",
+          "facet": "veritas.affected-surface",
+          "impactLevel": "medium",
+          "gapType": "provenance_gap",
+          "message": "Missing required evidence: policy_rule.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "claimId": "bearing.surface.tooling.scripts",
+          "facet": "veritas.affected-surface",
+          "impactLevel": "medium",
+          "gapType": "policy_violation",
+          "message": "Missing required verification method: auditability.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "claimId": "bearing.surface.tooling.scripts",
+          "facet": "veritas.affected-surface",
+          "impactLevel": "medium",
+          "gapType": "provenance_gap",
+          "message": "Missing required evidence: policy_rule.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "claimId": "bearing.surface.verification.tests",
+          "facet": "veritas.affected-surface",
+          "impactLevel": "medium",
+          "gapType": "policy_violation",
+          "message": "Missing required verification method: auditability.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        },
+        {
+          "claimId": "bearing.surface.verification.tests",
+          "facet": "veritas.affected-surface",
+          "impactLevel": "medium",
+          "gapType": "provenance_gap",
+          "message": "Missing required evidence: policy_rule.",
+          "evidenceIds": [],
+          "policyId": "veritas.surface"
+        }
+      ]
+    },
+    "attestationValidity": {
+      "totalAttestations": 1,
+      "validAttestations": 0,
+      "weakAttestations": 0,
+      "invalidAttestations": 1,
+      "items": [
+        {
+          "evidenceId": "veritas-1788532019252.governance.bearing.governance.attestation.evidence",
+          "claimId": "bearing.governance",
+          "requiredAuthority": "veritas plus authority attestation",
+          "status": "invalid",
+          "gaps": [
+            "attestation_actor_missing",
+            "attestation_identity_unverified",
+            "attestation_authority_unverified"
+          ],
+          "integrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  },
+  "standardsFeedbackSummary": null,
+  "claims": [
+    {
+      "id": "bearing.surface.governance.guidance",
+      "status": "unknown",
+      "subjectType": "repo-surface",
+      "subjectId": "bearing:governance.guidance",
+      "facet": "veritas.affected-surface",
+      "domain": "veritas",
+      "claimType": "veritas-affected-surface",
+      "fieldOrBehavior": "governance.guidance",
+      "value": "governance.guidance",
+      "verificationPolicyId": "veritas.surface",
+      "impactLevel": "medium",
+      "reviewerAuthority": null,
+      "evidenceStrength": null,
+      "sourceQuality": null,
+      "confidenceBasis": null,
+      "currentIntegrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "derivedFrom": [],
+      "createdAt": "2026-07-20T14:45:19.343Z",
+      "updatedAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [],
+      "eventIds": [],
+      "transparencyGapIds": [
+        "bearing.surface.governance.guidance.gap.provenance-gap",
+        "bearing.surface.governance.guidance.gap.policy-violation"
+      ],
+      "transparencyGapTypes": [
+        "policy_violation",
+        "provenance_gap"
+      ],
+      "evidenceTypes": [],
+      "evidenceMethods": [],
+      "latestEventStatus": null,
+      "metadata": {
+        "nodeId": "governance.guidance"
+      }
+    },
+    {
+      "id": "bearing.surface.governance.root-manifests",
+      "status": "unknown",
+      "subjectType": "repo-surface",
+      "subjectId": "bearing:governance.root-manifests",
+      "facet": "veritas.affected-surface",
+      "domain": "veritas",
+      "claimType": "veritas-affected-surface",
+      "fieldOrBehavior": "governance.root-manifests",
+      "value": "governance.root-manifests",
+      "verificationPolicyId": "veritas.surface",
+      "impactLevel": "medium",
+      "reviewerAuthority": null,
+      "evidenceStrength": null,
+      "sourceQuality": null,
+      "confidenceBasis": null,
+      "currentIntegrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "derivedFrom": [],
+      "createdAt": "2026-07-20T14:45:19.343Z",
+      "updatedAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [],
+      "eventIds": [],
+      "transparencyGapIds": [
+        "bearing.surface.governance.root-manifests.gap.provenance-gap",
+        "bearing.surface.governance.root-manifests.gap.policy-violation"
+      ],
+      "transparencyGapTypes": [
+        "policy_violation",
+        "provenance_gap"
+      ],
+      "evidenceTypes": [],
+      "evidenceMethods": [],
+      "latestEventStatus": null,
+      "metadata": {
+        "nodeId": "governance.root-manifests"
+      }
+    },
+    {
+      "id": "bearing.surface.delivery.workflows",
+      "status": "unknown",
+      "subjectType": "repo-surface",
+      "subjectId": "bearing:delivery.workflows",
+      "facet": "veritas.affected-surface",
+      "domain": "veritas",
+      "claimType": "veritas-affected-surface",
+      "fieldOrBehavior": "delivery.workflows",
+      "value": "delivery.workflows",
+      "verificationPolicyId": "veritas.surface",
+      "impactLevel": "medium",
+      "reviewerAuthority": null,
+      "evidenceStrength": null,
+      "sourceQuality": null,
+      "confidenceBasis": null,
+      "currentIntegrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "derivedFrom": [],
+      "createdAt": "2026-07-20T14:45:19.343Z",
+      "updatedAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [],
+      "eventIds": [],
+      "transparencyGapIds": [
+        "bearing.surface.delivery.workflows.gap.provenance-gap",
+        "bearing.surface.delivery.workflows.gap.policy-violation"
+      ],
+      "transparencyGapTypes": [
+        "policy_violation",
+        "provenance_gap"
+      ],
+      "evidenceTypes": [],
+      "evidenceMethods": [],
+      "latestEventStatus": null,
+      "metadata": {
+        "nodeId": "delivery.workflows"
+      }
+    },
+    {
+      "id": "bearing.surface.tooling.scripts",
+      "status": "unknown",
+      "subjectType": "repo-surface",
+      "subjectId": "bearing:tooling.scripts",
+      "facet": "veritas.affected-surface",
+      "domain": "veritas",
+      "claimType": "veritas-affected-surface",
+      "fieldOrBehavior": "tooling.scripts",
+      "value": "tooling.scripts",
+      "verificationPolicyId": "veritas.surface",
+      "impactLevel": "medium",
+      "reviewerAuthority": null,
+      "evidenceStrength": null,
+      "sourceQuality": null,
+      "confidenceBasis": null,
+      "currentIntegrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "derivedFrom": [],
+      "createdAt": "2026-07-20T14:45:19.343Z",
+      "updatedAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [],
+      "eventIds": [],
+      "transparencyGapIds": [
+        "bearing.surface.tooling.scripts.gap.provenance-gap",
+        "bearing.surface.tooling.scripts.gap.policy-violation"
+      ],
+      "transparencyGapTypes": [
+        "policy_violation",
+        "provenance_gap"
+      ],
+      "evidenceTypes": [],
+      "evidenceMethods": [],
+      "latestEventStatus": null,
+      "metadata": {
+        "nodeId": "tooling.scripts"
+      }
+    },
+    {
+      "id": "bearing.surface.app.src",
+      "status": "unknown",
+      "subjectType": "repo-surface",
+      "subjectId": "bearing:app.src",
+      "facet": "veritas.affected-surface",
+      "domain": "veritas",
+      "claimType": "veritas-affected-surface",
+      "fieldOrBehavior": "app.src",
+      "value": "app.src",
+      "verificationPolicyId": "veritas.surface",
+      "impactLevel": "medium",
+      "reviewerAuthority": null,
+      "evidenceStrength": null,
+      "sourceQuality": null,
+      "confidenceBasis": null,
+      "currentIntegrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "derivedFrom": [],
+      "createdAt": "2026-07-20T14:45:19.343Z",
+      "updatedAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [],
+      "eventIds": [],
+      "transparencyGapIds": [
+        "bearing.surface.app.src.gap.provenance-gap",
+        "bearing.surface.app.src.gap.policy-violation"
+      ],
+      "transparencyGapTypes": [
+        "policy_violation",
+        "provenance_gap"
+      ],
+      "evidenceTypes": [],
+      "evidenceMethods": [],
+      "latestEventStatus": null,
+      "metadata": {
+        "nodeId": "app.src"
+      }
+    },
+    {
+      "id": "bearing.surface.docs.docs",
+      "status": "unknown",
+      "subjectType": "repo-surface",
+      "subjectId": "bearing:docs.docs",
+      "facet": "veritas.affected-surface",
+      "domain": "veritas",
+      "claimType": "veritas-affected-surface",
+      "fieldOrBehavior": "docs.docs",
+      "value": "docs.docs",
+      "verificationPolicyId": "veritas.surface",
+      "impactLevel": "medium",
+      "reviewerAuthority": null,
+      "evidenceStrength": null,
+      "sourceQuality": null,
+      "confidenceBasis": null,
+      "currentIntegrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "derivedFrom": [],
+      "createdAt": "2026-07-20T14:45:19.343Z",
+      "updatedAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [],
+      "eventIds": [],
+      "transparencyGapIds": [
+        "bearing.surface.docs.docs.gap.provenance-gap",
+        "bearing.surface.docs.docs.gap.policy-violation"
+      ],
+      "transparencyGapTypes": [
+        "policy_violation",
+        "provenance_gap"
+      ],
+      "evidenceTypes": [],
+      "evidenceMethods": [],
+      "latestEventStatus": null,
+      "metadata": {
+        "nodeId": "docs.docs"
+      }
+    },
+    {
+      "id": "bearing.surface.verification.tests",
+      "status": "unknown",
+      "subjectType": "repo-surface",
+      "subjectId": "bearing:verification.tests",
+      "facet": "veritas.affected-surface",
+      "domain": "veritas",
+      "claimType": "veritas-affected-surface",
+      "fieldOrBehavior": "verification.tests",
+      "value": "verification.tests",
+      "verificationPolicyId": "veritas.surface",
+      "impactLevel": "medium",
+      "reviewerAuthority": null,
+      "evidenceStrength": null,
+      "sourceQuality": null,
+      "confidenceBasis": null,
+      "currentIntegrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "derivedFrom": [],
+      "createdAt": "2026-07-20T14:45:19.343Z",
+      "updatedAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [],
+      "eventIds": [],
+      "transparencyGapIds": [
+        "bearing.surface.verification.tests.gap.provenance-gap",
+        "bearing.surface.verification.tests.gap.policy-violation"
+      ],
+      "transparencyGapTypes": [
+        "policy_violation",
+        "provenance_gap"
+      ],
+      "evidenceTypes": [],
+      "evidenceMethods": [],
+      "latestEventStatus": null,
+      "metadata": {
+        "nodeId": "verification.tests"
+      }
+    },
+    {
+      "id": "bearing.governance",
+      "status": "disputed",
+      "subjectType": "repository",
+      "subjectId": "bearing",
+      "facet": "veritas.governance",
+      "domain": "veritas",
+      "claimType": "veritas-governance-artifact",
+      "fieldOrBehavior": "governance artifact integrity",
+      "value": "governance artifact integrity",
+      "verificationPolicyId": "veritas.governance-artifact",
+      "impactLevel": "high",
+      "reviewerAuthority": null,
+      "evidenceStrength": null,
+      "sourceQuality": null,
+      "confidenceBasis": null,
+      "currentIntegrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "derivedFrom": [],
+      "createdAt": "2026-07-20T14:45:19.343Z",
+      "updatedAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [
+        "veritas-1788532019252.governance.bearing.governance.attestation.evidence",
+        "veritas-1788532019252.governance.bearing.governance.audit.evidence"
+      ],
+      "eventIds": [
+        "veritas-1788532019252.governance.bearing.governance.disputed"
+      ],
+      "transparencyGapIds": [
+        "bearing.governance.gap.evidence-veritas-1788532019252.governance.bearing.governance.attestation.evidence",
+        "bearing.governance.gap.evidence-veritas-1788532019252.governance.bearing.governance.audit.evidence"
+      ],
+      "transparencyGapTypes": [
+        "policy_violation"
+      ],
+      "evidenceTypes": [
+        "attestation",
+        "policy_rule"
+      ],
+      "evidenceMethods": [
+        "attestation",
+        "auditability"
+      ],
+      "latestEventStatus": "disputed",
+      "metadata": {}
+    },
+    {
+      "id": "bearing.evidence-check.npm-run-verify",
+      "status": "verified",
+      "subjectType": "repository",
+      "subjectId": "bearing",
+      "facet": "veritas.evidence-check",
+      "domain": "veritas",
+      "claimType": "software-evidence-check",
+      "fieldOrBehavior": "npm run verify",
+      "value": "all checks pass",
+      "verificationPolicyId": "veritas.evidence-check",
+      "impactLevel": "high",
+      "reviewerAuthority": null,
+      "evidenceStrength": null,
+      "sourceQuality": null,
+      "confidenceBasis": null,
+      "currentIntegrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "derivedFrom": [],
+      "createdAt": "2026-07-20T14:45:19.343Z",
+      "updatedAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [
+        "veritas-1788532019252.evidence-check.required-evidence-check.evidence"
+      ],
+      "eventIds": [
+        "veritas-1788532019252.evidence-check.required-evidence-check.verified"
+      ],
+      "transparencyGapIds": [],
+      "transparencyGapTypes": [],
+      "evidenceTypes": [
+        "test_output"
+      ],
+      "evidenceMethods": [
+        "validation"
+      ],
+      "latestEventStatus": "verified",
+      "metadata": {
+        "command": "npm run verify"
+      }
+    },
+    {
+      "id": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+      "status": "rejected",
+      "subjectType": "policy-rule",
+      "subjectId": "bearing:bearing-default:policy-changes-require-attestation",
+      "facet": "veritas.policy-results",
+      "domain": "veritas",
+      "claimType": "veritas-policy-result",
+      "fieldOrBehavior": "policy-changes-require-attestation",
+      "value": "policy-changes-require-attestation",
+      "verificationPolicyId": "veritas.policy-result",
+      "impactLevel": "high",
+      "reviewerAuthority": null,
+      "evidenceStrength": null,
+      "sourceQuality": null,
+      "confidenceBasis": null,
+      "currentIntegrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "derivedFrom": [],
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "updatedAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [
+        "veritas-1788532019252.policy.policy-changes-require-attestation.evidence"
+      ],
+      "eventIds": [
+        "veritas-1788532019252.policy.policy-changes-require-attestation.rejected"
+      ],
+      "transparencyGapIds": [
+        "veritas.policy.bearing.bearing-default.policy-changes-require-attestation.gap.evidence-veritas-1788532019252.policy.policy-changes-require-attestation.evidence",
+        "veritas.policy.bearing.bearing-default.policy-changes-require-attestation.gap.hint-1"
+      ],
+      "transparencyGapTypes": [
+        "policy_violation"
+      ],
+      "evidenceTypes": [
+        "policy_rule"
+      ],
+      "evidenceMethods": [
+        "validation"
+      ],
+      "latestEventStatus": "rejected",
+      "metadata": {
+        "projected": true,
+        "ruleId": "policy-changes-require-attestation",
+        "enforcementLevel": "Require",
+        "classification": "hard-invariant",
+        "repoStandards": "bearing-default",
+        "repoMap": "bearing"
+      }
+    },
+    {
+      "id": "veritas.policy.bearing.bearing-default.required-veritas-artifacts",
+      "status": "verified",
+      "subjectType": "policy-rule",
+      "subjectId": "bearing:bearing-default:required-veritas-artifacts",
+      "facet": "veritas.policy-results",
+      "domain": "veritas",
+      "claimType": "veritas-policy-result",
+      "fieldOrBehavior": "required-veritas-artifacts",
+      "value": "required-veritas-artifacts",
+      "verificationPolicyId": "veritas.policy-result",
+      "impactLevel": "high",
+      "reviewerAuthority": null,
+      "evidenceStrength": null,
+      "sourceQuality": null,
+      "confidenceBasis": null,
+      "currentIntegrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "derivedFrom": [],
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "updatedAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [
+        "veritas-1788532019252.policy.required-veritas-artifacts.evidence"
+      ],
+      "eventIds": [
+        "veritas-1788532019252.policy.required-veritas-artifacts.verified"
+      ],
+      "transparencyGapIds": [],
+      "transparencyGapTypes": [],
+      "evidenceTypes": [
+        "policy_rule"
+      ],
+      "evidenceMethods": [
+        "validation"
+      ],
+      "latestEventStatus": "verified",
+      "metadata": {
+        "projected": true,
+        "ruleId": "required-veritas-artifacts",
+        "enforcementLevel": "Require",
+        "classification": "hard-invariant",
+        "repoStandards": "bearing-default",
+        "repoMap": "bearing"
+      }
+    },
+    {
+      "id": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+      "status": "disputed",
+      "subjectType": "policy-rule",
+      "subjectId": "bearing:bearing-default:ai-instruction-files-synced",
+      "facet": "veritas.policy-results",
+      "domain": "veritas",
+      "claimType": "veritas-policy-result",
+      "fieldOrBehavior": "ai-instruction-files-synced",
+      "value": "ai-instruction-files-synced",
+      "verificationPolicyId": "veritas.policy-result",
+      "impactLevel": "high",
+      "reviewerAuthority": null,
+      "evidenceStrength": null,
+      "sourceQuality": null,
+      "confidenceBasis": null,
+      "currentIntegrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "derivedFrom": [],
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "updatedAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [
+        "veritas-1788532019252.policy.ai-instruction-files-synced.evidence"
+      ],
+      "eventIds": [
+        "veritas-1788532019252.policy.ai-instruction-files-synced.disputed"
+      ],
+      "transparencyGapIds": [
+        "veritas.policy.bearing.bearing-default.ai-instruction-files-synced.gap.evidence-veritas-1788532019252.policy.ai-instruction-files-synced.evidence",
+        "veritas.policy.bearing.bearing-default.ai-instruction-files-synced.gap.hint-1"
+      ],
+      "transparencyGapTypes": [
+        "policy_violation"
+      ],
+      "evidenceTypes": [
+        "policy_rule"
+      ],
+      "evidenceMethods": [
+        "validation"
+      ],
+      "latestEventStatus": "disputed",
+      "metadata": {
+        "projected": true,
+        "ruleId": "ai-instruction-files-synced",
+        "enforcementLevel": "Guide",
+        "classification": "hard-invariant",
+        "repoStandards": "bearing-default",
+        "repoMap": "bearing"
+      }
+    },
+    {
+      "id": "veritas.policy.bearing.bearing-default.prefer-veritas-routed-delivery",
+      "status": "verified",
+      "subjectType": "policy-rule",
+      "subjectId": "bearing:bearing-default:prefer-veritas-routed-delivery",
+      "facet": "veritas.policy-results",
+      "domain": "veritas",
+      "claimType": "veritas-policy-result",
+      "fieldOrBehavior": "prefer-veritas-routed-delivery",
+      "value": "prefer-veritas-routed-delivery",
+      "verificationPolicyId": "veritas.policy-result",
+      "impactLevel": "low",
+      "reviewerAuthority": null,
+      "evidenceStrength": null,
+      "sourceQuality": null,
+      "confidenceBasis": null,
+      "currentIntegrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "derivedFrom": [],
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "updatedAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [
+        "veritas-1788532019252.policy.prefer-veritas-routed-delivery.evidence"
+      ],
+      "eventIds": [
+        "veritas-1788532019252.policy.prefer-veritas-routed-delivery.verified"
+      ],
+      "transparencyGapIds": [],
+      "transparencyGapTypes": [],
+      "evidenceTypes": [
+        "policy_rule"
+      ],
+      "evidenceMethods": [
+        "validation"
+      ],
+      "latestEventStatus": "verified",
+      "metadata": {
+        "projected": true,
+        "ruleId": "prefer-veritas-routed-delivery",
+        "enforcementLevel": "Observe",
+        "classification": "promotable-policy",
+        "repoStandards": "bearing-default",
+        "repoMap": "bearing"
+      }
+    },
+    {
+      "id": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "rejected",
+      "subjectType": "repository-change",
+      "subjectId": "bearing-default:working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "facet": "veritas.readiness",
+      "domain": "veritas",
+      "claimType": "software-readiness-verdict",
+      "fieldOrBehavior": "mergeReadiness",
+      "value": {
+        "verdict": "not-ready",
+        "promotionAllowed": true,
+        "uncoveredPathResult": "clear",
+        "sourceRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "verificationPolicyId": "veritas.readiness-verdict",
+      "impactLevel": "high",
+      "reviewerAuthority": null,
+      "evidenceStrength": null,
+      "sourceQuality": null,
+      "confidenceBasis": null,
+      "currentIntegrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "derivedFrom": [
+        "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+        "veritas.policy.bearing.bearing-default.required-veritas-artifacts"
+      ],
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "updatedAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [
+        "veritas-1788532019252.readiness-verdict.evidence"
+      ],
+      "eventIds": [
+        "veritas-1788532019252.readiness-verdict.rejected"
+      ],
+      "transparencyGapIds": [
+        "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gap.evidence-veritas-1788532019252.readiness-verdict.evidence",
+        "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gap.hint-1"
+      ],
+      "transparencyGapTypes": [
+        "policy_violation"
+      ],
+      "evidenceTypes": [
+        "policy_rule"
+      ],
+      "evidenceMethods": [
+        "validation"
+      ],
+      "latestEventStatus": "rejected",
+      "metadata": {
+        "producer": "veritas",
+        "source": "readiness",
+        "sourceRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sourceKind": "working-tree",
+        "sourceScope": [
+          "staged",
+          "unstaged",
+          "untracked"
+        ],
+        "policyCoverage": {
+          "policyResultCount": 4,
+          "derivedRequirementClaimIds": [
+            "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+            "veritas.policy.bearing.bearing-default.required-veritas-artifacts"
+          ],
+          "selectedEvidenceCheckCount": 1,
+          "readinessCoveragePresent": true
+        },
+        "integrity": {
+          "sourceRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sourceKind": "working-tree",
+          "sourceScope": [
+            "staged",
+            "unstaged",
+            "untracked"
+          ],
+          "fileRefs": [],
+          "configRefs": {
+            "repoMap": {
+              "name": "bearing",
+              "path": ".veritas/repo-map.json",
+              "hash": "sha256:f6316c6886602960e677ba81e13f929e5ca9ac597c5087fa002913f5d5721b5e"
+            },
+            "repoStandards": {
+              "name": "bearing-default",
+              "path": ".veritas/repo-standards/default.repo-standards.json",
+              "hash": "sha256:5773f36d469bdd4bad913fccaba3eec6b53a0df16734e2321d8dad4ace55e583"
+            },
+            "authoritySettings": {
+              "name": "authority-settings",
+              "path": ".veritas/authority/default.authority-settings.json",
+              "hash": "sha256:4ee9172c197cab9e279c634adc72c6a27ba102989f5af394edff1a82f5065a38"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "policies": [
+    {
+      "id": "veritas.surface",
+      "claimType": "veritas-affected-surface",
+      "requiredEvidence": [
+        "policy_rule"
+      ],
+      "requiredMethods": [
+        "auditability"
+      ],
+      "reviewAuthority": "veritas",
+      "validityRule": {
+        "kind": "commit"
+      },
+      "impactLevel": "medium",
+      "claimCount": 7,
+      "statusCounts": {
+        "unknown": 7
+      },
+      "transparencyGapCounts": {
+        "provenance_gap": 7,
+        "policy_violation": 7
+      }
+    },
+    {
+      "id": "veritas.governance-artifact",
+      "claimType": "veritas-governance-artifact",
+      "requiredEvidence": [
+        "attestation",
+        "policy_rule"
+      ],
+      "requiredMethods": [
+        "auditability",
+        "attestation"
+      ],
+      "reviewAuthority": "veritas plus authority attestation",
+      "validityRule": {
+        "kind": "manual"
+      },
+      "impactLevel": "high",
+      "claimCount": 1,
+      "statusCounts": {
+        "disputed": 1
+      },
+      "transparencyGapCounts": {
+        "policy_violation": 2
+      }
+    },
+    {
+      "id": "veritas.evidence-check",
+      "claimType": "software-evidence-check",
+      "requiredEvidence": [
+        "test_output"
+      ],
+      "requiredMethods": [
+        "validation"
+      ],
+      "reviewAuthority": "veritas",
+      "validityRule": {
+        "kind": "commit"
+      },
+      "impactLevel": "high",
+      "claimCount": 1,
+      "statusCounts": {
+        "verified": 1
+      },
+      "transparencyGapCounts": {}
+    },
+    {
+      "id": "veritas.policy-result",
+      "claimType": "veritas-policy-result",
+      "requiredEvidence": [
+        "policy_rule"
+      ],
+      "requiredMethods": [
+        "validation"
+      ],
+      "reviewAuthority": "veritas requirements",
+      "validityRule": {
+        "kind": "commit"
+      },
+      "impactLevel": "high",
+      "claimCount": 4,
+      "statusCounts": {
+        "rejected": 1,
+        "verified": 2,
+        "disputed": 1
+      },
+      "transparencyGapCounts": {
+        "policy_violation": 4
+      }
+    },
+    {
+      "id": "veritas.readiness-verdict",
+      "claimType": "software-readiness-verdict",
+      "requiredEvidence": [
+        "policy_rule"
+      ],
+      "requiredMethods": [
+        "validation"
+      ],
+      "reviewAuthority": "veritas readiness producer",
+      "validityRule": {
+        "kind": "commit"
+      },
+      "impactLevel": "high",
+      "claimCount": 1,
+      "statusCounts": {
+        "rejected": 1
+      },
+      "transparencyGapCounts": {
+        "policy_violation": 2
+      }
+    }
+  ],
+  "evidence": [
+    {
+      "id": "veritas-1788532019252.evidence-check.required-evidence-check.evidence",
+      "claimId": "bearing.evidence-check.npm-run-verify",
+      "evidenceType": "test_output",
+      "method": "validation",
+      "sourceRef": "veritas-1788532019252",
+      "sourceLocator": "selected_evidence_checks",
+      "excerptOrSummary": "All evidence checks passed.",
+      "observedAt": "2026-09-04T14:26:59.252Z",
+      "collectedBy": "veritas",
+      "integrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passing": true,
+      "blocking": true,
+      "execution": {
+        "runner": "bash",
+        "label": "npm run verify",
+        "exitCode": 0,
+        "durationMs": 3908
+      },
+      "metadata": {
+        "sourceKind": "working-tree",
+        "sourceScope": [
+          "staged",
+          "unstaged",
+          "untracked"
+        ],
+        "files": [],
+        "unresolvedFiles": [],
+        "integrity": {
+          "sourceRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sourceKind": "working-tree",
+          "sourceScope": [
+            "staged",
+            "unstaged",
+            "untracked"
+          ],
+          "fileRefs": [],
+          "configRefs": {
+            "repoMap": {
+              "name": "bearing",
+              "path": ".veritas/repo-map.json",
+              "hash": "sha256:f6316c6886602960e677ba81e13f929e5ca9ac597c5087fa002913f5d5721b5e"
+            },
+            "repoStandards": {
+              "name": "bearing-default",
+              "path": ".veritas/repo-standards/default.repo-standards.json",
+              "hash": "sha256:5773f36d469bdd4bad913fccaba3eec6b53a0df16734e2321d8dad4ace55e583"
+            },
+            "authoritySettings": {
+              "name": "authority-settings",
+              "path": ".veritas/authority/default.authority-settings.json",
+              "hash": "sha256:4ee9172c197cab9e279c634adc72c6a27ba102989f5af394edff1a82f5065a38"
+            }
+          }
+        },
+        "fileIntegrity": [],
+        "configIntegrity": {
+          "repoMap": {
+            "name": "bearing",
+            "path": ".veritas/repo-map.json",
+            "hash": "sha256:f6316c6886602960e677ba81e13f929e5ca9ac597c5087fa002913f5d5721b5e"
+          },
+          "repoStandards": {
+            "name": "bearing-default",
+            "path": ".veritas/repo-standards/default.repo-standards.json",
+            "hash": "sha256:5773f36d469bdd4bad913fccaba3eec6b53a0df16734e2321d8dad4ace55e583"
+          },
+          "authoritySettings": {
+            "name": "authority-settings",
+            "path": ".veritas/authority/default.authority-settings.json",
+            "hash": "sha256:4ee9172c197cab9e279c634adc72c6a27ba102989f5af394edff1a82f5065a38"
+          }
+        },
+        "evidenceCheckLabel": "npm run verify",
+        "command": "npm run verify",
+        "expectedResult": "all checks pass",
+        "observedResult": {
+          "expected": "all checks pass",
+          "status": "passed",
+          "summary": "All evidence checks passed."
+        },
+        "commandOutput": {
+          "command": "npm run verify",
+          "exitCode": 0,
+          "signal": null,
+          "stdout": "\n> @kontourai/bearing@0.2.0 verify\n> npm run typecheck && npm test && npm run check:pack\n\n\n> @kontourai/bearing@0.2.0 typecheck\n> tsc --noEmit\n\n\n> @kontourai/bearing@0.2.0 test\n> npm run build && node scripts/run-tests.mjs\n\n\n> @kontourai/bearing@0.2.0 build\n> rm -rf dist && tsc\n\n✔ Aider source descriptor names the official licensed structured artifact (0.667083ms)\n✔ imports explicitly mapped Aider runs as scoped external observations (7.907833ms)\n✔ exact run mappings are deterministic and never fuzzy-match model labels (4.893916ms)\n✔ supports real heterogeneous rows without inventing missing cost (0.844542ms)\n✔ unchanged run observations remain identical across authenticated re-fetches (1.957417ms)\n✔ rejects unauthenticated, aliased, duplicate, and mapped schema-drift input (4.116542ms)\n✔ catalog serialization validates digest and canonical shape (4.138333ms)\n✔ read API lists models and returns evidence-bearing model detail (3.752416ms)\n✔ snapshot reads are canonical and support conditional requests (0.86375ms)\n✔ API errors are versioned and deterministic (0.925584ms)\n✔ offline catalog files and the thin Node server use the same contract (26.959417ms)\n✔ Node adapter loads the packaged or explicitly selected approved source manifest (8.674917ms)\n✔ canonical object ordering is locale-independent code-unit order (0.624584ms)\n✔ normalization is deterministic and computes an observation id (2.628334ms)\n✔ catalog output and digest are stable across input ordering (1.386167ms)\n✔ revision, quantization, and execution scopes remain distinct (1.282458ms)\n✔ different overlapping fact values are retained as a conflict (0.442542ms)\n✔ partial execution scopes participate in deterministic conflict identity (0.323541ms)\n✔ different sample values are retained without a fact conflict (0.251542ms)\n✔ non-overlapping historical facts do not form a conflict (0.182208ms)\n✔ conflict sweeps match pairwise interval semantics across randomized scopes (85.622875ms)\n✔ dense same-scope facts compile without pairwise conflict enumeration (87.042042ms)\n✔ catalog asOf rejects observations and evidence from the future (0.365791ms)\n✔ duplicate normalized observations fail with a typed diagnostic (0.133667ms)\n✔ unsupported schema and incomplete evaluation scope fail explicitly (0.243917ms)\n✔ unknown fields and invalid timestamps are rejected (0.100875ms)\n✔ partial declarations match asserted runtime dimensions and explain wildcarded fields (4.471958ms)\n✔ successful applicability summarizes only contributing requirements and preferences (3.187125ms)\n✔ partial scope nulls are wildcards while empty tools remain known-empty (1.841333ms)\n✔ partial nested versions and optional components match only when asserted (1.593375ms)\n✔ exact evaluation scopes remain exact after partial matching is introduced (0.540083ms)\n✔ advisories expose partial-scope applicability without changing ranking (0.348959ms)\n✔ imports accepted, rejected, invalid, and unattributed Evals outcomes without conflating them (6.8255ms)\n✔ preserves reviewed identity, execution treatment, evaluator, and first-party provenance (3.392791ms)\n✔ partial timeout usage remains partial and cannot become a cost observation (2.983625ms)\n✔ re-import is deterministic and duplicate catalog input remains detectable (7.328125ms)\n✔ requires exact run and model mappings rather than fuzzy identity inference (1.487458ms)\n✔ rejects tampered, duplicate-key, over-deep, and inconsistent result records (11.239625ms)\n✔ maps missing exit evidence to invalid without laundering complete usage (1.979291ms)\n✔ records without runner execution evidence are invalid and diagnostic-only (0.850042ms)\n✔ dry-run records remain diagnostic-only even when the grader accepts the tree (0.801708ms)\n✔ rejects contradictory turn, engagement, usage-source, and provenance claims (2.368542ms)\n✔ rejects prototype keys, unsafe references, and physical-line amplification (3.196417ms)\n✔ discovers the same-origin hashed main bundle from the approved official entrypoint (4.292416ms)\n✔ derives a reviewable current release and exact artifact locators from official bundle bytes (14.11525ms)\n✔ fails closed on off-origin, ambiguous, unhashed, or mismatched bundle discovery (4.334792ms)\n✔ rejects a manifest mutated after review and digesting (0.187583ms)\n✔ independently rejects a custom-registry source that launders the LiveBench adapter identity (0.49875ms)\n✔ independently rejects custom-registry provenance laundering on the official LiveBench endpoint (0.413875ms)\n✔ does not mistake unrelated dates for releases and rejects schema drift (18.705666ms)\n✔ requires full exact snapshot envelopes (0.482958ms)\n✔ LiveBench source descriptor and release artifacts are explicit (2.158833ms)\n✔ imports exact mapped rows as per-task observations without a universal score (8.996542ms)\n✔ exact mapping and observation order are deterministic and never fuzzy (5.8035ms)\n✔ unchanged source bytes produce identical observations across authenticated re-fetches (3.487583ms)\n✔ unrelated artifact changes do not churn or double-weight stable task observations (4.299375ms)\n✔ requires matching full-envelope provenance for both official artifacts (0.47875ms)\n✔ supports BOM and quoted CSV while rejecting invalid UTF-8 (1.226708ms)\n✔ fails closed on table width, duplicate ids/tasks, and invalid scores (1.70825ms)\n✔ fails closed on category schema drift, duplicate membership, and table mismatch (5.398125ms)\n✔ enforces source, row, and column bounds before observation construction (53.416125ms)\n✔ caps aggregate row-by-task expansion before allocating observations (19.683208ms)\n✔ invalid reviewed mappings remain typed source failures (0.34775ms)\n✔ imports exact OpenRouter runtime facts and attributed benchmark samples (7.170459ms)\n✔ mapping and output are deterministic and exact rather than fuzzy (7.702792ms)\n✔ fails closed on unparsed policy, snapshot tampering, duplicate keys, and document drift (7.061917ms)\n✔ quarantines a row the parser cannot read rather than voiding the document (9.450417ms)\n✔ a document with no readable row is not a partial catalogue (0.399667ms)\n✔ a configured model whose row was quarantined is not reported as absent (0.446125ms)\n✔ independently rejects a custom-registry source that launders the OpenRouter adapter identity (0.555833ms)\n✔ independently rejects custom-registry provenance laundering on the official OpenRouter endpoint (0.380167ms)\n✔ accepts explicitly partial attributed indexes without inventing missing samples (1.1425ms)\n✔ rejects mapped-row observation amplification before constructing observations (40.374334ms)\n✔ rejects aggregate normalized-byte amplification below the observation-count ceiling (31.835ms)\n✔ hard requirements filter before request-relative preference ranking (6.507667ms)\n✔ ranking never adds a model absent from runtime inventory (3.266875ms)\n✔ count aggregation can enforce minimum sample volume (2.023833ms)\n✔ invalid evaluation measurements never contribute to ranking (1.533625ms)\n✔ criteria can separate first-party measurements from external priors (1.875625ms)\n✔ runtime tool ordering is normalized before exact profile matching (1.233666ms)\n✔ missing, stale, and conflicting requirement evidence exclude explicitly (1.630333ms)\n✔ rank results are deterministic across observation and inventory ordering (5.101708ms)\n✔ v2 advisories project scalar facts without changing v1 eligibility, scores, or ordering (2.711833ms)\n✔ v2 advisories distinguish missing, stale, conflicting, incomparable, and source-filtered evidence (2.396625ms)\n✔ v2 advisories remain available on excluded candidates and deterministic across input ordering (2.421208ms)\n✔ rank message schemas fail with typed diagnostics (3.118416ms)\n✔ empty runtime inventories retain rank request validation and deterministic results (2.437292ms)\n✔ rank candidate count boundaries are explicit (4.301375ms)\n✔ rank requirement count boundaries are explicit (2.7915ms)\n✔ rank preference count boundaries are explicit (2.665875ms)\n✔ rank requests reject duplicate criteria and excessive evaluation cells (4.713ms)\n✔ rank advisory projection and text bounds are explicit (2.869583ms)\n✔ rank requests reject inherited record structures (2.159583ms)\n✔ rank requests reject nested inherited and accessor values without invoking getters (2.639167ms)\n✔ rank requests reject inherited and accessor-backed arrays without invoking getters (2.012541ms)\n✔ POST /v1/rank exposes the same deterministic operation (6.965583ms)\n✔ rank HTTP responses and concurrent work are bounded (3.268166ms)\n✔ the Node adapter carries rank request bodies into the same handler (49.312916ms)\n✔ parses the reviewed packaged source manifest deterministically (15.335291ms)\n✔ rejects invalid direct revision rendering and parser resource amplification (2.683708ms)\n✔ rejects duplicate keys and source ids rather than silently changing trust policy (0.8625ms)\n✔ rejects unregistered adapters, unsafe URLs, hidden parse instructions, and impossible freshness (1.601166ms)\n✔ approves exact content-addressed source identities rather than compatible adapter names (0.392458ms)\nℹ tests 103\nℹ suites 0\nℹ pass 103\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 282.525375\n\n> @kontourai/bearing@0.2.0 check:pack\n> node scripts/check-package-contents.mjs\n\nBearing package contents and clean-consumer checks passed: 50 files; artifact /var/folders/zz/8n7yx67d751dfk33tz367rxm0000gn/T/bearing-pack-EeCZbf/artifacts/kontourai-bearing-0.2.0.tgz.\n",
+          "stderr": "",
+          "combined": "\n> @kontourai/bearing@0.2.0 verify\n> npm run typecheck && npm test && npm run check:pack\n\n\n> @kontourai/bearing@0.2.0 typecheck\n> tsc --noEmit\n\n\n> @kontourai/bearing@0.2.0 test\n> npm run build && node scripts/run-tests.mjs\n\n\n> @kontourai/bearing@0.2.0 build\n> rm -rf dist && tsc\n\n✔ Aider source descriptor names the official licensed structured artifact (0.667083ms)\n✔ imports explicitly mapped Aider runs as scoped external observations (7.907833ms)\n✔ exact run mappings are deterministic and never fuzzy-match model labels (4.893916ms)\n✔ supports real heterogeneous rows without inventing missing cost (0.844542ms)\n✔ unchanged run observations remain identical across authenticated re-fetches (1.957417ms)\n✔ rejects unauthenticated, aliased, duplicate, and mapped schema-drift input (4.116542ms)\n✔ catalog serialization validates digest and canonical shape (4.138333ms)\n✔ read API lists models and returns evidence-bearing model detail (3.752416ms)\n✔ snapshot reads are canonical and support conditional requests (0.86375ms)\n✔ API errors are versioned and deterministic (0.925584ms)\n✔ offline catalog files and the thin Node server use the same contract (26.959417ms)\n✔ Node adapter loads the packaged or explicitly selected approved source manifest (8.674917ms)\n✔ canonical object ordering is locale-independent code-unit order (0.624584ms)\n✔ normalization is deterministic and computes an observation id (2.628334ms)\n✔ catalog output and digest are stable across input ordering (1.386167ms)\n✔ revision, quantization, and execution scopes remain distinct (1.282458ms)\n✔ different overlapping fact values are retained as a conflict (0.442542ms)\n✔ partial execution scopes participate in deterministic conflict identity (0.323541ms)\n✔ different sample values are retained without a fact conflict (0.251542ms)\n✔ non-overlapping historical facts do not form a conflict (0.182208ms)\n✔ conflict sweeps match pairwise interval semantics across randomized scopes (85.622875ms)\n✔ dense same-scope facts compile without pairwise conflict enumeration (87.042042ms)\n✔ catalog asOf rejects observations and evidence from the future (0.365791ms)\n✔ duplicate normalized observations fail with a typed diagnostic (0.133667ms)\n✔ unsupported schema and incomplete evaluation scope fail explicitly (0.243917ms)\n✔ unknown fields and invalid timestamps are rejected (0.100875ms)\n✔ partial declarations match asserted runtime dimensions and explain wildcarded fields (4.471958ms)\n✔ successful applicability summarizes only contributing requirements and preferences (3.187125ms)\n✔ partial scope nulls are wildcards while empty tools remain known-empty (1.841333ms)\n✔ partial nested versions and optional components match only when asserted (1.593375ms)\n✔ exact evaluation scopes remain exact after partial matching is introduced (0.540083ms)\n✔ advisories expose partial-scope applicability without changing ranking (0.348959ms)\n✔ imports accepted, rejected, invalid, and unattributed Evals outcomes without conflating them (6.8255ms)\n✔ preserves reviewed identity, execution treatment, evaluator, and first-party provenance (3.392791ms)\n✔ partial timeout usage remains partial and cannot become a cost observation (2.983625ms)\n✔ re-import is deterministic and duplicate catalog input remains detectable (7.328125ms)\n✔ requires exact run and model mappings rather than fuzzy identity inference (1.487458ms)\n✔ rejects tampered, duplicate-key, over-deep, and inconsistent result records (11.239625ms)\n✔ maps missing exit evidence to invalid without laundering complete usage (1.979291ms)\n✔ records without runner execution evidence are invalid and diagnostic-only (0.850042ms)\n✔ dry-run records remain diagnostic-only even when the grader accepts the tree (0.801708ms)\n✔ rejects contradictory turn, engagement, usage-source, and provenance claims (2.368542ms)\n✔ rejects prototype keys, unsafe references, and physical-line amplification (3.196417ms)\n✔ discovers the same-origin hashed main bundle from the approved official entrypoint (4.292416ms)\n✔ derives a reviewable current release and exact artifact locators from official bundle bytes (14.11525ms)\n✔ fails closed on off-origin, ambiguous, unhashed, or mismatched bundle discovery (4.334792ms)\n✔ rejects a manifest mutated after review and digesting (0.187583ms)\n✔ independently rejects a custom-registry source that launders the LiveBench adapter identity (0.49875ms)\n✔ independently rejects custom-registry provenance laundering on the official LiveBench endpoint (0.413875ms)\n✔ does not mistake unrelated dates for releases and rejects schema drift (18.705666ms)\n✔ requires full exact snapshot envelopes (0.482958ms)\n✔ LiveBench source descriptor and release artifacts are explicit (2.158833ms)\n✔ imports exact mapped rows as per-task observations without a universal score (8.996542ms)\n✔ exact mapping and observation order are deterministic and never fuzzy (5.8035ms)\n✔ unchanged source bytes produce identical observations across authenticated re-fetches (3.487583ms)\n✔ unrelated artifact changes do not churn or double-weight stable task observations (4.299375ms)\n✔ requires matching full-envelope provenance for both official artifacts (0.47875ms)\n✔ supports BOM and quoted CSV while rejecting invalid UTF-8 (1.226708ms)\n✔ fails closed on table width, duplicate ids/tasks, and invalid scores (1.70825ms)\n✔ fails closed on category schema drift, duplicate membership, and table mismatch (5.398125ms)\n✔ enforces source, row, and column bounds before observation construction (53.416125ms)\n✔ caps aggregate row-by-task expansion before allocating observations (19.683208ms)\n✔ invalid reviewed mappings remain typed source failures (0.34775ms)\n✔ imports exact OpenRouter runtime facts and attributed benchmark samples (7.170459ms)\n✔ mapping and output are deterministic and exact rather than fuzzy (7.702792ms)\n✔ fails closed on unparsed policy, snapshot tampering, duplicate keys, and document drift (7.061917ms)\n✔ quarantines a row the parser cannot read rather than voiding the document (9.450417ms)\n✔ a document with no readable row is not a partial catalogue (0.399667ms)\n✔ a configured model whose row was quarantined is not reported as absent (0.446125ms)\n✔ independently rejects a custom-registry source that launders the OpenRouter adapter identity (0.555833ms)\n✔ independently rejects custom-registry provenance laundering on the official OpenRouter endpoint (0.380167ms)\n✔ accepts explicitly partial attributed indexes without inventing missing samples (1.1425ms)\n✔ rejects mapped-row observation amplification before constructing observations (40.374334ms)\n✔ rejects aggregate normalized-byte amplification below the observation-count ceiling (31.835ms)\n✔ hard requirements filter before request-relative preference ranking (6.507667ms)\n✔ ranking never adds a model absent from runtime inventory (3.266875ms)\n✔ count aggregation can enforce minimum sample volume (2.023833ms)\n✔ invalid evaluation measurements never contribute to ranking (1.533625ms)\n✔ criteria can separate first-party measurements from external priors (1.875625ms)\n✔ runtime tool ordering is normalized before exact profile matching (1.233666ms)\n✔ missing, stale, and conflicting requirement evidence exclude explicitly (1.630333ms)\n✔ rank results are deterministic across observation and inventory ordering (5.101708ms)\n✔ v2 advisories project scalar facts without changing v1 eligibility, scores, or ordering (2.711833ms)\n✔ v2 advisories distinguish missing, stale, conflicting, incomparable, and source-filtered evidence (2.396625ms)\n✔ v2 advisories remain available on excluded candidates and deterministic across input ordering (2.421208ms)\n✔ rank message schemas fail with typed diagnostics (3.118416ms)\n✔ empty runtime inventories retain rank request validation and deterministic results (2.437292ms)\n✔ rank candidate count boundaries are explicit (4.301375ms)\n✔ rank requirement count boundaries are explicit (2.7915ms)\n✔ rank preference count boundaries are explicit (2.665875ms)\n✔ rank requests reject duplicate criteria and excessive evaluation cells (4.713ms)\n✔ rank advisory projection and text bounds are explicit (2.869583ms)\n✔ rank requests reject inherited record structures (2.159583ms)\n✔ rank requests reject nested inherited and accessor values without invoking getters (2.639167ms)\n✔ rank requests reject inherited and accessor-backed arrays without invoking getters (2.012541ms)\n✔ POST /v1/rank exposes the same deterministic operation (6.965583ms)\n✔ rank HTTP responses and concurrent work are bounded (3.268166ms)\n✔ the Node adapter carries rank request bodies into the same handler (49.312916ms)\n✔ parses the reviewed packaged source manifest deterministically (15.335291ms)\n✔ rejects invalid direct revision rendering and parser resource amplification (2.683708ms)\n✔ rejects duplicate keys and source ids rather than silently changing trust policy (0.8625ms)\n✔ rejects unregistered adapters, unsafe URLs, hidden parse instructions, and impossible freshness (1.601166ms)\n✔ approves exact content-addressed source identities rather than compatible adapter names (0.392458ms)\nℹ tests 103\nℹ suites 0\nℹ pass 103\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 282.525375\n\n> @kontourai/bearing@0.2.0 check:pack\n> node scripts/check-package-contents.mjs\n\nBearing package contents and clean-consumer checks passed: 50 files; artifact /var/folders/zz/8n7yx67d751dfk33tz367rxm0000gn/T/bearing-pack-EeCZbf/artifacts/kontourai-bearing-0.2.0.tgz.\n"
+        },
+        "evidenceCheckResolutionSource": "default",
+        "baselineCiFastPassed": true,
+        "evidenceCheckId": "required-evidence-check",
+        "evidenceCheckRunner": "bash",
+        "surfaceClaimIds": []
+      }
+    },
+    {
+      "id": "veritas-1788532019252.policy.policy-changes-require-attestation.evidence",
+      "claimId": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+      "evidenceType": "policy_rule",
+      "method": "validation",
+      "sourceRef": "veritas-1788532019252",
+      "sourceLocator": "policy_results.policy-changes-require-attestation",
+      "excerptOrSummary": "Current protected standards hashes do not match the active attestation.",
+      "observedAt": "2026-09-04T14:26:59.252Z",
+      "collectedBy": "veritas",
+      "integrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passing": false,
+      "blocking": true,
+      "metadata": {
+        "sourceKind": "working-tree",
+        "sourceScope": [
+          "staged",
+          "unstaged",
+          "untracked"
+        ],
+        "files": [],
+        "unresolvedFiles": [],
+        "integrity": {
+          "sourceRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sourceKind": "working-tree",
+          "sourceScope": [
+            "staged",
+            "unstaged",
+            "untracked"
+          ],
+          "fileRefs": [],
+          "configRefs": {
+            "repoMap": {
+              "name": "bearing",
+              "path": ".veritas/repo-map.json",
+              "hash": "sha256:f6316c6886602960e677ba81e13f929e5ca9ac597c5087fa002913f5d5721b5e"
+            },
+            "repoStandards": {
+              "name": "bearing-default",
+              "path": ".veritas/repo-standards/default.repo-standards.json",
+              "hash": "sha256:5773f36d469bdd4bad913fccaba3eec6b53a0df16734e2321d8dad4ace55e583"
+            },
+            "authoritySettings": {
+              "name": "authority-settings",
+              "path": ".veritas/authority/default.authority-settings.json",
+              "hash": "sha256:4ee9172c197cab9e279c634adc72c6a27ba102989f5af394edff1a82f5065a38"
+            }
+          }
+        },
+        "fileIntegrity": [],
+        "configIntegrity": {
+          "repoMap": {
+            "name": "bearing",
+            "path": ".veritas/repo-map.json",
+            "hash": "sha256:f6316c6886602960e677ba81e13f929e5ca9ac597c5087fa002913f5d5721b5e"
+          },
+          "repoStandards": {
+            "name": "bearing-default",
+            "path": ".veritas/repo-standards/default.repo-standards.json",
+            "hash": "sha256:5773f36d469bdd4bad913fccaba3eec6b53a0df16734e2321d8dad4ace55e583"
+          },
+          "authoritySettings": {
+            "name": "authority-settings",
+            "path": ".veritas/authority/default.authority-settings.json",
+            "hash": "sha256:4ee9172c197cab9e279c634adc72c6a27ba102989f5af394edff1a82f5065a38"
+          }
+        },
+        "enforcementLevel": "Require",
+        "classification": "hard-invariant",
+        "implemented": true,
+        "passed": false,
+        "transparencyGapHints": [
+          {
+            "type": "policy_violation",
+            "severity": "high",
+            "message": "Protected standards changes require a fresh authority-backed attestation.",
+            "blocking": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "veritas-1788532019252.policy.required-veritas-artifacts.evidence",
+      "claimId": "veritas.policy.bearing.bearing-default.required-veritas-artifacts",
+      "evidenceType": "policy_rule",
+      "method": "validation",
+      "sourceRef": "veritas-1788532019252",
+      "sourceLocator": "policy_results.required-veritas-artifacts",
+      "excerptOrSummary": "All required repository artifacts are present.",
+      "observedAt": "2026-09-04T14:26:59.252Z",
+      "collectedBy": "veritas",
+      "integrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passing": true,
+      "blocking": true,
+      "metadata": {
+        "sourceKind": "working-tree",
+        "sourceScope": [
+          "staged",
+          "unstaged",
+          "untracked"
+        ],
+        "files": [],
+        "unresolvedFiles": [],
+        "integrity": {
+          "sourceRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sourceKind": "working-tree",
+          "sourceScope": [
+            "staged",
+            "unstaged",
+            "untracked"
+          ],
+          "fileRefs": [],
+          "configRefs": {
+            "repoMap": {
+              "name": "bearing",
+              "path": ".veritas/repo-map.json",
+              "hash": "sha256:f6316c6886602960e677ba81e13f929e5ca9ac597c5087fa002913f5d5721b5e"
+            },
+            "repoStandards": {
+              "name": "bearing-default",
+              "path": ".veritas/repo-standards/default.repo-standards.json",
+              "hash": "sha256:5773f36d469bdd4bad913fccaba3eec6b53a0df16734e2321d8dad4ace55e583"
+            },
+            "authoritySettings": {
+              "name": "authority-settings",
+              "path": ".veritas/authority/default.authority-settings.json",
+              "hash": "sha256:4ee9172c197cab9e279c634adc72c6a27ba102989f5af394edff1a82f5065a38"
+            }
+          }
+        },
+        "fileIntegrity": [],
+        "configIntegrity": {
+          "repoMap": {
+            "name": "bearing",
+            "path": ".veritas/repo-map.json",
+            "hash": "sha256:f6316c6886602960e677ba81e13f929e5ca9ac597c5087fa002913f5d5721b5e"
+          },
+          "repoStandards": {
+            "name": "bearing-default",
+            "path": ".veritas/repo-standards/default.repo-standards.json",
+            "hash": "sha256:5773f36d469bdd4bad913fccaba3eec6b53a0df16734e2321d8dad4ace55e583"
+          },
+          "authoritySettings": {
+            "name": "authority-settings",
+            "path": ".veritas/authority/default.authority-settings.json",
+            "hash": "sha256:4ee9172c197cab9e279c634adc72c6a27ba102989f5af394edff1a82f5065a38"
+          }
+        },
+        "enforcementLevel": "Require",
+        "classification": "hard-invariant",
+        "implemented": true,
+        "passed": true,
+        "transparencyGapHints": []
+      }
+    },
+    {
+      "id": "veritas-1788532019252.policy.ai-instruction-files-synced.evidence",
+      "claimId": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+      "evidenceType": "policy_rule",
+      "method": "validation",
+      "sourceRef": "veritas-1788532019252",
+      "sourceLocator": "policy_results.ai-instruction-files-synced",
+      "excerptOrSummary": "Some AI instruction files are missing the canonical Veritas governance block.",
+      "observedAt": "2026-09-04T14:26:59.252Z",
+      "collectedBy": "veritas",
+      "integrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passing": false,
+      "blocking": false,
+      "metadata": {
+        "sourceKind": "working-tree",
+        "sourceScope": [
+          "staged",
+          "unstaged",
+          "untracked"
+        ],
+        "files": [],
+        "unresolvedFiles": [],
+        "integrity": {
+          "sourceRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sourceKind": "working-tree",
+          "sourceScope": [
+            "staged",
+            "unstaged",
+            "untracked"
+          ],
+          "fileRefs": [],
+          "configRefs": {
+            "repoMap": {
+              "name": "bearing",
+              "path": ".veritas/repo-map.json",
+              "hash": "sha256:f6316c6886602960e677ba81e13f929e5ca9ac597c5087fa002913f5d5721b5e"
+            },
+            "repoStandards": {
+              "name": "bearing-default",
+              "path": ".veritas/repo-standards/default.repo-standards.json",
+              "hash": "sha256:5773f36d469bdd4bad913fccaba3eec6b53a0df16734e2321d8dad4ace55e583"
+            },
+            "authoritySettings": {
+              "name": "authority-settings",
+              "path": ".veritas/authority/default.authority-settings.json",
+              "hash": "sha256:4ee9172c197cab9e279c634adc72c6a27ba102989f5af394edff1a82f5065a38"
+            }
+          }
+        },
+        "fileIntegrity": [],
+        "configIntegrity": {
+          "repoMap": {
+            "name": "bearing",
+            "path": ".veritas/repo-map.json",
+            "hash": "sha256:f6316c6886602960e677ba81e13f929e5ca9ac597c5087fa002913f5d5721b5e"
+          },
+          "repoStandards": {
+            "name": "bearing-default",
+            "path": ".veritas/repo-standards/default.repo-standards.json",
+            "hash": "sha256:5773f36d469bdd4bad913fccaba3eec6b53a0df16734e2321d8dad4ace55e583"
+          },
+          "authoritySettings": {
+            "name": "authority-settings",
+            "path": ".veritas/authority/default.authority-settings.json",
+            "hash": "sha256:4ee9172c197cab9e279c634adc72c6a27ba102989f5af394edff1a82f5065a38"
+          }
+        },
+        "enforcementLevel": "Guide",
+        "classification": "hard-invariant",
+        "implemented": true,
+        "passed": false,
+        "transparencyGapHints": [
+          {
+            "type": "policy_violation",
+            "severity": "high",
+            "message": "All required AI tool instruction files must contain the Veritas guidance block.",
+            "blocking": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "veritas-1788532019252.policy.prefer-veritas-routed-delivery.evidence",
+      "claimId": "veritas.policy.bearing.bearing-default.prefer-veritas-routed-delivery",
+      "evidenceType": "policy_rule",
+      "method": "validation",
+      "sourceRef": "veritas-1788532019252",
+      "sourceLocator": "policy_results.prefer-veritas-routed-delivery",
+      "excerptOrSummary": "All required repository artifacts are present.",
+      "observedAt": "2026-09-04T14:26:59.252Z",
+      "collectedBy": "veritas",
+      "integrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passing": true,
+      "blocking": false,
+      "metadata": {
+        "sourceKind": "working-tree",
+        "sourceScope": [
+          "staged",
+          "unstaged",
+          "untracked"
+        ],
+        "files": [],
+        "unresolvedFiles": [],
+        "integrity": {
+          "sourceRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sourceKind": "working-tree",
+          "sourceScope": [
+            "staged",
+            "unstaged",
+            "untracked"
+          ],
+          "fileRefs": [],
+          "configRefs": {
+            "repoMap": {
+              "name": "bearing",
+              "path": ".veritas/repo-map.json",
+              "hash": "sha256:f6316c6886602960e677ba81e13f929e5ca9ac597c5087fa002913f5d5721b5e"
+            },
+            "repoStandards": {
+              "name": "bearing-default",
+              "path": ".veritas/repo-standards/default.repo-standards.json",
+              "hash": "sha256:5773f36d469bdd4bad913fccaba3eec6b53a0df16734e2321d8dad4ace55e583"
+            },
+            "authoritySettings": {
+              "name": "authority-settings",
+              "path": ".veritas/authority/default.authority-settings.json",
+              "hash": "sha256:4ee9172c197cab9e279c634adc72c6a27ba102989f5af394edff1a82f5065a38"
+            }
+          }
+        },
+        "fileIntegrity": [],
+        "configIntegrity": {
+          "repoMap": {
+            "name": "bearing",
+            "path": ".veritas/repo-map.json",
+            "hash": "sha256:f6316c6886602960e677ba81e13f929e5ca9ac597c5087fa002913f5d5721b5e"
+          },
+          "repoStandards": {
+            "name": "bearing-default",
+            "path": ".veritas/repo-standards/default.repo-standards.json",
+            "hash": "sha256:5773f36d469bdd4bad913fccaba3eec6b53a0df16734e2321d8dad4ace55e583"
+          },
+          "authoritySettings": {
+            "name": "authority-settings",
+            "path": ".veritas/authority/default.authority-settings.json",
+            "hash": "sha256:4ee9172c197cab9e279c634adc72c6a27ba102989f5af394edff1a82f5065a38"
+          }
+        },
+        "enforcementLevel": "Observe",
+        "classification": "promotable-policy",
+        "implemented": true,
+        "passed": true,
+        "transparencyGapHints": []
+      }
+    },
+    {
+      "id": "veritas-1788532019252.readiness-verdict.evidence",
+      "claimId": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "evidenceType": "policy_rule",
+      "method": "validation",
+      "sourceRef": "veritas-1788532019252",
+      "sourceLocator": "readiness",
+      "excerptOrSummary": "Veritas readiness verdict is not ready because blocking requirements or evidence failed.",
+      "observedAt": "2026-09-04T14:26:59.252Z",
+      "collectedBy": "veritas",
+      "integrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passing": false,
+      "blocking": true,
+      "metadata": {
+        "sourceKind": "working-tree",
+        "sourceScope": [
+          "staged",
+          "unstaged",
+          "untracked"
+        ],
+        "files": [],
+        "unresolvedFiles": [],
+        "integrity": {
+          "sourceRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sourceKind": "working-tree",
+          "sourceScope": [
+            "staged",
+            "unstaged",
+            "untracked"
+          ],
+          "fileRefs": [],
+          "configRefs": {
+            "repoMap": {
+              "name": "bearing",
+              "path": ".veritas/repo-map.json",
+              "hash": "sha256:f6316c6886602960e677ba81e13f929e5ca9ac597c5087fa002913f5d5721b5e"
+            },
+            "repoStandards": {
+              "name": "bearing-default",
+              "path": ".veritas/repo-standards/default.repo-standards.json",
+              "hash": "sha256:5773f36d469bdd4bad913fccaba3eec6b53a0df16734e2321d8dad4ace55e583"
+            },
+            "authoritySettings": {
+              "name": "authority-settings",
+              "path": ".veritas/authority/default.authority-settings.json",
+              "hash": "sha256:4ee9172c197cab9e279c634adc72c6a27ba102989f5af394edff1a82f5065a38"
+            }
+          }
+        },
+        "fileIntegrity": [],
+        "configIntegrity": {
+          "repoMap": {
+            "name": "bearing",
+            "path": ".veritas/repo-map.json",
+            "hash": "sha256:f6316c6886602960e677ba81e13f929e5ca9ac597c5087fa002913f5d5721b5e"
+          },
+          "repoStandards": {
+            "name": "bearing-default",
+            "path": ".veritas/repo-standards/default.repo-standards.json",
+            "hash": "sha256:5773f36d469bdd4bad913fccaba3eec6b53a0df16734e2321d8dad4ace55e583"
+          },
+          "authoritySettings": {
+            "name": "authority-settings",
+            "path": ".veritas/authority/default.authority-settings.json",
+            "hash": "sha256:4ee9172c197cab9e279c634adc72c6a27ba102989f5af394edff1a82f5065a38"
+          }
+        },
+        "readinessVerdict": "not-ready",
+        "readinessStatus": "rejected",
+        "promotionAllowed": true,
+        "uncoveredPathResult": "clear",
+        "policyResults": {
+          "total": 4,
+          "failedBlocking": [
+            "policy-changes-require-attestation"
+          ],
+          "warnings": [
+            "ai-instruction-files-synced"
+          ]
+        },
+        "evidenceChecks": {
+          "selected": [
+            "required-evidence-check"
+          ],
+          "failed": [],
+          "baselineCiFastPassed": true
+        },
+        "transparencyGapHints": [
+          {
+            "type": "policy_violation",
+            "severity": "high",
+            "message": "Blocking readiness requirement failed: policy-changes-require-attestation.",
+            "blocking": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "veritas-1788532019252.governance.bearing.governance.attestation.evidence",
+      "claimId": "bearing.governance",
+      "evidenceType": "attestation",
+      "method": "attestation",
+      "sourceRef": "veritas-1788532019252",
+      "sourceLocator": ".veritas/attestations",
+      "excerptOrSummary": "Authority-backed attestation currency is disputed for Protected Standards state drifted.",
+      "observedAt": "2026-09-04T14:26:59.252Z",
+      "collectedBy": "veritas",
+      "integrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passing": false,
+      "blocking": true,
+      "metadata": {
+        "sourceKind": "working-tree",
+        "sourceScope": [
+          "staged",
+          "unstaged",
+          "untracked"
+        ],
+        "files": [],
+        "unresolvedFiles": [],
+        "integrity": {
+          "sourceRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sourceKind": "working-tree",
+          "sourceScope": [
+            "staged",
+            "unstaged",
+            "untracked"
+          ],
+          "fileRefs": [],
+          "configRefs": {
+            "repoMap": {
+              "name": "bearing",
+              "path": ".veritas/repo-map.json",
+              "hash": "sha256:f6316c6886602960e677ba81e13f929e5ca9ac597c5087fa002913f5d5721b5e"
+            },
+            "repoStandards": {
+              "name": "bearing-default",
+              "path": ".veritas/repo-standards/default.repo-standards.json",
+              "hash": "sha256:5773f36d469bdd4bad913fccaba3eec6b53a0df16734e2321d8dad4ace55e583"
+            },
+            "authoritySettings": {
+              "name": "authority-settings",
+              "path": ".veritas/authority/default.authority-settings.json",
+              "hash": "sha256:4ee9172c197cab9e279c634adc72c6a27ba102989f5af394edff1a82f5065a38"
+            }
+          }
+        },
+        "fileIntegrity": [],
+        "configIntegrity": {
+          "repoMap": {
+            "name": "bearing",
+            "path": ".veritas/repo-map.json",
+            "hash": "sha256:f6316c6886602960e677ba81e13f929e5ca9ac597c5087fa002913f5d5721b5e"
+          },
+          "repoStandards": {
+            "name": "bearing-default",
+            "path": ".veritas/repo-standards/default.repo-standards.json",
+            "hash": "sha256:5773f36d469bdd4bad913fccaba3eec6b53a0df16734e2321d8dad4ace55e583"
+          },
+          "authoritySettings": {
+            "name": "authority-settings",
+            "path": ".veritas/authority/default.authority-settings.json",
+            "hash": "sha256:4ee9172c197cab9e279c634adc72c6a27ba102989f5af394edff1a82f5065a38"
+          }
+        }
+      }
+    },
+    {
+      "id": "veritas-1788532019252.governance.bearing.governance.audit.evidence",
+      "claimId": "bearing.governance",
+      "evidenceType": "policy_rule",
+      "method": "auditability",
+      "sourceRef": "veritas-1788532019252",
+      "sourceLocator": "governance_state",
+      "excerptOrSummary": "Veritas inspected Protected Standards state drifted for governance artifact integrity.",
+      "observedAt": "2026-09-04T14:26:59.252Z",
+      "collectedBy": "veritas",
+      "integrityRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passing": false,
+      "blocking": true,
+      "metadata": {
+        "sourceKind": "working-tree",
+        "sourceScope": [
+          "staged",
+          "unstaged",
+          "untracked"
+        ],
+        "files": [],
+        "unresolvedFiles": [],
+        "integrity": {
+          "sourceRef": "working-tree:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sourceKind": "working-tree",
+          "sourceScope": [
+            "staged",
+            "unstaged",
+            "untracked"
+          ],
+          "fileRefs": [],
+          "configRefs": {
+            "repoMap": {
+              "name": "bearing",
+              "path": ".veritas/repo-map.json",
+              "hash": "sha256:f6316c6886602960e677ba81e13f929e5ca9ac597c5087fa002913f5d5721b5e"
+            },
+            "repoStandards": {
+              "name": "bearing-default",
+              "path": ".veritas/repo-standards/default.repo-standards.json",
+              "hash": "sha256:5773f36d469bdd4bad913fccaba3eec6b53a0df16734e2321d8dad4ace55e583"
+            },
+            "authoritySettings": {
+              "name": "authority-settings",
+              "path": ".veritas/authority/default.authority-settings.json",
+              "hash": "sha256:4ee9172c197cab9e279c634adc72c6a27ba102989f5af394edff1a82f5065a38"
+            }
+          }
+        },
+        "fileIntegrity": [],
+        "configIntegrity": {
+          "repoMap": {
+            "name": "bearing",
+            "path": ".veritas/repo-map.json",
+            "hash": "sha256:f6316c6886602960e677ba81e13f929e5ca9ac597c5087fa002913f5d5721b5e"
+          },
+          "repoStandards": {
+            "name": "bearing-default",
+            "path": ".veritas/repo-standards/default.repo-standards.json",
+            "hash": "sha256:5773f36d469bdd4bad913fccaba3eec6b53a0df16734e2321d8dad4ace55e583"
+          },
+          "authoritySettings": {
+            "name": "authority-settings",
+            "path": ".veritas/authority/default.authority-settings.json",
+            "hash": "sha256:4ee9172c197cab9e279c634adc72c6a27ba102989f5af394edff1a82f5065a38"
+          }
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "id": "veritas-1788532019252.evidence-check.required-evidence-check.verified",
+      "claimId": "bearing.evidence-check.npm-run-verify",
+      "status": "verified",
+      "actor": "veritas",
+      "method": "npm run verify",
+      "evidenceIds": [
+        "veritas-1788532019252.evidence-check.required-evidence-check.evidence"
+      ],
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "verifiedAt": "2026-09-04T14:26:59.252Z"
+    },
+    {
+      "id": "veritas-1788532019252.policy.policy-changes-require-attestation.rejected",
+      "claimId": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+      "status": "rejected",
+      "actor": "veritas",
+      "method": "requirements evaluation",
+      "evidenceIds": [
+        "veritas-1788532019252.policy.policy-changes-require-attestation.evidence"
+      ],
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "notes": "Protected standards changes require a fresh authority-backed attestation."
+    },
+    {
+      "id": "veritas-1788532019252.policy.required-veritas-artifacts.verified",
+      "claimId": "veritas.policy.bearing.bearing-default.required-veritas-artifacts",
+      "status": "verified",
+      "actor": "veritas",
+      "method": "requirements evaluation",
+      "evidenceIds": [
+        "veritas-1788532019252.policy.required-veritas-artifacts.evidence"
+      ],
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "verifiedAt": "2026-09-04T14:26:59.252Z",
+      "notes": "The bootstrap Veritas artifacts must stay present so agents and reviewers share the same baseline."
+    },
+    {
+      "id": "veritas-1788532019252.policy.ai-instruction-files-synced.disputed",
+      "claimId": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+      "status": "disputed",
+      "actor": "veritas",
+      "method": "requirements evaluation",
+      "evidenceIds": [
+        "veritas-1788532019252.policy.ai-instruction-files-synced.evidence"
+      ],
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "notes": "All required AI tool instruction files must contain the Veritas guidance block."
+    },
+    {
+      "id": "veritas-1788532019252.policy.prefer-veritas-routed-delivery.verified",
+      "claimId": "veritas.policy.bearing.bearing-default.prefer-veritas-routed-delivery",
+      "status": "verified",
+      "actor": "veritas",
+      "method": "requirements evaluation",
+      "evidenceIds": [
+        "veritas-1788532019252.policy.prefer-veritas-routed-delivery.evidence"
+      ],
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "verifiedAt": "2026-09-04T14:26:59.252Z",
+      "notes": "Prefer running new AI-guided changes through Veritas readiness checks and the documented evidenceCheck before review."
+    },
+    {
+      "id": "veritas-1788532019252.readiness-verdict.rejected",
+      "claimId": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "rejected",
+      "actor": "veritas",
+      "method": "readiness verdict",
+      "evidenceIds": [
+        "veritas-1788532019252.readiness-verdict.evidence"
+      ],
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "notes": "Veritas readiness verdict is not ready because blocking requirements or evidence failed."
+    },
+    {
+      "id": "veritas-1788532019252.governance.bearing.governance.disputed",
+      "claimId": "bearing.governance",
+      "status": "disputed",
+      "actor": "veritas",
+      "method": "authority attestation status",
+      "evidenceIds": [
+        "veritas-1788532019252.governance.bearing.governance.attestation.evidence",
+        "veritas-1788532019252.governance.bearing.governance.audit.evidence"
+      ],
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "notes": "Authority-backed attestation currency is disputed."
+    }
+  ],
+  "transparencyGaps": [
+    {
+      "id": "bearing.surface.governance.guidance.gap.provenance-gap",
+      "claimId": "bearing.surface.governance.guidance",
+      "type": "provenance_gap",
+      "severity": "medium",
+      "message": "Missing required evidence: policy_rule.",
+      "policyId": "veritas.surface",
+      "createdAt": "2026-09-04T14:26:59.252Z"
+    },
+    {
+      "id": "bearing.surface.governance.guidance.gap.policy-violation",
+      "claimId": "bearing.surface.governance.guidance",
+      "type": "policy_violation",
+      "severity": "medium",
+      "message": "Missing required verification method: auditability.",
+      "policyId": "veritas.surface",
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": []
+    },
+    {
+      "id": "bearing.surface.governance.root-manifests.gap.provenance-gap",
+      "claimId": "bearing.surface.governance.root-manifests",
+      "type": "provenance_gap",
+      "severity": "medium",
+      "message": "Missing required evidence: policy_rule.",
+      "policyId": "veritas.surface",
+      "createdAt": "2026-09-04T14:26:59.252Z"
+    },
+    {
+      "id": "bearing.surface.governance.root-manifests.gap.policy-violation",
+      "claimId": "bearing.surface.governance.root-manifests",
+      "type": "policy_violation",
+      "severity": "medium",
+      "message": "Missing required verification method: auditability.",
+      "policyId": "veritas.surface",
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": []
+    },
+    {
+      "id": "bearing.surface.delivery.workflows.gap.provenance-gap",
+      "claimId": "bearing.surface.delivery.workflows",
+      "type": "provenance_gap",
+      "severity": "medium",
+      "message": "Missing required evidence: policy_rule.",
+      "policyId": "veritas.surface",
+      "createdAt": "2026-09-04T14:26:59.252Z"
+    },
+    {
+      "id": "bearing.surface.delivery.workflows.gap.policy-violation",
+      "claimId": "bearing.surface.delivery.workflows",
+      "type": "policy_violation",
+      "severity": "medium",
+      "message": "Missing required verification method: auditability.",
+      "policyId": "veritas.surface",
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": []
+    },
+    {
+      "id": "bearing.surface.tooling.scripts.gap.provenance-gap",
+      "claimId": "bearing.surface.tooling.scripts",
+      "type": "provenance_gap",
+      "severity": "medium",
+      "message": "Missing required evidence: policy_rule.",
+      "policyId": "veritas.surface",
+      "createdAt": "2026-09-04T14:26:59.252Z"
+    },
+    {
+      "id": "bearing.surface.tooling.scripts.gap.policy-violation",
+      "claimId": "bearing.surface.tooling.scripts",
+      "type": "policy_violation",
+      "severity": "medium",
+      "message": "Missing required verification method: auditability.",
+      "policyId": "veritas.surface",
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": []
+    },
+    {
+      "id": "bearing.surface.app.src.gap.provenance-gap",
+      "claimId": "bearing.surface.app.src",
+      "type": "provenance_gap",
+      "severity": "medium",
+      "message": "Missing required evidence: policy_rule.",
+      "policyId": "veritas.surface",
+      "createdAt": "2026-09-04T14:26:59.252Z"
+    },
+    {
+      "id": "bearing.surface.app.src.gap.policy-violation",
+      "claimId": "bearing.surface.app.src",
+      "type": "policy_violation",
+      "severity": "medium",
+      "message": "Missing required verification method: auditability.",
+      "policyId": "veritas.surface",
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": []
+    },
+    {
+      "id": "bearing.surface.docs.docs.gap.provenance-gap",
+      "claimId": "bearing.surface.docs.docs",
+      "type": "provenance_gap",
+      "severity": "medium",
+      "message": "Missing required evidence: policy_rule.",
+      "policyId": "veritas.surface",
+      "createdAt": "2026-09-04T14:26:59.252Z"
+    },
+    {
+      "id": "bearing.surface.docs.docs.gap.policy-violation",
+      "claimId": "bearing.surface.docs.docs",
+      "type": "policy_violation",
+      "severity": "medium",
+      "message": "Missing required verification method: auditability.",
+      "policyId": "veritas.surface",
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": []
+    },
+    {
+      "id": "bearing.surface.verification.tests.gap.provenance-gap",
+      "claimId": "bearing.surface.verification.tests",
+      "type": "provenance_gap",
+      "severity": "medium",
+      "message": "Missing required evidence: policy_rule.",
+      "policyId": "veritas.surface",
+      "createdAt": "2026-09-04T14:26:59.252Z"
+    },
+    {
+      "id": "bearing.surface.verification.tests.gap.policy-violation",
+      "claimId": "bearing.surface.verification.tests",
+      "type": "policy_violation",
+      "severity": "medium",
+      "message": "Missing required verification method: auditability.",
+      "policyId": "veritas.surface",
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": []
+    },
+    {
+      "id": "bearing.governance.gap.evidence-veritas-1788532019252.governance.bearing.governance.attestation.evidence",
+      "claimId": "bearing.governance",
+      "type": "policy_violation",
+      "severity": "high",
+      "message": "Evidence explicitly reported a non-passing result.",
+      "policyId": "veritas.governance-artifact",
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [
+        "veritas-1788532019252.governance.bearing.governance.attestation.evidence"
+      ]
+    },
+    {
+      "id": "bearing.governance.gap.evidence-veritas-1788532019252.governance.bearing.governance.audit.evidence",
+      "claimId": "bearing.governance",
+      "type": "policy_violation",
+      "severity": "high",
+      "message": "Evidence explicitly reported a non-passing result.",
+      "policyId": "veritas.governance-artifact",
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [
+        "veritas-1788532019252.governance.bearing.governance.audit.evidence"
+      ]
+    },
+    {
+      "id": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation.gap.evidence-veritas-1788532019252.policy.policy-changes-require-attestation.evidence",
+      "claimId": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+      "type": "policy_violation",
+      "severity": "high",
+      "message": "Evidence explicitly reported a non-passing result.",
+      "policyId": "veritas.policy-result",
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [
+        "veritas-1788532019252.policy.policy-changes-require-attestation.evidence"
+      ]
+    },
+    {
+      "id": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation.gap.hint-1",
+      "claimId": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+      "type": "policy_violation",
+      "severity": "high",
+      "message": "Protected standards changes require a fresh authority-backed attestation.",
+      "policyId": "veritas.policy-result",
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [
+        "veritas-1788532019252.policy.policy-changes-require-attestation.evidence"
+      ]
+    },
+    {
+      "id": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced.gap.evidence-veritas-1788532019252.policy.ai-instruction-files-synced.evidence",
+      "claimId": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+      "type": "policy_violation",
+      "severity": "high",
+      "message": "Evidence explicitly reported a non-passing result.",
+      "policyId": "veritas.policy-result",
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [
+        "veritas-1788532019252.policy.ai-instruction-files-synced.evidence"
+      ]
+    },
+    {
+      "id": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced.gap.hint-1",
+      "claimId": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+      "type": "policy_violation",
+      "severity": "high",
+      "message": "All required AI tool instruction files must contain the Veritas guidance block.",
+      "policyId": "veritas.policy-result",
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [
+        "veritas-1788532019252.policy.ai-instruction-files-synced.evidence"
+      ]
+    },
+    {
+      "id": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gap.evidence-veritas-1788532019252.readiness-verdict.evidence",
+      "claimId": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "type": "policy_violation",
+      "severity": "high",
+      "message": "Evidence explicitly reported a non-passing result.",
+      "policyId": "veritas.readiness-verdict",
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [
+        "veritas-1788532019252.readiness-verdict.evidence"
+      ]
+    },
+    {
+      "id": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gap.hint-1",
+      "claimId": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "type": "policy_violation",
+      "severity": "high",
+      "message": "Blocking readiness requirement failed: policy-changes-require-attestation.",
+      "policyId": "veritas.readiness-verdict",
+      "createdAt": "2026-09-04T14:26:59.252Z",
+      "evidenceIds": [
+        "veritas-1788532019252.readiness-verdict.evidence"
+      ]
+    }
+  ],
+  "graph": {
+    "nodes": [
+      {
+        "id": "bearing.surface.governance.guidance",
+        "kind": "claim",
+        "label": "governance.guidance",
+        "claimType": "veritas-affected-surface"
+      },
+      {
+        "id": "subject:repo-surface:bearing:governance.guidance",
+        "kind": "subject",
+        "label": "bearing:governance.guidance",
+        "subjectType": "repo-surface"
+      },
+      {
+        "id": "policy:veritas.surface",
+        "kind": "policy",
+        "label": "veritas.surface",
+        "claimType": "veritas-affected-surface"
+      },
+      {
+        "id": "bearing.surface.governance.root-manifests",
+        "kind": "claim",
+        "label": "governance.root-manifests",
+        "claimType": "veritas-affected-surface"
+      },
+      {
+        "id": "subject:repo-surface:bearing:governance.root-manifests",
+        "kind": "subject",
+        "label": "bearing:governance.root-manifests",
+        "subjectType": "repo-surface"
+      },
+      {
+        "id": "bearing.surface.delivery.workflows",
+        "kind": "claim",
+        "label": "delivery.workflows",
+        "claimType": "veritas-affected-surface"
+      },
+      {
+        "id": "subject:repo-surface:bearing:delivery.workflows",
+        "kind": "subject",
+        "label": "bearing:delivery.workflows",
+        "subjectType": "repo-surface"
+      },
+      {
+        "id": "bearing.surface.tooling.scripts",
+        "kind": "claim",
+        "label": "tooling.scripts",
+        "claimType": "veritas-affected-surface"
+      },
+      {
+        "id": "subject:repo-surface:bearing:tooling.scripts",
+        "kind": "subject",
+        "label": "bearing:tooling.scripts",
+        "subjectType": "repo-surface"
+      },
+      {
+        "id": "bearing.surface.app.src",
+        "kind": "claim",
+        "label": "app.src",
+        "claimType": "veritas-affected-surface"
+      },
+      {
+        "id": "subject:repo-surface:bearing:app.src",
+        "kind": "subject",
+        "label": "bearing:app.src",
+        "subjectType": "repo-surface"
+      },
+      {
+        "id": "bearing.surface.docs.docs",
+        "kind": "claim",
+        "label": "docs.docs",
+        "claimType": "veritas-affected-surface"
+      },
+      {
+        "id": "subject:repo-surface:bearing:docs.docs",
+        "kind": "subject",
+        "label": "bearing:docs.docs",
+        "subjectType": "repo-surface"
+      },
+      {
+        "id": "bearing.surface.verification.tests",
+        "kind": "claim",
+        "label": "verification.tests",
+        "claimType": "veritas-affected-surface"
+      },
+      {
+        "id": "subject:repo-surface:bearing:verification.tests",
+        "kind": "subject",
+        "label": "bearing:verification.tests",
+        "subjectType": "repo-surface"
+      },
+      {
+        "id": "bearing.governance",
+        "kind": "claim",
+        "label": "governance artifact integrity",
+        "claimType": "veritas-governance-artifact"
+      },
+      {
+        "id": "subject:repository:bearing",
+        "kind": "subject",
+        "label": "bearing",
+        "subjectType": "repository"
+      },
+      {
+        "id": "policy:veritas.governance-artifact",
+        "kind": "policy",
+        "label": "veritas.governance-artifact",
+        "claimType": "veritas-governance-artifact"
+      },
+      {
+        "id": "bearing.evidence-check.npm-run-verify",
+        "kind": "claim",
+        "label": "npm run verify",
+        "claimType": "software-evidence-check"
+      },
+      {
+        "id": "policy:veritas.evidence-check",
+        "kind": "policy",
+        "label": "veritas.evidence-check",
+        "claimType": "software-evidence-check"
+      },
+      {
+        "id": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+        "kind": "claim",
+        "label": "policy-changes-require-attestation",
+        "claimType": "veritas-policy-result"
+      },
+      {
+        "id": "subject:policy-rule:bearing:bearing-default:policy-changes-require-attestation",
+        "kind": "subject",
+        "label": "bearing:bearing-default:policy-changes-require-attestation",
+        "subjectType": "policy-rule"
+      },
+      {
+        "id": "policy:veritas.policy-result",
+        "kind": "policy",
+        "label": "veritas.policy-result",
+        "claimType": "veritas-policy-result"
+      },
+      {
+        "id": "veritas.policy.bearing.bearing-default.required-veritas-artifacts",
+        "kind": "claim",
+        "label": "required-veritas-artifacts",
+        "claimType": "veritas-policy-result"
+      },
+      {
+        "id": "subject:policy-rule:bearing:bearing-default:required-veritas-artifacts",
+        "kind": "subject",
+        "label": "bearing:bearing-default:required-veritas-artifacts",
+        "subjectType": "policy-rule"
+      },
+      {
+        "id": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+        "kind": "claim",
+        "label": "ai-instruction-files-synced",
+        "claimType": "veritas-policy-result"
+      },
+      {
+        "id": "subject:policy-rule:bearing:bearing-default:ai-instruction-files-synced",
+        "kind": "subject",
+        "label": "bearing:bearing-default:ai-instruction-files-synced",
+        "subjectType": "policy-rule"
+      },
+      {
+        "id": "veritas.policy.bearing.bearing-default.prefer-veritas-routed-delivery",
+        "kind": "claim",
+        "label": "prefer-veritas-routed-delivery",
+        "claimType": "veritas-policy-result"
+      },
+      {
+        "id": "subject:policy-rule:bearing:bearing-default:prefer-veritas-routed-delivery",
+        "kind": "subject",
+        "label": "bearing:bearing-default:prefer-veritas-routed-delivery",
+        "subjectType": "policy-rule"
+      },
+      {
+        "id": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "claim",
+        "label": "mergeReadiness",
+        "claimType": "software-readiness-verdict"
+      },
+      {
+        "id": "subject:repository-change:bearing-default:working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "subject",
+        "label": "bearing-default:working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "subjectType": "repository-change"
+      },
+      {
+        "id": "policy:veritas.readiness-verdict",
+        "kind": "policy",
+        "label": "veritas.readiness-verdict",
+        "claimType": "software-readiness-verdict"
+      },
+      {
+        "id": "evidence:veritas-1788532019252.evidence-check.required-evidence-check.evidence",
+        "kind": "evidence",
+        "label": "test_output",
+        "method": "validation"
+      },
+      {
+        "id": "evidence:veritas-1788532019252.policy.policy-changes-require-attestation.evidence",
+        "kind": "evidence",
+        "label": "policy_rule",
+        "method": "validation"
+      },
+      {
+        "id": "evidence:veritas-1788532019252.policy.required-veritas-artifacts.evidence",
+        "kind": "evidence",
+        "label": "policy_rule",
+        "method": "validation"
+      },
+      {
+        "id": "evidence:veritas-1788532019252.policy.ai-instruction-files-synced.evidence",
+        "kind": "evidence",
+        "label": "policy_rule",
+        "method": "validation"
+      },
+      {
+        "id": "evidence:veritas-1788532019252.policy.prefer-veritas-routed-delivery.evidence",
+        "kind": "evidence",
+        "label": "policy_rule",
+        "method": "validation"
+      },
+      {
+        "id": "evidence:veritas-1788532019252.readiness-verdict.evidence",
+        "kind": "evidence",
+        "label": "policy_rule",
+        "method": "validation"
+      },
+      {
+        "id": "evidence:veritas-1788532019252.governance.bearing.governance.attestation.evidence",
+        "kind": "evidence",
+        "label": "attestation",
+        "method": "attestation"
+      },
+      {
+        "id": "evidence:veritas-1788532019252.governance.bearing.governance.audit.evidence",
+        "kind": "evidence",
+        "label": "policy_rule",
+        "method": "auditability"
+      },
+      {
+        "id": "event:veritas-1788532019252.evidence-check.required-evidence-check.verified",
+        "kind": "event",
+        "label": "verified",
+        "method": "npm run verify"
+      },
+      {
+        "id": "event:veritas-1788532019252.policy.policy-changes-require-attestation.rejected",
+        "kind": "event",
+        "label": "rejected",
+        "method": "requirements evaluation"
+      },
+      {
+        "id": "event:veritas-1788532019252.policy.required-veritas-artifacts.verified",
+        "kind": "event",
+        "label": "verified",
+        "method": "requirements evaluation"
+      },
+      {
+        "id": "event:veritas-1788532019252.policy.ai-instruction-files-synced.disputed",
+        "kind": "event",
+        "label": "disputed",
+        "method": "requirements evaluation"
+      },
+      {
+        "id": "event:veritas-1788532019252.policy.prefer-veritas-routed-delivery.verified",
+        "kind": "event",
+        "label": "verified",
+        "method": "requirements evaluation"
+      },
+      {
+        "id": "event:veritas-1788532019252.readiness-verdict.rejected",
+        "kind": "event",
+        "label": "rejected",
+        "method": "readiness verdict"
+      },
+      {
+        "id": "event:veritas-1788532019252.governance.bearing.governance.disputed",
+        "kind": "event",
+        "label": "disputed",
+        "method": "authority attestation status"
+      },
+      {
+        "id": "transparency-gap:bearing.surface.governance.guidance.gap.provenance-gap",
+        "kind": "transparency-gap",
+        "label": "provenance_gap",
+        "severity": "medium"
+      },
+      {
+        "id": "transparency-gap:bearing.surface.governance.guidance.gap.policy-violation",
+        "kind": "transparency-gap",
+        "label": "policy_violation",
+        "severity": "medium"
+      },
+      {
+        "id": "transparency-gap:bearing.surface.governance.root-manifests.gap.provenance-gap",
+        "kind": "transparency-gap",
+        "label": "provenance_gap",
+        "severity": "medium"
+      },
+      {
+        "id": "transparency-gap:bearing.surface.governance.root-manifests.gap.policy-violation",
+        "kind": "transparency-gap",
+        "label": "policy_violation",
+        "severity": "medium"
+      },
+      {
+        "id": "transparency-gap:bearing.surface.delivery.workflows.gap.provenance-gap",
+        "kind": "transparency-gap",
+        "label": "provenance_gap",
+        "severity": "medium"
+      },
+      {
+        "id": "transparency-gap:bearing.surface.delivery.workflows.gap.policy-violation",
+        "kind": "transparency-gap",
+        "label": "policy_violation",
+        "severity": "medium"
+      },
+      {
+        "id": "transparency-gap:bearing.surface.tooling.scripts.gap.provenance-gap",
+        "kind": "transparency-gap",
+        "label": "provenance_gap",
+        "severity": "medium"
+      },
+      {
+        "id": "transparency-gap:bearing.surface.tooling.scripts.gap.policy-violation",
+        "kind": "transparency-gap",
+        "label": "policy_violation",
+        "severity": "medium"
+      },
+      {
+        "id": "transparency-gap:bearing.surface.app.src.gap.provenance-gap",
+        "kind": "transparency-gap",
+        "label": "provenance_gap",
+        "severity": "medium"
+      },
+      {
+        "id": "transparency-gap:bearing.surface.app.src.gap.policy-violation",
+        "kind": "transparency-gap",
+        "label": "policy_violation",
+        "severity": "medium"
+      },
+      {
+        "id": "transparency-gap:bearing.surface.docs.docs.gap.provenance-gap",
+        "kind": "transparency-gap",
+        "label": "provenance_gap",
+        "severity": "medium"
+      },
+      {
+        "id": "transparency-gap:bearing.surface.docs.docs.gap.policy-violation",
+        "kind": "transparency-gap",
+        "label": "policy_violation",
+        "severity": "medium"
+      },
+      {
+        "id": "transparency-gap:bearing.surface.verification.tests.gap.provenance-gap",
+        "kind": "transparency-gap",
+        "label": "provenance_gap",
+        "severity": "medium"
+      },
+      {
+        "id": "transparency-gap:bearing.surface.verification.tests.gap.policy-violation",
+        "kind": "transparency-gap",
+        "label": "policy_violation",
+        "severity": "medium"
+      },
+      {
+        "id": "transparency-gap:bearing.governance.gap.evidence-veritas-1788532019252.governance.bearing.governance.attestation.evidence",
+        "kind": "transparency-gap",
+        "label": "policy_violation",
+        "severity": "high"
+      },
+      {
+        "id": "transparency-gap:bearing.governance.gap.evidence-veritas-1788532019252.governance.bearing.governance.audit.evidence",
+        "kind": "transparency-gap",
+        "label": "policy_violation",
+        "severity": "high"
+      },
+      {
+        "id": "transparency-gap:veritas.policy.bearing.bearing-default.policy-changes-require-attestation.gap.evidence-veritas-1788532019252.policy.policy-changes-require-attestation.evidence",
+        "kind": "transparency-gap",
+        "label": "policy_violation",
+        "severity": "high"
+      },
+      {
+        "id": "transparency-gap:veritas.policy.bearing.bearing-default.policy-changes-require-attestation.gap.hint-1",
+        "kind": "transparency-gap",
+        "label": "policy_violation",
+        "severity": "high"
+      },
+      {
+        "id": "transparency-gap:veritas.policy.bearing.bearing-default.ai-instruction-files-synced.gap.evidence-veritas-1788532019252.policy.ai-instruction-files-synced.evidence",
+        "kind": "transparency-gap",
+        "label": "policy_violation",
+        "severity": "high"
+      },
+      {
+        "id": "transparency-gap:veritas.policy.bearing.bearing-default.ai-instruction-files-synced.gap.hint-1",
+        "kind": "transparency-gap",
+        "label": "policy_violation",
+        "severity": "high"
+      },
+      {
+        "id": "transparency-gap:veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gap.evidence-veritas-1788532019252.readiness-verdict.evidence",
+        "kind": "transparency-gap",
+        "label": "policy_violation",
+        "severity": "high"
+      },
+      {
+        "id": "transparency-gap:veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gap.hint-1",
+        "kind": "transparency-gap",
+        "label": "policy_violation",
+        "severity": "high"
+      }
+    ],
+    "edges": [
+      {
+        "from": "bearing.surface.governance.guidance",
+        "to": "subject:repo-surface:bearing:governance.guidance",
+        "kind": "about"
+      },
+      {
+        "from": "policy:veritas.surface",
+        "to": "bearing.surface.governance.guidance",
+        "kind": "validates"
+      },
+      {
+        "from": "bearing.surface.governance.root-manifests",
+        "to": "subject:repo-surface:bearing:governance.root-manifests",
+        "kind": "about"
+      },
+      {
+        "from": "policy:veritas.surface",
+        "to": "bearing.surface.governance.root-manifests",
+        "kind": "validates"
+      },
+      {
+        "from": "bearing.surface.delivery.workflows",
+        "to": "subject:repo-surface:bearing:delivery.workflows",
+        "kind": "about"
+      },
+      {
+        "from": "policy:veritas.surface",
+        "to": "bearing.surface.delivery.workflows",
+        "kind": "validates"
+      },
+      {
+        "from": "bearing.surface.tooling.scripts",
+        "to": "subject:repo-surface:bearing:tooling.scripts",
+        "kind": "about"
+      },
+      {
+        "from": "policy:veritas.surface",
+        "to": "bearing.surface.tooling.scripts",
+        "kind": "validates"
+      },
+      {
+        "from": "bearing.surface.app.src",
+        "to": "subject:repo-surface:bearing:app.src",
+        "kind": "about"
+      },
+      {
+        "from": "policy:veritas.surface",
+        "to": "bearing.surface.app.src",
+        "kind": "validates"
+      },
+      {
+        "from": "bearing.surface.docs.docs",
+        "to": "subject:repo-surface:bearing:docs.docs",
+        "kind": "about"
+      },
+      {
+        "from": "policy:veritas.surface",
+        "to": "bearing.surface.docs.docs",
+        "kind": "validates"
+      },
+      {
+        "from": "bearing.surface.verification.tests",
+        "to": "subject:repo-surface:bearing:verification.tests",
+        "kind": "about"
+      },
+      {
+        "from": "policy:veritas.surface",
+        "to": "bearing.surface.verification.tests",
+        "kind": "validates"
+      },
+      {
+        "from": "bearing.governance",
+        "to": "subject:repository:bearing",
+        "kind": "about"
+      },
+      {
+        "from": "policy:veritas.governance-artifact",
+        "to": "bearing.governance",
+        "kind": "validates"
+      },
+      {
+        "from": "bearing.evidence-check.npm-run-verify",
+        "to": "subject:repository:bearing",
+        "kind": "about"
+      },
+      {
+        "from": "policy:veritas.evidence-check",
+        "to": "bearing.evidence-check.npm-run-verify",
+        "kind": "validates"
+      },
+      {
+        "from": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+        "to": "subject:policy-rule:bearing:bearing-default:policy-changes-require-attestation",
+        "kind": "about"
+      },
+      {
+        "from": "policy:veritas.policy-result",
+        "to": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+        "kind": "validates"
+      },
+      {
+        "from": "veritas.policy.bearing.bearing-default.required-veritas-artifacts",
+        "to": "subject:policy-rule:bearing:bearing-default:required-veritas-artifacts",
+        "kind": "about"
+      },
+      {
+        "from": "policy:veritas.policy-result",
+        "to": "veritas.policy.bearing.bearing-default.required-veritas-artifacts",
+        "kind": "validates"
+      },
+      {
+        "from": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+        "to": "subject:policy-rule:bearing:bearing-default:ai-instruction-files-synced",
+        "kind": "about"
+      },
+      {
+        "from": "policy:veritas.policy-result",
+        "to": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+        "kind": "validates"
+      },
+      {
+        "from": "veritas.policy.bearing.bearing-default.prefer-veritas-routed-delivery",
+        "to": "subject:policy-rule:bearing:bearing-default:prefer-veritas-routed-delivery",
+        "kind": "about"
+      },
+      {
+        "from": "policy:veritas.policy-result",
+        "to": "veritas.policy.bearing.bearing-default.prefer-veritas-routed-delivery",
+        "kind": "validates"
+      },
+      {
+        "from": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "to": "subject:repository-change:bearing-default:working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "about"
+      },
+      {
+        "from": "policy:veritas.readiness-verdict",
+        "to": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "validates"
+      },
+      {
+        "from": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "to": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+        "kind": "derived-from"
+      },
+      {
+        "from": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "to": "veritas.policy.bearing.bearing-default.required-veritas-artifacts",
+        "kind": "derived-from"
+      },
+      {
+        "from": "evidence:veritas-1788532019252.evidence-check.required-evidence-check.evidence",
+        "to": "bearing.evidence-check.npm-run-verify",
+        "kind": "supports"
+      },
+      {
+        "from": "evidence:veritas-1788532019252.policy.policy-changes-require-attestation.evidence",
+        "to": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+        "kind": "supports"
+      },
+      {
+        "from": "evidence:veritas-1788532019252.policy.required-veritas-artifacts.evidence",
+        "to": "veritas.policy.bearing.bearing-default.required-veritas-artifacts",
+        "kind": "supports"
+      },
+      {
+        "from": "evidence:veritas-1788532019252.policy.ai-instruction-files-synced.evidence",
+        "to": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+        "kind": "supports"
+      },
+      {
+        "from": "evidence:veritas-1788532019252.policy.prefer-veritas-routed-delivery.evidence",
+        "to": "veritas.policy.bearing.bearing-default.prefer-veritas-routed-delivery",
+        "kind": "supports"
+      },
+      {
+        "from": "evidence:veritas-1788532019252.readiness-verdict.evidence",
+        "to": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "supports"
+      },
+      {
+        "from": "evidence:veritas-1788532019252.governance.bearing.governance.attestation.evidence",
+        "to": "bearing.governance",
+        "kind": "supports"
+      },
+      {
+        "from": "evidence:veritas-1788532019252.governance.bearing.governance.audit.evidence",
+        "to": "bearing.governance",
+        "kind": "supports"
+      },
+      {
+        "from": "event:veritas-1788532019252.evidence-check.required-evidence-check.verified",
+        "to": "bearing.evidence-check.npm-run-verify",
+        "kind": "updates-status"
+      },
+      {
+        "from": "event:veritas-1788532019252.policy.policy-changes-require-attestation.rejected",
+        "to": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+        "kind": "updates-status"
+      },
+      {
+        "from": "event:veritas-1788532019252.policy.required-veritas-artifacts.verified",
+        "to": "veritas.policy.bearing.bearing-default.required-veritas-artifacts",
+        "kind": "updates-status"
+      },
+      {
+        "from": "event:veritas-1788532019252.policy.ai-instruction-files-synced.disputed",
+        "to": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+        "kind": "updates-status"
+      },
+      {
+        "from": "event:veritas-1788532019252.policy.prefer-veritas-routed-delivery.verified",
+        "to": "veritas.policy.bearing.bearing-default.prefer-veritas-routed-delivery",
+        "kind": "updates-status"
+      },
+      {
+        "from": "event:veritas-1788532019252.readiness-verdict.rejected",
+        "to": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "updates-status"
+      },
+      {
+        "from": "event:veritas-1788532019252.governance.bearing.governance.disputed",
+        "to": "bearing.governance",
+        "kind": "updates-status"
+      },
+      {
+        "from": "transparency-gap:bearing.surface.governance.guidance.gap.provenance-gap",
+        "to": "bearing.surface.governance.guidance",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:bearing.surface.governance.guidance.gap.policy-violation",
+        "to": "bearing.surface.governance.guidance",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:bearing.surface.governance.root-manifests.gap.provenance-gap",
+        "to": "bearing.surface.governance.root-manifests",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:bearing.surface.governance.root-manifests.gap.policy-violation",
+        "to": "bearing.surface.governance.root-manifests",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:bearing.surface.delivery.workflows.gap.provenance-gap",
+        "to": "bearing.surface.delivery.workflows",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:bearing.surface.delivery.workflows.gap.policy-violation",
+        "to": "bearing.surface.delivery.workflows",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:bearing.surface.tooling.scripts.gap.provenance-gap",
+        "to": "bearing.surface.tooling.scripts",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:bearing.surface.tooling.scripts.gap.policy-violation",
+        "to": "bearing.surface.tooling.scripts",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:bearing.surface.app.src.gap.provenance-gap",
+        "to": "bearing.surface.app.src",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:bearing.surface.app.src.gap.policy-violation",
+        "to": "bearing.surface.app.src",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:bearing.surface.docs.docs.gap.provenance-gap",
+        "to": "bearing.surface.docs.docs",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:bearing.surface.docs.docs.gap.policy-violation",
+        "to": "bearing.surface.docs.docs",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:bearing.surface.verification.tests.gap.provenance-gap",
+        "to": "bearing.surface.verification.tests",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:bearing.surface.verification.tests.gap.policy-violation",
+        "to": "bearing.surface.verification.tests",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:bearing.governance.gap.evidence-veritas-1788532019252.governance.bearing.governance.attestation.evidence",
+        "to": "bearing.governance",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:bearing.governance.gap.evidence-veritas-1788532019252.governance.bearing.governance.audit.evidence",
+        "to": "bearing.governance",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:veritas.policy.bearing.bearing-default.policy-changes-require-attestation.gap.evidence-veritas-1788532019252.policy.policy-changes-require-attestation.evidence",
+        "to": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:veritas.policy.bearing.bearing-default.policy-changes-require-attestation.gap.hint-1",
+        "to": "veritas.policy.bearing.bearing-default.policy-changes-require-attestation",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:veritas.policy.bearing.bearing-default.ai-instruction-files-synced.gap.evidence-veritas-1788532019252.policy.ai-instruction-files-synced.evidence",
+        "to": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:veritas.policy.bearing.bearing-default.ai-instruction-files-synced.gap.hint-1",
+        "to": "veritas.policy.bearing.bearing-default.ai-instruction-files-synced",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gap.evidence-veritas-1788532019252.readiness-verdict.evidence",
+        "to": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "flags"
+      },
+      {
+        "from": "transparency-gap:veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gap.hint-1",
+        "to": "veritas.veritas-1788532019252.readiness-verdict.working-tree-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "kind": "flags"
+      }
+    ]
+  }
+}

@@ -16,6 +16,8 @@ const REASONING_EFFORTS = new Set(["max", "xhigh", "high", "medium", "low", "min
 const FORBIDDEN_OBJECT_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 
 export interface ParsedOpenRouterModelRow {
+  /** Index of this row in the source document, which survives quarantine compaction. */
+  sourceIndex: number;
   id: string;
   contextLength: number;
   topProviderContextLength: number | null;
@@ -44,9 +46,13 @@ export interface ParsedOpenRouterModelRow {
 }
 
 /**
- * A row the parser refused. `id` is read best-effort from the unvalidated row so
- * a caller can name what it lost; it is null when the row's own id is unreadable,
- * which is why it can never be used as a lookup key on its own.
+ * A row the parser refused. `id` is read best-effort from the unvalidated row so a
+ * caller can name what it lost, and is null when the row's own id is unreadable.
+ *
+ * It is matched against caller-supplied ids by exact string equality, so it does
+ * act as a lookup key. What it is not is proof the row was that model: the row
+ * failed validation, and only its id was read. A null id means the row cannot be
+ * matched at all, so a caller must treat "no match" as "unknown", not "absent".
  */
 export interface OpenRouterRowRejection {
   index: number;
@@ -356,6 +362,7 @@ const parseRow = (value: unknown, index: number): ParsedOpenRouterModelRow => {
   }
   validateRowMetadata(item, path);
   return {
+    sourceIndex: index,
     id: identityText(item.id, `${path}.id`, MAX_MODEL_ID_CHARACTERS),
     contextLength: positiveInteger(item.context_length, `${path}.context_length`),
     topProviderContextLength: optionalPositiveInteger(provider.context_length, `${path}.top_provider.context_length`),
@@ -434,6 +441,14 @@ export const parseOpenRouterModelRows = (body: string): ParsedOpenRouterModelRow
   // unreadable one. Returning zero rows plus a rejection record would let a
   // caller present "the source has nothing to say" as an observation.
   if (rows.length === 0) return fail("$.snapshot.body.data", "must contain at least one readable model row");
-  if (new Set(rows.map((row) => row.id)).size !== rows.length) return fail("$.snapshot.body.data", "must use unique model ids");
+  // Unique ids are a property of the source document, not of the rows that happened
+  // to survive. Checking only `rows` would let a duplicate hide behind a quarantine:
+  // the invalid twin is set aside and its valid partner imports unchallenged, where
+  // before the quarantine the document failed outright.
+  const assertedIds = [
+    ...rows.map((row) => row.id),
+    ...rejected.map((rejection) => rejection.id).filter((id): id is string => id !== null),
+  ];
+  if (new Set(assertedIds).size !== assertedIds.length) return fail("$.snapshot.body.data", "must use unique model ids");
   return { rows, rejected };
 };

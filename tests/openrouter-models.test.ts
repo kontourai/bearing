@@ -273,6 +273,30 @@ test("a document with no readable row is not a partial catalogue", () => {
   );
 });
 
+test("a duplicate id cannot hide behind a quarantine", () => {
+  // The invalid twin is quarantined; without a document-level check its valid
+  // partner would import unchallenged, where before the quarantine the whole
+  // document failed. Unique ids are a property of the source, not of survivors.
+  const twin = { ...structuredClone(modelRow("openai/gpt-5.6-sol")), alias_target: { name: "x", slug: "y" } };
+  const document = { data: [modelRow("openai/gpt-5.6-sol"), twin], total_count: 2, links: { next: null } };
+  assert.throws(
+    () => importSnapshot({ snapshot: snapshot(JSON.stringify(document)) }),
+    /must use unique model ids/,
+  );
+});
+
+test("provenance paths keep the source index across a quarantine", () => {
+  const bad = { ...structuredClone(modelRow("drift/unreviewed-field")), alias_target: { name: "x", slug: "y" } };
+  const document = { data: [bad, modelRow("unmapped/example"), modelRow("openai/gpt-5.6-sol")], total_count: 3, links: { next: null } };
+  const result = importSnapshot({ snapshot: snapshot(JSON.stringify(document)) });
+
+  const unmapped = result.diagnostics.find((item) => item.code === "unmapped-model")!;
+  // "unmapped/example" is data[1] in the source but rows[0] after compaction.
+  assert.equal(unmapped.path, "$.snapshot.body.data[1]");
+  assert.match(unmapped.message, /unmapped\/example/);
+  assert.equal(result.diagnostics.find((item) => item.code === "unreadable-row")!.path, "$.snapshot.body.data[0]");
+});
+
 test("a configured model whose row was quarantined is not reported as absent", () => {
   const quarantined = structuredClone(modelRow("openai/gpt-5.6-sol"));
   quarantined.reasoning.supported_efforts = ["unreviewed"];
