@@ -43,6 +43,18 @@ export interface ParsedOpenRouterModelRow {
   }>;
 }
 
+/**
+ * A row the parser refused. `id` is read best-effort from the unvalidated row so
+ * a caller can name what it lost; it is null when the row's own id is unreadable,
+ * which is why it can never be used as a lookup key on its own.
+ */
+export interface OpenRouterRowRejection {
+  index: number;
+  id: string | null;
+  path: string;
+  message: string;
+}
+
 const fail = (path: string, message: string): never => {
   throw new BearingError("INVALID_SOURCE_SNAPSHOT", path, message);
 };
@@ -360,7 +372,26 @@ const parseRow = (value: unknown, index: number): ParsedOpenRouterModelRow => {
   };
 };
 
-export const parseOpenRouterModelRows = (body: string): ParsedOpenRouterModelRow[] => {
+export interface ParsedOpenRouterModelRows {
+  rows: ParsedOpenRouterModelRow[];
+  rejected: OpenRouterRowRejection[];
+}
+
+/** Reads a rejected row's id under the same bounds a valid id must satisfy, or null. */
+const bestEffortRowId = (value: unknown): string | null => {
+  const id = (value as { id?: unknown } | null)?.id;
+  if (typeof id !== "string" || id.length === 0 || id.length > MAX_MODEL_ID_CHARACTERS || id.trim() !== id) return null;
+  try { encodeURIComponent(id); } catch { return null; }
+  return id;
+};
+
+/**
+ * Validates every row to exactly the same standard as before and quarantines the
+ * ones that fail, so a field this parser has not reviewed costs the rows carrying
+ * it rather than the whole catalogue. Document-level faults still throw: they are
+ * not attributable to a row, and a caller cannot route around them.
+ */
+export const parseOpenRouterModelRows = (body: string): ParsedOpenRouterModelRows => {
   preflightJsonBounds(body);
   const errors: ParseError[] = [];
   let tree: Node | undefined;
@@ -380,7 +411,29 @@ export const parseOpenRouterModelRows = (body: string): ParsedOpenRouterModelRow
   const links = record(root.links, "$.snapshot.body.links");
   exactKeys(links, ["next"], "$.snapshot.body.links");
   if (links.next !== null) return fail("$.snapshot.body.links.next", "must be null for a complete unpaginated snapshot");
-  const rows = root.data.map(parseRow);
+  const rows: ParsedOpenRouterModelRow[] = [];
+  const rejected: OpenRouterRowRejection[] = [];
+  root.data.forEach((value, index) => {
+    try {
+      rows.push(parseRow(value, index));
+    } catch (error) {
+      if (!(error instanceof BearingError)) throw error;
+      rejected.push({
+        index,
+        id: bestEffortRowId(value),
+        path: error.path,
+        // BearingError prefixes its message with the path; the record keeps the
+        // two separate so a caller is not forced to parse one out of the other.
+        message: error.message.startsWith(`${error.path}: `)
+          ? error.message.slice(error.path.length + 2)
+          : error.message,
+      });
+    }
+  });
+  // A snapshot in which no row survives is not a partial catalogue, it is an
+  // unreadable one. Returning zero rows plus a rejection record would let a
+  // caller present "the source has nothing to say" as an observation.
+  if (rows.length === 0) return fail("$.snapshot.body.data", "must contain at least one readable model row");
   if (new Set(rows.map((row) => row.id)).size !== rows.length) return fail("$.snapshot.body.data", "must use unique model ids");
-  return rows;
+  return { rows, rejected };
 };

@@ -91,9 +91,11 @@ process.stdout.write(`${JSON.stringify({
   revision: imported.acquisition.revision,
   bytes,
   rowCount: imported.acquisition.rowCount,
+  rejectedRowCount: imported.acquisition.rejectedRowCount,
   mappedRows: reviewedIds.length,
   observationCount: imported.observations.length,
   unmappedRows: imported.diagnostics.filter((item) => item.code === "unmapped-model").length,
+  unreadableRows: imported.diagnostics.filter((item) => item.code === "unreadable-row").length,
   replayVerified: true,
   report: path.join(proofRoot, "report.json"),
 })}\n`);
