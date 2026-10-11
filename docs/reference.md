@@ -29,9 +29,9 @@ With no arguments, `--help` or `-h` prints usage. A usage error exits `2`. A
 runtime failure, such as an invalid catalog file or a port in use, prints
 `bearing: <message>` and exits `1`.
 
-The CLI reads only the options listed above. It ignores any other flag or
-argument without an error, so a misspelled option is not reported and its
-default applies.
+The CLI reads only the options listed above. An unknown command exits `2` with
+`Unknown command`, but any other unrecognized flag is ignored without an error,
+so a misspelled option is not reported and its default applies.
 
 ## Package entry points
 
