@@ -1,8 +1,8 @@
-import { createServer } from "node:http";
+import { createServer, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 import { Readable } from "node:stream";
 
-import { createCatalogHandler, type CatalogHandlerOptions } from "../api.js";
+import { createCatalogHandler, internalErrorResponse, type CatalogHandlerOptions } from "../api.js";
 
 export interface StartCatalogServerOptions extends CatalogHandlerOptions {
   host?: string;
@@ -13,6 +13,12 @@ export interface RunningCatalogServer {
   url: string;
   close(): Promise<void>;
 }
+
+const send = async (outgoing: ServerResponse, response: Response): Promise<void> => {
+  const body = response.body === null ? undefined : Buffer.from(await response.arrayBuffer());
+  outgoing.writeHead(response.status, Object.fromEntries(response.headers.entries()));
+  outgoing.end(body);
+};
 
 export const startCatalogServer = async (options: StartCatalogServerOptions): Promise<RunningCatalogServer> => {
   const handler = createCatalogHandler({
@@ -38,16 +44,17 @@ export const startCatalogServer = async (options: StartCatalogServerOptions): Pr
           : Readable.toWeb(incoming) as ReadableStream<Uint8Array>,
         duplex: "half",
       } as RequestInit & { duplex: "half" });
-      const response = await handler(request);
-      outgoing.writeHead(response.status, Object.fromEntries(response.headers.entries()));
-      if (response.body === null) {
-        outgoing.end();
-      } else {
-        outgoing.end(Buffer.from(await response.arrayBuffer()));
-      }
+      await send(outgoing, await handler(request));
     } catch {
-      outgoing.writeHead(500, { "content-type": "application/json; charset=utf-8" });
-      outgoing.end('{"error":{"code":"INTERNAL_ERROR","message":"Request handling failed."},"schemaVersion":"bearing.api.error/v1"}');
+      // A failure after the head was written cannot become a 500; drop the
+      // connection so the client sees a truncated response, not a wrong one.
+      if (outgoing.headersSent) {
+        outgoing.destroy();
+        return;
+      }
+      // createCatalogHandler validated options.catalog above, so its digest
+      // and asOf are the ones every handler response reports.
+      await send(outgoing, internalErrorResponse(options.catalog, incoming.method === "HEAD"));
     }
   });
   await new Promise<void>((resolve, reject) => {

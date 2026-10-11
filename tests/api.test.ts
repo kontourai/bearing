@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { request as httpRequest } from "node:http";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -138,5 +139,53 @@ test("offline catalog files and the thin Node server use the same contract", asy
     }
   } finally {
     await rm(root, { recursive: true, force: true });
+  }
+});
+
+// fetch() cannot send TRACE, so use node:http. The Node server's Request
+// construction refuses TRACE, which fails the request outside the handler.
+const rawRequest = (url: string, method: string) => new Promise<{
+  status: number;
+  headers: Record<string, string | string[] | undefined>;
+  body: string;
+}>((resolve, reject) => {
+  const outgoing = httpRequest(`${url}/v1/models`, { method }, (response) => {
+    let body = "";
+    response.setEncoding("utf8");
+    response.on("data", (chunk: string) => { body += chunk; });
+    response.on("end", () => resolve({ status: response.statusCode ?? 0, headers: response.headers, body }));
+  });
+  outgoing.on("error", reject);
+  outgoing.end();
+});
+
+test("the Node server's 500 INTERNAL_ERROR carries the handler's headers and error shape", async () => {
+  const snapshot = catalog();
+  const server = await startCatalogServer({ catalog: snapshot, host: "127.0.0.1", port: 0 });
+  try {
+    const handlerError = await fetch(`${server.url}/v1/missing`);
+    assert.equal(handlerError.status, 404);
+    const failed = await rawRequest(server.url, "TRACE");
+    assert.equal(failed.status, 500);
+    for (const name of [
+      "access-control-allow-origin",
+      "access-control-expose-headers",
+      "cache-control",
+      "content-type",
+      "etag",
+      "x-bearing-catalog-as-of",
+      "x-bearing-catalog-digest",
+    ]) {
+      assert.equal(failed.headers[name], handlerError.headers.get(name), name);
+    }
+    assert.equal(failed.headers["access-control-allow-origin"], "*");
+    assert.equal(failed.headers.etag, `"bearing-${snapshot.digest}"`);
+    assert.deepEqual(JSON.parse(failed.body), {
+      schemaVersion: "bearing.api.error/v1",
+      error: { code: "INTERNAL_ERROR", message: "Request handling failed." },
+      catalog: { digest: snapshot.digest, asOf: snapshot.asOf },
+    });
+  } finally {
+    await server.close();
   }
 });
