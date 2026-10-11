@@ -56,7 +56,9 @@ for (const [label, extra, message] of [
   test(`serve refuses ${label} with exit 2`, async () => {
     await withCatalogFile(async (file) => {
       const result = runCli(["serve", "--catalog", file, "--port", "0", ...extra]);
-      assert.equal(result.signal, null, "the CLI started a server instead of refusing the arguments");
+      // On timeout spawnSync reports ETIMEDOUT here; the CLI's SIGTERM handler
+      // then exits 0, so status alone would hide that a server was started.
+      assert.equal(result.error, undefined, "the CLI started a server instead of refusing the arguments");
       assert.equal(result.status, 2);
       assert.equal(result.stdout, "");
       assert.ok(result.stderr.startsWith(`${message}\n`), result.stderr);
