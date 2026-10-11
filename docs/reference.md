@@ -1,7 +1,7 @@
 # Reference
 
 The public surface of `@kontourai/bearing`: the `bearing` command, the package
-entry points, the HTTP read API, rank request limits, and error codes. The
+entry points, the HTTP read API, rank requests and their limits, and error codes. The
 [README](../README.md) explains the behaviour behind each surface, and
 [CONTEXT.md](../CONTEXT.md) defines its vocabulary.
 
@@ -28,6 +28,10 @@ bearing --help
 With no arguments, `--help` or `-h` prints usage. A usage error exits `2`. A
 runtime failure, such as an invalid catalog file or a port in use, prints
 `bearing: <message>` and exits `1`.
+
+The CLI reads only the options listed above. It ignores any other flag or
+argument without an error, so a misspelled option is not reported and its
+default applies.
 
 ## Package entry points
 
@@ -66,7 +70,10 @@ TypeScript types for every input and result.
 ## HTTP API
 
 The handler serves one validated, immutable snapshot. Every path is under
-`/v1`; any other `/v<n>` prefix returns `404 UNSUPPORTED_API_VERSION`.
+`/v1`. If the first path segment is anything else that starts with `v`, the
+response is `404 UNSUPPORTED_API_VERSION`. That includes `/v2` and also
+non-version paths such as `/validate`. Any other unknown path returns
+`404 NOT_FOUND`.
 
 | Method | Path | Response `schemaVersion` | Returns |
 | --- | --- | --- | --- |
@@ -76,15 +83,23 @@ The handler serves one validated, immutable snapshot. Every path is under
 | `POST` | `/v1/rank` | `bearing.rank.result/v1` or `/v2` | A rank result. The request's `schemaVersion` selects the result version. |
 | `OPTIONS` | `/v1/rank` | none | CORS preflight, `204`. |
 
-Every response carries these headers:
+`<key>` is the opaque `key` that `/v1/models` returns for each model, not the
+model `id`. It is a content hash of the model identity, so look it up from
+`/v1/models` first.
+
+Every response from the handler carries these headers, including `304`
+responses and error responses:
 
 - `ETag: "bearing-<digest>"`
 - `X-Bearing-Catalog-Digest` and `X-Bearing-Catalog-As-Of`
 - `Access-Control-Allow-Origin: *`
+- `Access-Control-Expose-Headers: ETag, X-Bearing-Catalog-As-Of, X-Bearing-Catalog-Digest`,
+  so browser clients can read those three headers
 - `Cache-Control: public, max-age=0, must-revalidate`
 
-The `GET` endpoints honour `If-None-Match` and answer `304 Not Modified` when
-the snapshot digest matches.
+The `GET` and `HEAD` endpoints honour `If-None-Match`. When it matches the
+snapshot's `ETag` (or is `*`), both `GET` and `HEAD` answer `304 Not Modified`
+with no body.
 
 Errors use one body shape:
 
@@ -105,9 +120,64 @@ Errors use one body shape:
 | `422` | `RANK_RESULT_TOO_LARGE` | The serialized rank result exceeds the response budget. |
 | `503` | `RANK_CAPACITY_EXCEEDED` | Too many concurrent rank requests. The response sets `Retry-After: 1`. |
 
-The Node server answers an unexpected handler failure with `500
-INTERNAL_ERROR`. Bearing has no authentication or per-caller rate limiting;
-put those at your ingress.
+The Node server (`bearing serve` and `startCatalogServer`) answers an
+unexpected handler failure with `500 INTERNAL_ERROR`. That response comes from
+the server, not the handler. It carries only a `Content-Type` header, none of
+the catalog, cache, or CORS headers above, and its body has no `catalog` field.
+
+Bearing has no authentication or per-caller rate limiting. Put those at your
+ingress.
+
+## Rank requests
+
+`rankCatalog`, `createCatalogRanker`, and `POST /v1/rank` accept two message
+versions. The request's `schemaVersion` selects the result version:
+`bearing.rank.request/v1` returns `bearing.rank.result/v1`, and
+`bearing.rank.request/v2` returns `bearing.rank.result/v2`. Unknown keys are
+refused at every level. String fields must be non-empty and have no leading or
+trailing whitespace.
+
+```json
+{
+  "schemaVersion": "bearing.rank.request/v2",
+  "task": { "family": "software-engineering", "suite": null },
+  "inventory": [],
+  "requirements": [],
+  "preferences": [],
+  "advisories": []
+}
+```
+
+| Field | Required | Shape |
+| --- | --- | --- |
+| `schemaVersion` | yes | `bearing.rank.request/v1` or `bearing.rank.request/v2`. |
+| `task` | yes | `{ family, suite }`. `family` is a string. `suite` is a string or `null`. |
+| `inventory` | yes, may be empty | Runtime candidates `{ id, model, execution }`. Ids must be unique. |
+| `requirements` | yes, may be empty | `{ measurementKey, aggregation, operator, value, sourceClasses? }`. |
+| `preferences` | yes, may be empty | `{ measurementKey, aggregation, direction, weight, sourceClasses? }`. |
+| `advisories` | v2 only, yes, may be empty | `{ id, measurementKey, aggregation, sourceClasses? }`. Ids must be unique. A v1 request that includes `advisories` is refused. |
+
+The nested fields:
+
+- `model` is `{ id, revision, quantization }`. `revision` and `quantization`
+  are strings or `null`.
+- `execution` must be a concrete execution profile, not `null`. It needs every
+  one of `runtime`, `adapter`, `effectiveContextTokens`, `toolSurface`,
+  `hardware`, and `workflow`:
+  - `runtime` is `{ id, version }`.
+  - `adapter` is `{ id, version }` or `null`.
+  - `effectiveContextTokens` is an integer or `null`.
+  - `toolSurface` is an array of strings.
+  - `hardware` is `{ class, accelerator, memoryBytes }` or `null`.
+  - `workflow` is `{ id, version, condition }` or `null`.
+- `aggregation` is `fact`, `mean`, `min`, `max`, `success-rate`, or `count`.
+- `operator` is `eq`, `gte`, or `lte`. `value` is a string, number, or boolean,
+  and must be a number for `gte` and `lte`.
+- `direction` is `maximize` or `minimize`. `weight` is a positive finite
+  number.
+- `sourceClasses`, when present, is a non-empty list of `first-party` and
+  `external`, with no duplicates.
+- Duplicate requirements or preferences are refused.
 
 ## Rank request limits
 
@@ -122,10 +192,6 @@ alike.
 | `MAX_RANK_TEXT_BYTES` | 256 | UTF-8 bytes in each bounded text field. |
 | `MAX_RANK_V2_ADVISORIES` | 64 | Entries in a v2 `advisories` list. |
 | `MAX_RANK_V2_ADVISORY_CELLS` | 1024 | Candidates multiplied by advisories. |
-
-Requirement operators are `eq`, `gte`, and `lte`. Preference directions are
-`maximize` and `minimize`, with a positive finite `weight`. Aggregations are
-`fact`, `mean`, `min`, `max`, `success-rate`, and `count`.
 
 ## Errors
 
