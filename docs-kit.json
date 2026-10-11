@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "product": "bearing",
+  "title": "Bearing",
+  "tagline": "Evidence-backed model capability catalogs and runtime-aware ranking, without invoking a model.",
+  "repo": "kontourai/bearing",
+  "landing": "README.md",
+  "documents": [
+    { "source": "docs/getting-started.md", "section": "Start Here" },
+    { "source": "CONTEXT.md", "section": "Concepts" },
+    { "source": "docs/decisions/catalog-contract.md", "section": "Concepts" },
+    { "source": "docs/decisions/ranking.md", "section": "Concepts" },
+    { "source": "docs/decisions/read-api.md", "section": "Concepts" },
+    {
+      "source": "docs/reference.md",
+      "section": "Reference",
+      "covers": ["bin/bearing.mjs", "src/api.ts", "src/error.ts"]
+    },
+    { "source": "CHANGELOG.md", "section": "Reference" }
+  ],
+  "topics": [
+    { "id": "product-boundary", "title": "What Bearing owns and how it fits with Datum, Station, Forage, and Lookout", "source": "CONTEXT.md#product-boundary" },
+    { "id": "vocabulary", "title": "Vocabulary: observations, execution scope, snapshots, inventory", "source": "CONTEXT.md#language" },
+    { "id": "install", "title": "Install and entry points", "source": "docs/getting-started.md#install" },
+    { "id": "compile-catalog", "title": "Compile a catalog snapshot", "source": "docs/getting-started.md#compile-a-catalog" },
+    { "id": "catalog-contract", "title": "Catalog contract: observations, facts, samples, and conflicts", "source": "docs/decisions/catalog-contract.md#decision" },
+    { "id": "ranking", "title": "Runtime-aware ranking and advisories", "source": "README.md#runtime-aware-ranking" },
+    { "id": "ranking-policy", "title": "Ranking policy decisions and bounds", "source": "docs/decisions/ranking.md#decision" },
+    { "id": "cli", "title": "bearing serve command", "source": "docs/reference.md#cli" },
+    { "id": "library-api", "title": "Package exports", "source": "docs/reference.md#package-entry-points" },
+    { "id": "http-api", "title": "HTTP read and rank API", "source": "docs/reference.md#http-api" },
+    { "id": "rank-request", "title": "Rank request shape (v1 and v2)", "source": "docs/reference.md#rank-requests" },
+    { "id": "rank-limits", "title": "Rank request limits", "source": "docs/reference.md#rank-request-limits" },
+    { "id": "errors", "title": "Troubleshooting BearingError and HTTP error codes", "source": "docs/reference.md#errors" },
+    { "id": "source-ingestion", "title": "Trusted source ingestion adapters", "source": "README.md#trusted-source-ingestion" },
+    { "id": "source-discovery", "title": "Approved source manifest and discovery", "source": "README.md#trusted-source-discovery" }
+  ],
+  "exclude": ["docs/shaping/**"]
+}

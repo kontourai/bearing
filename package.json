@@ -46,7 +46,9 @@
     "prove:livebench-discovery": "npm run build && node scripts/prove-livebench-discovery.mjs",
     "prove:openrouter-models": "npm run build && node scripts/prove-openrouter-models.mjs",
     "check:pack": "node scripts/check-package-contents.mjs",
-    "verify": "npm run typecheck && npm test && npm run check:pack"
+    "verify": "npm run typecheck && npm test && npm run check:pack",
+    "docs:check": "npx -y github:kontourai/docs-kit#482fb2e691fe7686f79a9a4da8bc2247384b85c3 docs-kit check",
+    "docs:build": "npx -y github:kontourai/docs-kit#482fb2e691fe7686f79a9a4da8bc2247384b85c3 docs-kit build"
   },
   "dependencies": {
     "@kontourai/forage": "0.4.1",
