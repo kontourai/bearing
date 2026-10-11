@@ -99,6 +99,12 @@ const errorResponse = (
   catalog: { digest: catalog.digest, asOf: catalog.asOf },
 }, status, head, extraHeaders);
 
+// The Node adapter's answer when a request fails outside the handler, so it
+// carries the same catalog, cache, and CORS headers and body shape as every
+// handler error. Deliberately not re-exported from the package index.
+export const internalErrorResponse = (catalog: CatalogSnapshot, head: boolean): Response =>
+  errorResponse(catalog, 500, "INTERNAL_ERROR", "Request handling failed.", head);
+
 export const createCatalogHandler = (options: CatalogHandlerOptions): CatalogHandler => {
   const catalog = validateCatalogSnapshot(options.catalog);
   const maxConcurrentRankRequests = positiveInteger(

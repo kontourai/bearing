@@ -122,11 +122,13 @@ Errors use one body shape:
 | `413` | `PAYLOAD_TOO_LARGE` | The rank body exceeds 1 MiB (`MAX_RANK_REQUEST_BYTES`). |
 | `422` | `RANK_RESULT_TOO_LARGE` | The serialized rank result exceeds the response budget. |
 | `503` | `RANK_CAPACITY_EXCEEDED` | Too many concurrent rank requests. The response sets `Retry-After: 1`. |
+| `500` | `INTERNAL_ERROR` | Node server only: the request failed outside the handler. |
 
-The Node server (`bearing serve` and `startCatalogServer`) answers an
-unexpected handler failure with `500 INTERNAL_ERROR`. That response comes from
-the server, not the handler. It carries only a `Content-Type` header, none of
-the catalog, cache, or CORS headers above, and its body has no `catalog` field.
+The Node server (`bearing serve` and `startCatalogServer`) answers a request it
+fails to handle with `500 INTERNAL_ERROR`. That response comes from the server,
+not the handler, but it uses the same headers and error body, including the
+`catalog` field. If the failure happens after the response head was sent, the
+server closes the connection instead.
 
 Bearing has no authentication or per-caller rate limiting. Put those at your
 ingress.
