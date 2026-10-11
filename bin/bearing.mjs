@@ -12,19 +12,42 @@ const fail = (message) => {
   process.exitCode = 2;
 };
 
-const valueFor = (args, name) => {
-  const index = args.indexOf(name);
-  if (index === -1) return undefined;
-  const value = args[index + 1];
-  if (value === undefined || value.startsWith("--")) {
-    fail(`${name} requires a value.`);
-    return undefined;
+const SERVE_OPTIONS = new Set([
+  "--catalog",
+  "--host",
+  "--port",
+  "--max-concurrent-rank-requests",
+  "--max-rank-response-bytes",
+]);
+
+// Every serve option takes a value. Anything else (a misspelled option, a
+// stray positional, or a repeated option) is a usage error rather than being
+// ignored, so a typo can never silently fall back to a default.
+const parseServeOptions = (args) => {
+  const options = new Map();
+  for (let index = 0; index < args.length; index += 1) {
+    const name = args[index];
+    if (!SERVE_OPTIONS.has(name)) {
+      fail(name.startsWith("-") ? `Unknown option: ${name}` : `Unexpected argument: ${name}`);
+      return undefined;
+    }
+    if (options.has(name)) {
+      fail(`${name} may be given only once.`);
+      return undefined;
+    }
+    const value = args[index + 1];
+    if (value === undefined || value.startsWith("--")) {
+      fail(`${name} requires a value.`);
+      return undefined;
+    }
+    options.set(name, value);
+    index += 1;
   }
-  return value;
+  return options;
 };
 
-const positiveIntegerFor = (args, name) => {
-  const raw = valueFor(args, name);
+const positiveIntegerFor = (options, name) => {
+  const raw = options.get(name);
   if (raw === undefined) return undefined;
   const value = Number(raw);
   if (!Number.isSafeInteger(value) || value <= 0) {
@@ -44,15 +67,17 @@ const main = async () => {
     fail(`Unknown command: ${args[0]}`);
     return;
   }
-  const catalogFile = valueFor(args, "--catalog");
-  if (catalogFile === undefined || process.exitCode) {
-    if (catalogFile === undefined && !process.exitCode) fail("--catalog is required.");
+  const options = parseServeOptions(args.slice(1));
+  if (options === undefined) return;
+  const catalogFile = options.get("--catalog");
+  if (catalogFile === undefined) {
+    fail("--catalog is required.");
     return;
   }
-  const configuredHost = valueFor(args, "--host");
-  const configuredPort = valueFor(args, "--port");
-  const maxConcurrentRankRequests = positiveIntegerFor(args, "--max-concurrent-rank-requests");
-  const maxRankResponseBytes = positiveIntegerFor(args, "--max-rank-response-bytes");
+  const configuredHost = options.get("--host");
+  const configuredPort = options.get("--port");
+  const maxConcurrentRankRequests = positiveIntegerFor(options, "--max-concurrent-rank-requests");
+  const maxRankResponseBytes = positiveIntegerFor(options, "--max-rank-response-bytes");
   if (process.exitCode) return;
   const host = configuredHost ?? "127.0.0.1";
   const rawPort = configuredPort ?? "4244";

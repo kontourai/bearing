@@ -29,9 +29,12 @@ With no arguments, `--help` or `-h` prints usage. A usage error exits `2`. A
 runtime failure, such as an invalid catalog file or a port in use, prints
 `bearing: <message>` and exits `1`.
 
-The CLI reads only the options listed above. An unknown command exits `2` with
-`Unknown command`, but any other unrecognized flag is ignored without an error,
-so a misspelled option is not reported and its default applies.
+The CLI accepts only the options listed above, each at most once, in the
+`--name <value>` form. Anything else is a usage error that prints the usage and
+exits `2`: an unknown command (`Unknown command`), an unrecognized or misspelled
+option such as `--prot` or `--port=8080` (`Unknown option`), a stray positional
+argument (`Unexpected argument`), or a repeated option. A typo never falls back
+to a default.
 
 ## Package entry points
 
