@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.4.0](https://github.com/kontourai/bearing/compare/v0.3.0...v0.4.0) (2026-10-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* **cli:** `bearing serve` invocations that carry unrecognized, positional, or repeated arguments, which previously started a server with those arguments ignored, now exit 2 without starting.
+
+### Fixes
+
+* **cli:** refuse unknown options and stray arguments ([#54](https://github.com/kontourai/bearing/issues/54)) ([5b4dca6](https://github.com/kontourai/bearing/commit/5b4dca6509a5eec62b19ca6ff3457108c0a19ba9))
+* **server:** give the Node server's 500 the handler's headers and error shape ([#55](https://github.com/kontourai/bearing/issues/55)) ([b74a526](https://github.com/kontourai/bearing/commit/b74a526060a7a0bace42bf0083b42c167a96e2dd)), closes [#53](https://github.com/kontourai/bearing/issues/53)
+
+
+### Documentation
+
+* adopt docs-kit gate, Pages site, and MCP bundle ([#51](https://github.com/kontourai/bearing/issues/51)) ([637b3c8](https://github.com/kontourai/bearing/commit/637b3c8605464ab8ca88f937f5dd46562f682850))
+
 ## [0.3.0](https://github.com/kontourai/bearing/compare/v0.2.0...v0.3.0) (2026-09-04)
 
 
