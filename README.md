@@ -1,5 +1,12 @@
 # @kontourai/bearing
 
+[![npm version](https://img.shields.io/npm/v/%40kontourai%2Fbearing)](https://www.npmjs.com/package/@kontourai/bearing)
+[![CI](https://github.com/kontourai/bearing/actions/workflows/ci.yml/badge.svg)](https://github.com/kontourai/bearing/actions/workflows/ci.yml)
+[![Docs](https://img.shields.io/badge/docs-kontourai.github.io-blue)](https://kontourai.github.io/bearing/)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
+[Documentation](https://kontourai.github.io/bearing/)
+
 Evidence-backed model capability intelligence. Bearing accepts provenance-bearing
 model observations, compiles them into deterministic catalog snapshots, and
 supports runtime-aware ranking without invoking models.
