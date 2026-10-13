@@ -1,5 +1,13 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
+  "purpose": "Know what current, provenance-bearing evidence says a model can do.",
+  "builtOn": [
+    {
+      "product": "forage",
+      "via": "@kontourai/forage",
+      "for": "Validate replayable snapshot references for trusted-source model observations."
+    }
+  ],
   "product": "bearing",
   "title": "Bearing",
   "tagline": "Evidence-backed model capability catalogs and runtime-aware ranking, without invoking a model.",
