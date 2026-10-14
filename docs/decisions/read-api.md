@@ -1,3 +1,14 @@
+---
+status: current
+subject: Read API
+decided: 2026-07-18
+evidence:
+  - kind: commit
+    ref: c79c3858c0871b4fda1871c754f3746eb51f77bb
+  - kind: pr
+    ref: https://github.com/kontourai/bearing/pull/9
+---
+
 # Read API
 
 Status: accepted for the initial Bearing read surface.
