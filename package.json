@@ -46,9 +46,11 @@
     "prove:livebench-discovery": "npm run build && node scripts/prove-livebench-discovery.mjs",
     "prove:openrouter-models": "npm run build && node scripts/prove-openrouter-models.mjs",
     "check:pack": "node scripts/check-package-contents.mjs",
-    "verify": "npm run typecheck && npm test && npm run check:pack",
-    "docs:check": "npx -y github:kontourai/corpus#340b66fc8f723c1babe35fce8240c82cd196b0db corpus check",
-    "docs:build": "npx -y github:kontourai/corpus#340b66fc8f723c1babe35fce8240c82cd196b0db corpus build"
+    "check:decisions": "npx -y --package=https://codeload.github.com/kontourai/corpus/tar.gz/08c62ccd72880ff4bd4c378ae252ad437b4b4fb5 -- corpus decisions check --base ${DECISIONS_BASE:-origin/main}",
+    "gen:decisions-index": "npx -y --package=https://codeload.github.com/kontourai/corpus/tar.gz/08c62ccd72880ff4bd4c378ae252ad437b4b4fb5 -- corpus decisions index",
+    "verify": "npm run check:decisions && npm run typecheck && npm test && npm run check:pack",
+    "docs:check": "npx -y --package=https://codeload.github.com/kontourai/corpus/tar.gz/08c62ccd72880ff4bd4c378ae252ad437b4b4fb5 -- corpus check",
+    "docs:build": "npx -y --package=https://codeload.github.com/kontourai/corpus/tar.gz/08c62ccd72880ff4bd4c378ae252ad437b4b4fb5 -- corpus build"
   },
   "dependencies": {
     "@kontourai/forage": "0.4.1",

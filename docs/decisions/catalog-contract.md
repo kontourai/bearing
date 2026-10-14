@@ -1,3 +1,12 @@
+---
+status: current
+subject: Catalog contract
+decided: 2026-07-18
+evidence:
+  - kind: commit
+    ref: 81596f7ca6d11ea686ed6768062eb5003c26d88e
+---
+
 # Catalog Contract
 
 Status: accepted; observation and catalog v2 supersede the unreleased v1 wire contract.

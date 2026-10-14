@@ -1,3 +1,12 @@
+---
+status: current
+subject: Runtime-aware ranking
+decided: 2026-07-18
+evidence:
+  - kind: commit
+    ref: 13e609d60faa127cf4a81ee912fb79345a0fa6e4
+---
+
 # Runtime-Aware Ranking
 
 Status: accepted for the initial Bearing ranking surface.

@@ -16,6 +16,7 @@
   "documents": [
     { "source": "docs/getting-started.md", "section": "Start Here" },
     { "source": "CONTEXT.md", "section": "Concepts" },
+    { "source": "docs/decisions/index.md", "section": "Concepts" },
     { "source": "docs/decisions/catalog-contract.md", "section": "Concepts" },
     { "source": "docs/decisions/ranking.md", "section": "Concepts" },
     { "source": "docs/decisions/read-api.md", "section": "Concepts" },
@@ -43,5 +44,6 @@
     { "id": "source-ingestion", "title": "Trusted source ingestion adapters", "source": "README.md#trusted-source-ingestion" },
     { "id": "source-discovery", "title": "Approved source manifest and discovery", "source": "README.md#trusted-source-discovery" }
   ],
-  "exclude": ["docs/shaping/**"]
+  "exclude": ["docs/shaping/**"],
+  "decisions": {}
 }
