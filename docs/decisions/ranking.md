@@ -1,10 +1,18 @@
 ---
 status: current
 subject: Runtime-aware ranking
-decided: 2026-07-18
+decided: 2026-07-19
 evidence:
   - kind: commit
     ref: 13e609d60faa127cf4a81ee912fb79345a0fa6e4
+  - kind: pr
+    ref: https://github.com/kontourai/bearing/pull/10
+  - kind: pr
+    ref: https://github.com/kontourai/bearing/pull/21
+  - kind: pr
+    ref: https://github.com/kontourai/bearing/pull/23
+  - kind: pr
+    ref: https://github.com/kontourai/bearing/pull/27
 ---
 
 # Runtime-Aware Ranking
