@@ -59,6 +59,7 @@
     "yaml": "^2.9.0"
   },
   "devDependencies": {
+    "@kontourai/veritas": "1.11.2",
     "@types/node": "^25.6.0",
     "typescript": "^5.8.0"
   },
