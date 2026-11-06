@@ -49,8 +49,8 @@
     "check:decisions": "npx -y --dry-run=false --package=https://codeload.github.com/kontourai/corpus/tar.gz/08c62ccd72880ff4bd4c378ae252ad437b4b4fb5 -- corpus decisions check --base ${DECISIONS_BASE:-origin/main}",
     "gen:decisions-index": "npx -y --package=https://codeload.github.com/kontourai/corpus/tar.gz/08c62ccd72880ff4bd4c378ae252ad437b4b4fb5 -- corpus decisions index",
     "verify": "npm run check:decisions && npm run typecheck && npm test && npm run check:pack",
-    "docs:check": "npx -y --package=https://codeload.github.com/kontourai/corpus/tar.gz/08c62ccd72880ff4bd4c378ae252ad437b4b4fb5 -- corpus check",
-    "docs:build": "npx -y --package=https://codeload.github.com/kontourai/corpus/tar.gz/08c62ccd72880ff4bd4c378ae252ad437b4b4fb5 -- corpus build"
+    "docs:check": "npx -y --package=https://codeload.github.com/kontourai/corpus/tar.gz/b127e35a818b532369843731b3c64792baade83e -- corpus check",
+    "docs:build": "npx -y --package=https://codeload.github.com/kontourai/corpus/tar.gz/b127e35a818b532369843731b3c64792baade83e -- corpus build"
   },
   "dependencies": {
     "@kontourai/forage": "0.4.1",
